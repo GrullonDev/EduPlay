@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/math_adventure/bloc/math_adventure_bloc.dart';
-import 'package:edu_play/features/math_adventure/widgets/math_adventure_layout.dart';
+import 'package:edu_play/features/math_adventure/pages/math_adventure_layout.dart';
 
 class MathAdventurePage extends StatelessWidget {
   const MathAdventurePage({super.key});
