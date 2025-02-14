@@ -13,10 +13,10 @@ class MenuPage extends StatelessWidget {
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Menú de Juegos',
+            'Bienvenido a EduPlay',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 50,
+              fontSize: 37,
               fontWeight: FontWeight.bold,
             ),
           ),
