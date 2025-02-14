@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
 
 class RegisterButton extends StatelessWidget {
   const RegisterButton({super.key});
@@ -13,7 +11,8 @@ class RegisterButton extends StatelessWidget {
 
         return ElevatedButton(
           onPressed: () {
-            final username = context.read<RegisterProvider>().username;
+            // TODO: Implement the action when the button is pressed
+            // final username = context.read<RegisterProvider>().username;
             // Acción al presionar el botón con el username
           },
           style: ElevatedButton.styleFrom(
