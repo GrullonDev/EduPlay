@@ -7,7 +7,10 @@ import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 class MenuButtons extends StatelessWidget {
   final double fontSize;
 
-  const MenuButtons({super.key, required this.fontSize});
+  const MenuButtons({
+    super.key,
+    required this.fontSize,
+  });
 
   @override
   Widget build(BuildContext context) {
