@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/math_adventure/bloc/math_adventure_bloc.dart';
+import 'package:edu_play/features/math_adventure/widgets/math_adventure_game_area.dart';
+import 'package:edu_play/features/math_adventure/widgets/math_adventure_header.dart';
 
 class MathAdventureLayout extends StatelessWidget {
   const MathAdventureLayout({super.key});
@@ -10,31 +12,13 @@ class MathAdventureLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<MathAdventureProvider>(
-      builder: (context, bloc, __) => Padding(
-        padding: const EdgeInsets.all(16.0),
+      builder: (context, bloc, __) => const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Score: ${bloc.score}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: bloc.increaseScore,
-                  child: const Text('Increase Score'),
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton(
-                  onPressed: bloc.resetScore,
-                  child: const Text('Reset Score'),
-                ),
-              ],
-            ),
+            MathAdventureHeader(),
+            SizedBox(height: 30),
+            MathAdventureGameArea(),
           ],
         ),
       ),

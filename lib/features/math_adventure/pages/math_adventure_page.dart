@@ -11,7 +11,7 @@ class MathAdventurePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MathAdventureProvider>(
-      create: (context) => MathAdventureProvider(),
+      create: (context) => MathAdventureProvider(context: context),
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -20,11 +20,17 @@ class MathAdventurePage extends StatelessWidget {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           centerTitle: true,
+          backgroundColor: Colors.deepPurple,
         ),
-        body: const MathAdventureLayout(),
+        body: const Column(
+          children: [
+            MathAdventureLayout(),
+          ],
+        ),
       ),
     );
   }
