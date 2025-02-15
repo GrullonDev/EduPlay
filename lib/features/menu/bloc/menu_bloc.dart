@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_play/features/menu/models/game.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 class MenuProvider with ChangeNotifier {
   MenuProvider({
@@ -34,14 +35,50 @@ class MenuProvider with ChangeNotifier {
   }
 
   List<Game> get games => [
-        Game(title: 'Aventura Matemática', color: Colors.blue),
-        Game(title: 'Palabras Mágicas', color: Colors.green),
-        Game(title: 'Inglés Divertido', color: Colors.red),
-        Game(title: 'Exploradores de la Naturaleza', color: Colors.orange),
-        Game(title: 'Viaje en el Tiempo', color: Colors.purple),
-        Game(title: 'Mapa del Tesoro', color: Colors.yellow),
-        Game(title: 'Artistas en Acción', color: Colors.pink),
-        Game(title: 'Concierto de Colores', color: Colors.teal),
-        Game(title: 'Desafío Deportivo', color: Colors.brown),
+        Game(
+          title: 'Aventura Matemática',
+          color: Colors.blue,
+          onTap: () => Navigator.pushNamed(context, RouterPaths.mathAdventure),
+        ),
+        Game(
+          title: 'Palabras Mágicas',
+          color: Colors.green,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Inglés Divertido',
+          color: Colors.red,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Exploradores de la Naturaleza',
+          color: Colors.orange,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Viaje en el Tiempo',
+          color: Colors.purple,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Mapa del Tesoro',
+          color: Colors.yellow,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Artistas en Acción',
+          color: Colors.pink,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Concierto de Colores',
+          color: Colors.teal,
+          onTap: () {},
+        ),
+        Game(
+          title: 'Desafío Deportivo',
+          color: Colors.brown,
+          onTap: () {},
+        ),
       ];
 }

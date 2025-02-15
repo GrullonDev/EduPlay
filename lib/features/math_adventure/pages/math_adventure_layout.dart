@@ -17,17 +17,23 @@ class MathAdventureLayout extends StatelessWidget {
           children: [
             Text(
               'Score: ${bloc.score}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: bloc.increaseScore,
-              child: const Text('Increase Score'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: bloc.resetScore,
-              child: const Text('Reset Score'),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: bloc.increaseScore,
+                  child: const Text('Increase Score'),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: bloc.resetScore,
+                  child: const Text('Reset Score'),
+                ),
+              ],
             ),
           ],
         ),

@@ -28,9 +28,7 @@ class MenuButtons extends StatelessWidget {
               backgroundColor: game.color,
               padding: const EdgeInsets.all(16.0),
             ),
-            onPressed: () {
-              bloc.selectGame(game.title);
-            },
+            onPressed: game.onTap,
             child: Text(
               game.title,
               textAlign: TextAlign.center,

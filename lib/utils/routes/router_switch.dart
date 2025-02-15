@@ -25,9 +25,14 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const MathAdventurePage(),
         );
-      // Agrega más rutas aquí según sea necesario
       default:
-        return MaterialPageRoute(builder: (_) => const LoginPage());
+        return MaterialPageRoute(
+          builder: (_) => const Scaffold(
+            body: Center(
+              child: Text('Page not found'),
+            ),
+          ),
+        );
     }
   }
 

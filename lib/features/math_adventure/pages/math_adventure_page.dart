@@ -15,7 +15,7 @@ class MathAdventurePage extends StatelessWidget {
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Math Adventure',
+            'Aventuras Matemáticas',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,
