@@ -4,24 +4,21 @@ import 'package:flutter/material.dart';
 class RegisterProvider with ChangeNotifier {
   RegisterProvider({
     required this.context,
-  });
+  }) {
+    _usernameController = TextEditingController();
+  }
 
-  BuildContext context;
+  final BuildContext context;
+  late TextEditingController _usernameController;
 
-  String _username = '';
   String _age = '';
   bool _isSliderActive = false;
   int? _sliderValue;
 
-  String get username => _username;
+  TextEditingController get usernameController => _usernameController;
   String get age => _age;
   bool get isSliderActive => _isSliderActive;
   int? get sliderValue => _sliderValue;
-
-  void setUsername(String username) {
-    _username = username;
-    notifyListeners();
-  }
 
   void toggleSlider(bool isActive) {
     _isSliderActive = isActive;
@@ -40,5 +37,11 @@ class RegisterProvider with ChangeNotifier {
       RouterPaths.menu,
       (route) => false, // Reemplaza todas las pantallas anteriores
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    super.dispose();
   }
 }

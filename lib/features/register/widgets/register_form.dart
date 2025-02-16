@@ -30,7 +30,7 @@ class RegisterForm extends StatelessWidget {
             Consumer<RegisterProvider>(
               builder: (context, provider, child) {
                 return TextField(
-                  onChanged: (value) => provider.setUsername(value),
+                  controller: provider.usernameController,
                   decoration: InputDecoration(
                     labelText: 'Nombre o Username',
                     border: OutlineInputBorder(

@@ -27,9 +27,8 @@ class RegisterLayout extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TextField(
-                    decoration: const InputDecoration(labelText: 'Username'),
-                    onChanged: (value) => bloc.setUsername(value),
+                  const TextField(
+                    decoration: InputDecoration(labelText: 'Username'),
                   ),
                   const SizedBox(height: 20),
                   const SliderText(),
