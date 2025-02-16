@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:edu_play/features/math_adventure/models/question.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
@@ -25,23 +26,38 @@ class MathAdventureProvider with ChangeNotifier {
   String get currentQuestion => _currentQuestion;
   List<String> get currentAnswers => _currentAnswers;
 
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': '¿Cuánto es 2 + 2?',
-      'answers': ['3', '4', '5', '6'],
-      'correctIndex': 1,
-    },
-    {
-      'question': '¿Cuánto es 3 + 5?',
-      'answers': ['7', '8', '9', '10'],
-      'correctIndex': 1,
-    },
-    {
-      'question': '¿Cuánto es 7 - 3?',
-      'answers': ['3', '4', '5', '6'],
-      'correctIndex': 1,
-    },
+  final List<Question> _questions = [
+    Question(
+      question: '¿Cuánto es 2 + 2?',
+      options: ['3', '4', '5', '6'],
+      answer: 1,
+    ),
+    Question(
+      question: '¿Cuánto es 3 + 5?',
+      options: ['7', '8', '9', '10'],
+      answer: 1,
+    ),
+    Question(
+      question: '¿Cuánto es 7 - 3?',
+      options: ['3', '4', '5', '6'],
+      answer: 1,
+    ),
     // Agrega más preguntas aquí
+    Question(
+      question: '¿Cuánto es 10 / 2?',
+      options: ['3', '4', '5', '6'],
+      answer: 2,
+    ),
+    Question(
+      question: '¿Cuánto es 6 * 3?',
+      options: ['18', '16', '20', '22'],
+      answer: 0,
+    ),
+    Question(
+      question: '¿Cuánto es 9 + 10?',
+      options: ['19', '20', '21', '22'],
+      answer: 0,
+    ),
   ];
 
   void _loadNextQuestion() {
@@ -49,9 +65,9 @@ class MathAdventureProvider with ChangeNotifier {
     final questionIndex = random.nextInt(_questions.length);
     final questionData = _questions[questionIndex];
 
-    _currentQuestion = questionData['question'];
-    _currentAnswers = List<String>.from(questionData['answers']);
-    _correctAnswerIndex = questionData['correctIndex'];
+    _currentQuestion = questionData.question;
+    _currentAnswers = List<String>.from(questionData.options);
+    _correctAnswerIndex = questionData.answer;
   }
 
   void checkAnswer(int answerIndex) {
