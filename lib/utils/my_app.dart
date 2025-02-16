@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/login/pages/login_page.dart';
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
           create: (_) => RegisterProvider(context: context),
         ),
         ChangeNotifierProvider(
-          create: (_) => MenuProvider(context: context),
+          create: (_) => MenuProvider(context: context, username: ''),
         ),
       ],
       child: MaterialApp(
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          textTheme: GoogleFonts.patrickHandTextTheme(),
           useMaterial3: true,
         ),
         home: const LoginPage(),

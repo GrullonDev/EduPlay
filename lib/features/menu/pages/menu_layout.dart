@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
+
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/menu/widgets/menu_buttons.dart';
 
@@ -16,9 +18,14 @@ class MenuLayout extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Nombre del jugador: ${bloc.username}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             const Text(
-              'Seleccione un juego:',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              'Seleccione un juego',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Expanded(

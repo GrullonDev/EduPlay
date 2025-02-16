@@ -5,9 +5,11 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 class MenuProvider with ChangeNotifier {
   MenuProvider({
     required this.context,
+    required this.username,
   });
 
   final BuildContext context;
+  final String? username;
 
   String _selectedGame = '';
 

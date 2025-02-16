@@ -6,12 +6,20 @@ import 'package:edu_play/features/math_adventure/bloc/math_adventure_bloc.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_layout.dart';
 
 class MathAdventurePage extends StatelessWidget {
-  const MathAdventurePage({super.key});
+  const MathAdventurePage({
+    super.key,
+    required this.userName,
+  });
+
+  final String? userName;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MathAdventureProvider>(
-      create: (context) => MathAdventureProvider(context: context),
+      create: (context) => MathAdventureProvider(
+        context: context,
+        userName: userName,
+      ),
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(

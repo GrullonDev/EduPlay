@@ -4,12 +4,17 @@ import 'package:edu_play/features/menu/pages/menu_layout.dart';
 import 'package:provider/provider.dart';
 
 class MenuPage extends StatelessWidget {
-  const MenuPage({super.key});
+  const MenuPage({
+    super.key,
+    required this.username,
+  });
+
+  final String? username;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MenuProvider>(
-      create: (context) => MenuProvider(context: context),
+      create: (context) => MenuProvider(context: context, username: username),
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(

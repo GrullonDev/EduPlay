@@ -7,11 +7,15 @@ import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class MathAdventureProvider with ChangeNotifier {
-  MathAdventureProvider({required this.context}) {
+  MathAdventureProvider({
+    required this.context,
+    required this.userName,
+  }) {
     _loadNextQuestion();
   }
 
   final BuildContext context;
+  final String? userName;
 
   int _score = 0;
   int _lives = 3;
@@ -129,24 +133,22 @@ class MathAdventureProvider with ChangeNotifier {
         title: '¡Juego terminado!',
         content: 'Volverás a comenzar.',
         buttonText: 'Aceptar',
-        onButtonPressed: () {
-          Navigator.of(context).pop();
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            RouterPaths.menu,
-            (route) => false,
-          );
-        },
+        onButtonPressed: () => Navigator.pushNamed(
+          context,
+          RouterPaths.menu,
+          arguments: userName,
+        ),
       ),
     );
+
     _score = 0;
     _lives = 3;
     _level = 1;
-    Navigator.pushNamedAndRemoveUntil(
+
+/*     Navigator.pop(
       context,
       RouterPaths.menu,
-      (route) => false,
-    );
+    ); */
     notifyListeners();
   }
 

@@ -32,10 +32,17 @@ class RegisterProvider with ChangeNotifier {
   }
 
   void registerUser() {
+    final userName = usernameController.text;
+    if (userName.isEmpty) {
+      // Manejar el caso en que el nombre de usuario esté vacío
+      return;
+    }
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       RouterPaths.menu,
-      (route) => false, // Reemplaza todas las pantallas anteriores
+      arguments: userName,
+      (route) => false,
     );
   }
 

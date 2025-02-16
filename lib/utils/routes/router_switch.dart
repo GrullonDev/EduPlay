@@ -18,12 +18,16 @@ class AppRouter {
           builder: (_) => const RegisterPage(),
         );
       case RouterPaths.menu:
+        final userName = settings.arguments as String?;
+        print(userName);
         return MaterialPageRoute(
-          builder: (_) => const MenuPage(),
+          builder: (_) => MenuPage(username: userName),
         );
       case RouterPaths.mathAdventure:
+        final userName = settings.arguments as String?;
+        print(userName);
         return MaterialPageRoute(
-          builder: (_) => const MathAdventurePage(),
+          builder: (_) => MathAdventurePage(userName: userName),
         );
       default:
         return MaterialPageRoute(
