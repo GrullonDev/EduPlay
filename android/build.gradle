@@ -6,7 +6,8 @@ allprojects {
 }
 
 buildscript {
-    ext.kotlin_version = "1.9.21" // Usa la última versión estable
+    ext.kotlin_version = project.hasProperty('kotlin.gradlePluginVersion') ? project.getProperty('kotlin.gradlePluginVersion') : '1.9.24'
+    
     repositories {
         google()
         mavenCentral()

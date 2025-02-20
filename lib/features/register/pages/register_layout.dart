@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
 import 'package:provider/provider.dart';
-
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:edu_play/features/register/widgets/slider_control.dart';
 import 'package:edu_play/features/register/widgets/slider_text.dart';
+import 'package:edu_play/features/register/widgets/register_button.dart';
 
 class RegisterLayout extends StatelessWidget {
   const RegisterLayout({super.key});
@@ -27,28 +26,24 @@ class RegisterLayout extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const TextField(
-                    decoration: InputDecoration(labelText: 'Username'),
+                  TextField(
+                    controller: bloc.usernameController,
+                    decoration:
+                        const InputDecoration(labelText: 'Nombre del Padre'),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: bloc.ageController,
+                    decoration:
+                        const InputDecoration(labelText: 'Edad del Padre'),
+                    keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 20),
                   const SliderText(),
                   const SizedBox(height: 20),
                   const SliderControl(),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: bloc.registerUser,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    child: const Text(
-                      'Empezar a jugar',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  const RegisterButton(),
                 ],
               ),
             ),

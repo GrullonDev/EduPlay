@@ -4,31 +4,30 @@ import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
 import 'package:edu_play/features/menu/pages/menu_page.dart';
 import 'package:edu_play/features/register/pages/register_page.dart';
+import 'package:edu_play/features/register/widgets/register_child.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
+    Widget? page;
+    String name = settings.name ?? '';
+
+    switch (name) {
       case RouterPaths.root:
-        return MaterialPageRoute(
-          builder: (_) => const LoginPage(),
-        );
+        page = const LoginPage();
       case RouterPaths.register:
-        return MaterialPageRoute(
-          builder: (_) => const RegisterPage(),
-        );
+        page = const RegisterPage();
+      case RouterPaths.registerChild:
+        page = const RegisterChild();
       case RouterPaths.menu:
         final userName = settings.arguments as String?;
         print(userName);
-        return MaterialPageRoute(
-          builder: (_) => MenuPage(username: userName),
-        );
+        page = MenuPage(username: userName);
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
         print(userName);
-        return MaterialPageRoute(
-          builder: (_) => MathAdventurePage(userName: userName),
-        );
+        page = MathAdventurePage(userName: userName);
+
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
@@ -38,19 +37,60 @@ class AppRouter {
           ),
         );
     }
+
+    return _getPageRoute(name, page, settings.arguments);
   }
 
-  static Future<dynamic> push(BuildContext context, String path,
-      {Map<String, dynamic>? params}) {
-    return Navigator.pushNamed(context, path, arguments: params);
+  static PageRoute _getPageRoute(
+    String routeName,
+    dynamic viewToShow,
+    Object? args,
+  ) {
+    // sl<GoogleAnalyticsService>().setScreenName(routeName);
+    return MaterialPageRoute(
+      settings: RouteSettings(
+        name: routeName,
+        arguments: args,
+      ),
+      builder: (_) => viewToShow,
+    );
   }
 
-  static Future<dynamic> replace(BuildContext context, String path,
-      {Map<String, dynamic>? params}) {
-    return Navigator.pushReplacementNamed(context, path, arguments: params);
+  static PageRoute _getPageRouteMap(
+    String routeName,
+    dynamic viewToShow,
+    Object? args,
+  ) {
+    // sl<GoogleAnalytics>().setScreenName(routeName);
+    return MaterialPageRoute<Map<String, dynamic>>(
+      settings: RouteSettings(
+        name: routeName,
+        arguments: args,
+      ),
+      builder: (_) => viewToShow,
+    );
   }
 
-  void pop(BuildContext context) {
-    Navigator.pop(context);
+  // Valida use because it call dispose navigation to a new page
+  static PageRoute _fadeRoute(
+    String routeName,
+    dynamic viewToShow,
+    Object? args,
+  ) {
+    /* sl<GoogleAnalytics>().setScreenName(routeName);
+    return FadeTransitionRoute(
+      settings: RouteSettings(
+        name: routeName,
+        arguments: args,
+      ),
+      page: viewToShow,
+    ); */
+    return MaterialPageRoute(
+      settings: RouteSettings(
+        name: routeName,
+        arguments: args,
+      ),
+      builder: (_) => viewToShow,
+    );
   }
 }

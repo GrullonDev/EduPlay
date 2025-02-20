@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
+
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 
 class SliderControl extends StatelessWidget {
@@ -8,7 +10,7 @@ class SliderControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<RegisterProvider>(
-      builder: (context, provider, child) {
+      builder: (context, provider, __) {
         int sliderValue = provider.sliderValue ??
             5; // Usar un valor predeterminado si sliderValue es nulo
         return Slider(
