@@ -1,124 +1,88 @@
 import 'package:flutter/material.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class RegisterProvider with ChangeNotifier {
   RegisterProvider({
-    required this.context,
-  }) {
-    _usernameController = TextEditingController();
-    _ageController = TextEditingController();
-    _childNameController = TextEditingController();
-    _childAgeController = TextEditingController();
-  }
+    required BuildContext context,
+    required this.authRepository,
+  })  : _context = context,
+        mounted = true;
 
-  final BuildContext context;
-  late TextEditingController _usernameController;
-  late TextEditingController _ageController;
-  late TextEditingController _childNameController;
-  late TextEditingController _childAgeController;
+  final BuildContext _context;
+  final bool mounted;
+  final AuthRepository authRepository;
 
-  TextEditingController get usernameController => _usernameController;
-  TextEditingController get ageController => _ageController;
-  TextEditingController get childNameController => _childNameController;
-  TextEditingController get childAgeController => _childAgeController;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController firstNameController = TextEditingController();
+  TextEditingController lastNameController = TextEditingController();
+  TextEditingController ageController = TextEditingController();
+  TextEditingController childNameController = TextEditingController();
+  TextEditingController childAgeController = TextEditingController();
 
-  String _age = '';
-  bool _isSliderActive = false;
-  int? _sliderValue;
+  String get email => emailController.text;
+  String get password => passwordController.text;
+  String get firstName => firstNameController.text;
+  String get lastName => lastNameController.text;
+  String get age => ageController.text;
+  final List<String> _children = [];
 
-  String get age => _age;
-  bool get isSliderActive => _isSliderActive;
-  int? get sliderValue => _sliderValue;
+  List<String> get children => _children;
 
-  void toggleSlider(bool isActive) {
-    _isSliderActive = isActive;
+  void addChild(String child) {
+    _children.add(child);
     notifyListeners();
   }
 
-  void setSliderValue(int value) {
-    _sliderValue = value;
-    _age = value.toString();
+  void removeChild(String child) {
+    _children.remove(child);
     notifyListeners();
   }
 
   Future<void> registerParent() async {
-    final userName = _usernameController.text;
-    final age = _ageController.text;
+    User? user = await authRepository.registerParent(
+      email: email,
+      password: password,
+      firstName: firstName,
+      lastName: lastName,
+      age: age,
+      children: _children,
+    );
 
-    if (userName.isEmpty || age.isEmpty) {
-      // Manejar el caso en que el nombre o la edad estén vacíos
-      return;
-    }
+    if (!mounted) return;
 
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email:
-            'parent@example.com', // Reemplaza con el correo electrónico del padre
-        password: 'password123', // Reemplaza con la contraseña del padre
+    if (user != null) {
+      Navigator.pushNamedAndRemoveUntil(
+        _context,
+        RouterPaths.menu,
+        (route) => false,
       );
-
-      await FirebaseFirestore.instance
-          .collection('parents')
-          .doc(userCredential.user!.uid)
-          .set({
-        'name': userName,
-        'age': age,
-        'children': [],
-      });
-
-      await Navigator.pushNamed(context, RouterPaths.registerChild);
-    } catch (e) {
-      // Manejar errores
-      print(e);
+    } else {
+      // Mostrar un mensaje de error
+      showDialog(
+        context: _context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('No se pudo registrar el usuario.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
-  Future<void> registerChild() async {
-    final childName = _childNameController.text;
-    final childAge = _childAgeController.text;
-
-    if (childName.isEmpty || childAge.isEmpty) {
-      // Manejar el caso en que el nombre o la edad del niño estén vacíos
-      return;
+  void registerChild() {
+    if (childNameController.text.isNotEmpty &&
+        childAgeController.text.isNotEmpty) {
+      addChild('${childNameController.text} (${childAgeController.text} años)');
+      childNameController.clear();
+      childAgeController.clear();
     }
-
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        DocumentReference parentRef = FirebaseFirestore.instance
-            .collection('parents')
-            .doc(currentUser.uid);
-
-        DocumentReference childRef =
-            await FirebaseFirestore.instance.collection('children').add({
-          'name': childName,
-          'age': childAge,
-          'parentId': currentUser.uid,
-        });
-
-        await parentRef.update({
-          'children': FieldValue.arrayUnion([childRef.id]),
-        });
-
-        Navigator.pushNamed(context, RouterPaths.menu);
-      }
-    } catch (e) {
-      // Manejar errores
-      print(e);
-    }
-  }
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _ageController.dispose();
-    _childNameController.dispose();
-    _childAgeController.dispose();
-    super.dispose();
   }
 }

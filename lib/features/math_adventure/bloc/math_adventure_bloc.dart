@@ -1,8 +1,6 @@
 import 'dart:math';
-
 import 'package:edu_play/features/math_adventure/models/question.dart';
 import 'package:flutter/material.dart';
-
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -144,11 +142,6 @@ class MathAdventureProvider with ChangeNotifier {
     _score = 0;
     _lives = 3;
     _level = 1;
-
-/*     Navigator.pop(
-      context,
-      RouterPaths.menu,
-    ); */
     notifyListeners();
   }
 

@@ -7,11 +7,31 @@ class RegisterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.watch<RegisterProvider>();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        double fontSizeButton = constraints.maxWidth > 600 ? 20 : 16;
 
-    return ElevatedButton(
-      onPressed: bloc.registerParent,
-      child: const Text('Registrar Padre'),
+        return ElevatedButton(
+          onPressed: () {
+            context.read<RegisterProvider>().registerParent();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.all(20),
+          ),
+          child: Text(
+            'Empezar a Jugar',
+            style: TextStyle(
+              fontSize: fontSizeButton,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
     );
   }
 }
