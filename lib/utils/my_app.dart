@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import 'package:edu_play/features/login/pages/login_page.dart';
+import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/routes/router_switch.dart';
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           textTheme: GoogleFonts.interTextTheme(),
           useMaterial3: true,
         ),
-        home: const LoginPage(),
+        home: const LoginMainPage(),
         initialRoute: RouterPaths.root,
         onGenerateRoute: AppRouter.generateRoute,
       ),

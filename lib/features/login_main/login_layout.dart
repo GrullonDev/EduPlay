@@ -1,8 +1,8 @@
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
-class LoginLayout extends StatelessWidget {
-  const LoginLayout({super.key});
+class LoginMainLayout extends StatelessWidget {
+  const LoginMainLayout({super.key});
 
   @override
   Widget build(BuildContext context) {

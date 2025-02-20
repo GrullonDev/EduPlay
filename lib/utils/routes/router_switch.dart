@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:edu_play/features/login/pages/login_page.dart';
+import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
 import 'package:edu_play/features/menu/pages/menu_page.dart';
 import 'package:edu_play/features/register_child/pages/register_child_page.dart';
@@ -14,7 +14,7 @@ class AppRouter {
 
     switch (name) {
       case RouterPaths.root:
-        page = const LoginPage();
+        page = const LoginMainPage();
         break;
       case RouterPaths.registerParents:
         page = const RegisterParentsPage();
