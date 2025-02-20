@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthDatasource {
   Future<User?> registerParent({
@@ -15,6 +15,9 @@ abstract class AuthDatasource {
     required String email,
     required String password,
   });
+
+  Future<bool> isChildRegistered(String name);
+  Future<void> registerChild(String name, String age);
 
   Future<void> logout();
 
@@ -61,6 +64,24 @@ class ImplAuthDatasource implements AuthDatasource {
       print('Error: $e');
       return null;
     }
+  }
+
+  @override
+  Future<bool> isChildRegistered(String name) async {
+    final QuerySnapshot result = await _firestore
+        .collection('parents')
+        .where('children', arrayContains: name)
+        .get();
+
+    return result.docs.isNotEmpty;
+  }
+
+  @override
+  Future<void> registerChild(String name, String age) async {
+    await _firestore.collection('children').add({
+      'name': name,
+      'age': age,
+    });
   }
 
   @override

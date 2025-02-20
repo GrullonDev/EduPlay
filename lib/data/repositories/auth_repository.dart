@@ -16,6 +16,9 @@ abstract class AuthRepository {
     required String password,
   });
 
+  Future<bool> isChildRegistered(String name);
+  Future<void> registerChild(String name, String age);
+
   Future<void> logout();
 
   User? getCurrentUser();
@@ -45,6 +48,14 @@ class ImplAuthRepository implements AuthRepository {
       age: age,
       children: children,
     );
+  }
+
+  Future<bool> isChildRegistered(String name) async {
+    return await _authDatasource.isChildRegistered(name);
+  }
+
+  Future<void> registerChild(String name, String age) async {
+    await _authDatasource.registerChild(name, age);
   }
 
   @override
