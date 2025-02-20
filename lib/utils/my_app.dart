@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/login/pages/login_page.dart';
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/routes/router_switch.dart';
 
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => RegisterProvider(
+          create: (_) => RegisterParentsBloc(
             context: context,
             authRepository: sl.get<AuthRepository>(),
           ),

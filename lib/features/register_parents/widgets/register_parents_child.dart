@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 
-class RegisterChild extends StatelessWidget {
-  const RegisterChild({super.key});
+class RegisterParentsChild extends StatelessWidget {
+  const RegisterParentsChild({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,17 +16,19 @@ class RegisterChild extends StatelessWidget {
         child: Column(
           children: [
             TextField(
-              controller: context.read<RegisterProvider>().childNameController,
+              controller:
+                  context.read<RegisterParentsBloc>().childNameController,
               decoration: const InputDecoration(labelText: 'Nombre del Niño'),
             ),
             TextField(
-              controller: context.read<RegisterProvider>().childAgeController,
+              controller:
+                  context.read<RegisterParentsBloc>().childAgeController,
               decoration: const InputDecoration(labelText: 'Edad del Niño'),
               keyboardType: TextInputType.number,
             ),
             ElevatedButton(
               onPressed: () {
-                context.read<RegisterProvider>().registerChild();
+                context.read<RegisterParentsBloc>().registerChild();
               },
               child: const Text('Registrar Niño'),
             ),

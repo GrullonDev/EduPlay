@@ -2,11 +2,23 @@ import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
 
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
-import 'package:edu_play/features/register/widgets/register_button.dart';
+import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 
-class RegisterForm extends StatelessWidget {
-  const RegisterForm({super.key});
+class RegisterParentsForm extends StatelessWidget {
+  const RegisterParentsForm({
+    super.key,
+    required this.emailController,
+    required this.passwordController,
+    required this.firstNameController,
+    required this.lastNameController,
+    required this.ageController,
+  });
+
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final TextEditingController firstNameController;
+  final TextEditingController lastNameController;
+  final TextEditingController ageController;
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +41,12 @@ class RegisterForm extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Consumer<RegisterProvider>(
+              Consumer<RegisterParentsBloc>(
                 builder: (context, provider, child) {
                   return Column(
                     children: [
                       TextField(
-                        controller: provider.emailController,
+                        controller: emailController,
                         decoration: InputDecoration(
                           labelText: 'Correo Electrónico',
                           border: OutlineInputBorder(
@@ -44,7 +56,7 @@ class RegisterForm extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       TextField(
-                        controller: provider.passwordController,
+                        controller: passwordController,
                         decoration: InputDecoration(
                           labelText: 'Contraseña',
                           border: OutlineInputBorder(
@@ -55,26 +67,24 @@ class RegisterForm extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       TextField(
-                        controller: provider.firstNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Nombre',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                        controller: firstNameController,
+                        decoration: const InputDecoration(
+                            labelText: 'Nombre del Padre'),
                       ),
                       const SizedBox(height: 20),
                       TextField(
-                        controller: provider.lastNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Apellido',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                        controller: lastNameController,
+                        decoration: const InputDecoration(
+                            labelText: 'Apellido del Padre'),
+                        keyboardType: TextInputType.text,
                       ),
                       const SizedBox(height: 20),
-                      const RegisterButton(),
+                      TextField(
+                        controller: ageController,
+                        decoration:
+                            const InputDecoration(labelText: 'Edad del Padre'),
+                        keyboardType: TextInputType.number,
+                      ),
                     ],
                   );
                 },

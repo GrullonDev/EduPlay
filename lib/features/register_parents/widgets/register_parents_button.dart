@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 
-class RegisterButton extends StatelessWidget {
-  const RegisterButton({super.key});
+class RegisterParentsButton extends StatelessWidget {
+  const RegisterParentsButton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,7 @@ class RegisterButton extends StatelessWidget {
 
         return ElevatedButton(
           onPressed: () {
-            context.read<RegisterProvider>().registerParent();
+            context.read<RegisterParentsBloc>().registerParent();
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,

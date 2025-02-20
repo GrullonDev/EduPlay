@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
-class RegisterProvider with ChangeNotifier {
-  RegisterProvider({
+class RegisterParentsBloc with ChangeNotifier {
+  RegisterParentsBloc({
     required BuildContext context,
     required this.authRepository,
   })  : _context = context,
