@@ -56,7 +56,7 @@ class RegisterParentsBloc with ChangeNotifier {
     if (user != null) {
       Navigator.pushNamedAndRemoveUntil(
         _context,
-        RouterPaths.menu,
+        RouterPaths.registerChild,
         (route) => false,
       );
     } else {

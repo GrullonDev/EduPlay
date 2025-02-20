@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
 import 'package:edu_play/features/menu/pages/menu_page.dart';
+import 'package:edu_play/features/register_child/pages/register_child_page.dart';
 import 'package:edu_play/features/register_parents/pages/register_parents_page.dart';
-import 'package:edu_play/features/register_parents/widgets/register_parents_child.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -16,11 +16,11 @@ class AppRouter {
       case RouterPaths.root:
         page = const LoginPage();
         break;
-      case RouterPaths.register:
+      case RouterPaths.registerParents:
         page = const RegisterParentsPage();
         break;
       case RouterPaths.registerChild:
-        page = const RegisterParentsChild();
+        page = const RegisterChildPage();
         break;
       case RouterPaths.menu:
         final userName = settings.arguments as String?;

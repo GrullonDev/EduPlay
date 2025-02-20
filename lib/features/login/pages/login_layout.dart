@@ -41,7 +41,7 @@ class LoginLayout extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () =>
-                    Navigator.pushNamed(context, RouterPaths.register),
+                    Navigator.pushNamed(context, RouterPaths.registerParents),
                 child: Text(
                   'Iniciar',
                   style: TextStyle(
