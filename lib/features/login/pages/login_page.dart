@@ -19,6 +19,8 @@ class LoginPage extends StatelessWidget {
               color: Colors.blueAccent,
             ),
           ),
+          centerTitle: true,
+          automaticallyImplyLeading: true,
         ),
         body: const LoginLayout(),
       ),
