@@ -1,8 +1,8 @@
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
-class LoginMainLayout extends StatelessWidget {
-  const LoginMainLayout({super.key});
+class MainLayout extends StatelessWidget {
+  const MainLayout({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class LoginMainLayout extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () =>
-                    Navigator.pushNamed(context, RouterPaths.login),
+                    Navigator.pushReplacementNamed(context, RouterPaths.login),
                 child: Text(
                   'Iniciar',
                   style: TextStyle(
