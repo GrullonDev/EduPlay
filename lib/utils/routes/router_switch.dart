@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/login/pages/login_page.dart';
+import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
 import 'package:edu_play/features/menu/pages/menu_page.dart';
 import 'package:edu_play/features/register/pages/register_page.dart';
@@ -24,6 +25,10 @@ class AppRouter {
       case RouterPaths.mathAdventure:
         return MaterialPageRoute(
           builder: (_) => const MathAdventurePage(),
+        );
+      case RouterPaths.magicWords:
+        return MaterialPageRoute(
+          builder: (_) => const MagicWordsPage(),
         );
       default:
         return MaterialPageRoute(

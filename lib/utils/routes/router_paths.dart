@@ -3,5 +3,6 @@ class RouterPaths {
   static const register = '/register';
   static const menu = '/menu';
   static const mathAdventure = '/math-adventure';
+  static const magicWords = '/magic-words';
   static const notFound = '/not-found';
 }

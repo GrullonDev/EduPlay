@@ -5,9 +5,11 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 class MenuProvider with ChangeNotifier {
   MenuProvider({
     required this.context,
+    required this.age,
   });
 
   final BuildContext context;
+  final int age;
 
   String _selectedGame = '';
 
@@ -45,7 +47,7 @@ class MenuProvider with ChangeNotifier {
           title: 'Palabras Mágicas',
           color: const Color(0xFF2196F3), // Bright Blue
           icon: Icons.abc_rounded,
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, RouterPaths.magicWords),
         ),
         Game(
           title: 'Inglés Divertido',
