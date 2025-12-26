@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/app_theme.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
@@ -24,12 +25,9 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Flutter Demo',
+        title: 'EduPlay',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.theme,
         home: const LoginPage(),
         initialRoute: RouterPaths.root,
         onGenerateRoute: AppRouter.generateRoute,

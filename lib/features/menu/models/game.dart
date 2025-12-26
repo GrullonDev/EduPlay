@@ -5,9 +5,12 @@ class Game {
   final Color color;
   final VoidCallback onTap;
 
+  final IconData icon;
+
   Game({
     required this.title,
     required this.color,
+    required this.icon,
     required this.onTap,
   });
 }

@@ -37,47 +37,56 @@ class MenuProvider with ChangeNotifier {
   List<Game> get games => [
         Game(
           title: 'Aventura Matemática',
-          color: Colors.blue,
+          color: const Color(0xFF4CAF50), // Fresh Green
+          icon: Icons.calculate_rounded,
           onTap: () => Navigator.pushNamed(context, RouterPaths.mathAdventure),
         ),
         Game(
           title: 'Palabras Mágicas',
-          color: Colors.green,
+          color: const Color(0xFF2196F3), // Bright Blue
+          icon: Icons.abc_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Inglés Divertido',
-          color: Colors.red,
+          color: const Color(0xFFF44336), // Vibrant Red
+          icon: Icons.language_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Exploradores de la Naturaleza',
-          color: Colors.orange,
+          color: const Color(0xFFFF9800), // Orange
+          icon: Icons.forest_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Viaje en el Tiempo',
-          color: Colors.purple,
+          color: const Color(0xFF9C27B0), // Purple
+          icon: Icons.access_time_filled_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Mapa del Tesoro',
-          color: Colors.yellow,
+          color: const Color(0xFFFFEB3B), // Yellow
+          icon: Icons.map_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Artistas en Acción',
-          color: Colors.pink,
+          color: const Color(0xFFE91E63), // Pink
+          icon: Icons.palette_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Concierto de Colores',
-          color: Colors.teal,
+          color: const Color(0xFF009688), // Teal
+          icon: Icons.music_note_rounded,
           onTap: () {},
         ),
         Game(
           title: 'Desafío Deportivo',
-          color: Colors.brown,
+          color: const Color(0xFF795548), // Brown
+          icon: Icons.sports_soccer_rounded,
           onTap: () {},
         ),
       ];

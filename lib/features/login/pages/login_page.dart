@@ -7,8 +7,19 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.greenAccent[200],
-      body: const LoginLayout(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF6C63FF), // Primary
+              Color(0xFF00BFA6), // Secondary
+            ],
+          ),
+        ),
+        child: const LoginLayout(),
+      ),
     );
   }
 }

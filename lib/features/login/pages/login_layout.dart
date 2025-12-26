@@ -6,56 +6,79 @@ class LoginLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double fontSizeTitle = constraints.maxWidth > 600 ? 45 : 30;
-        double fontSizeSubtitle = constraints.maxWidth > 600 ? 34 : 20;
-        double fontSizeButton = constraints.maxWidth > 600 ? 34 : 20;
-
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                '¡Bienvenido a EduPlay!',
-                style: TextStyle(
-                  fontSize: fontSizeTitle,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.bold,
-                  fontStyle: FontStyle.italic,
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: Card(
+              elevation: 8,
+              shadowColor: Colors.black26,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 48.0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Placeholder for Logo
+                    const Icon(
+                      Icons.school_rounded,
+                      size: 80,
+                      color: Color(0xFF6C63FF), // Primary color from theme
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '¡EduPlay!',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF6C63FF),
+                            letterSpacing: 1.2,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Aprende jugando en esta aventura mágica.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.grey[700],
+                            fontSize: 18,
+                          ),
+                    ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () =>
+                            Navigator.pushNamed(context, RouterPaths.register),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: const Text(
+                          '¡COMENZAR!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  'Una plataforma educativa gamificada para niños y adolecentes.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: fontSizeSubtitle,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.normal,
-                    fontStyle: FontStyle.normal,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () =>
-                    Navigator.pushNamed(context, RouterPaths.register),
-                child: Text(
-                  'Iniciar',
-                  style: TextStyle(
-                    fontSize: fontSizeButton,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontStyle: FontStyle.normal,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
