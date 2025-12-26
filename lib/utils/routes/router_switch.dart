@@ -7,6 +7,7 @@ import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart'
 import 'package:edu_play/features/menu/pages/menu_page.dart';
 import 'package:edu_play/features/register_child/pages/register_child_page.dart';
 import 'package:edu_play/features/register_parents/pages/register_parents_page.dart';
+import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -38,6 +39,10 @@ class AppRouter {
       case RouterPaths.magicWords:
         return MaterialPageRoute(
           builder: (_) => const MagicWordsPage(),
+        );
+      case RouterPaths.guestEntry:
+        return MaterialPageRoute(
+          builder: (_) => const GuestEntryPage(),
         );
       default:
         page = const Scaffold(

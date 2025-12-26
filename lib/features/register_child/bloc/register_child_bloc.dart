@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/data/datasources/local/database_helper.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:provider/provider.dart';
@@ -36,6 +37,16 @@ class RegisterChildProvider with ChangeNotifier {
       } else {
         // Registrar al niño en la base de datos
         await _repository.registerChild(name, age);
+
+        // Save to Local DB (Offline support)
+        try {
+          final dbHelper = DatabaseHelper();
+          // Try parse age to int, default to 6 if fail
+          int ageInt = int.tryParse(age) ?? 6;
+          await dbHelper.insertChild(name, ageInt);
+        } catch (e) {
+          debugPrint("Local DB Error: $e");
+        }
 
         // Update Global Age in RegisterProvider
         Provider.of<RegisterProvider>(_context, listen: false).setAge(age);

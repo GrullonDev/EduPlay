@@ -1,7 +1,5 @@
-import 'package:edu_play/features/login/bloc/login_bloc.dart';
 import 'package:edu_play/features/login/pages/login_layout.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

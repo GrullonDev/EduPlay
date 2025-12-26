@@ -7,4 +7,5 @@ class RouterPaths {
   static const mathAdventure = '/math-adventure';
   static const magicWords = '/magic-words';
   static const notFound = '/not-found';
+  static const String guestEntry = 'guestEntry';
 }

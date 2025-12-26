@@ -30,40 +30,6 @@ class MathAdventureProvider with ChangeNotifier {
   String get currentQuestion => _currentQuestion;
   List<String> get currentAnswers => _currentAnswers;
 
-  final List<Question> _questions = [
-    Question(
-      question: '¿Cuánto es 2 + 2?',
-      options: ['3', '4', '5', '6'],
-      answer: 1,
-    ),
-    Question(
-      question: '¿Cuánto es 3 + 5?',
-      options: ['7', '8', '9', '10'],
-      answer: 1,
-    ),
-    Question(
-      question: '¿Cuánto es 7 - 3?',
-      options: ['3', '4', '5', '6'],
-      answer: 1,
-    ),
-    // Agrega más preguntas aquí
-    Question(
-      question: '¿Cuánto es 10 / 2?',
-      options: ['3', '4', '5', '6'],
-      answer: 2,
-    ),
-    Question(
-      question: '¿Cuánto es 6 * 3?',
-      options: ['18', '16', '20', '22'],
-      answer: 0,
-    ),
-    Question(
-      question: '¿Cuánto es 9 + 10?',
-      options: ['19', '20', '21', '22'],
-      answer: 0,
-    ),
-  ];
-
   void _generateQuestion() {
     final random = Random();
     int num1, num2, result;

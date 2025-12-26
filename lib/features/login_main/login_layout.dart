@@ -43,12 +43,33 @@ class LoginMainLayout extends StatelessWidget {
                 onPressed: () =>
                     Navigator.pushNamed(context, RouterPaths.login),
                 child: Text(
-                  'Iniciar',
+                  'Iniciar Sesión',
                   style: TextStyle(
                     fontSize: fontSizeButton,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w400,
                     fontStyle: FontStyle.normal,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton(
+                onPressed: () =>
+                    Navigator.pushNamed(context, RouterPaths.guestEntry),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.orange, width: 2),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                ),
+                child: Text(
+                  'Jugar como Invitado',
+                  style: TextStyle(
+                    fontSize: fontSizeButton * 0.8,
+                    fontFamily: 'Nunito',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
                   ),
                 ),
               ),
