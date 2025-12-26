@@ -8,6 +8,8 @@ import 'package:edu_play/features/menu/pages/menu_page.dart';
 import 'package:edu_play/features/register_child/pages/register_child_page.dart';
 import 'package:edu_play/features/register_parents/pages/register_parents_page.dart';
 import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
+import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
+import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -43,6 +45,14 @@ class AppRouter {
       case RouterPaths.guestEntry:
         return MaterialPageRoute(
           builder: (_) => const GuestEntryPage(),
+        );
+      case RouterPaths.funEnglish:
+        return MaterialPageRoute(
+          builder: (_) => const FunEnglishPage(),
+        );
+      case RouterPaths.parentsDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const ParentsDashboardPage(),
         );
       default:
         page = const Scaffold(

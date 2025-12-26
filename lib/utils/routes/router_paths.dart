@@ -6,6 +6,8 @@ class RouterPaths {
   static const menu = '/menu';
   static const mathAdventure = '/math-adventure';
   static const magicWords = '/magic-words';
+  static const funEnglish = '/fun-english';
   static const notFound = '/not-found';
   static const String guestEntry = 'guestEntry';
+  static const String parentsDashboard = 'parentsDashboard';
 }

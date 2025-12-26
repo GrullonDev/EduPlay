@@ -55,7 +55,7 @@ class MenuProvider with ChangeNotifier {
           title: 'Inglés Divertido',
           color: const Color(0xFFF44336), // Vibrant Red
           icon: Icons.language_rounded,
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, RouterPaths.funEnglish),
         ),
         Game(
           title: 'Exploradores de la Naturaleza',
