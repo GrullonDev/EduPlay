@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/features/login/pages/login_page.dart';
+import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -19,6 +22,8 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
+          create: (_) => RegisterProvider(context: context),
+        ),
           create: (_) => RegisterParentsBloc(
             context: context,
             authRepository: sl.get<AuthRepository>(),
@@ -28,12 +33,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'EduPlay',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          textTheme: GoogleFonts.interTextTheme(),
-          useMaterial3: true,
-        ),
-        home: const LoginMainPage(),
+        theme: AppTheme.theme,
+        home: const LoginPage(),
         initialRoute: RouterPaths.root,
         onGenerateRoute: AppRouter.generateRoute,
       ),

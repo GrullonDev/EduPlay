@@ -8,19 +8,19 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => LoginBloc(),
-      builder: (context, __) => Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Login',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.blueAccent,
-            ),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF6C63FF), // Primary
+              Color(0xFF00BFA6), // Secondary
+            ],
           ),
         ),
-        body: const LoginLayout(),
+        child: const LoginLayout(),
       ),
     );
   }

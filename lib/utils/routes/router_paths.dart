@@ -5,5 +5,6 @@ class RouterPaths {
   static const registerChild = '/register-child';
   static const menu = '/menu';
   static const mathAdventure = '/math-adventure';
+  static const magicWords = '/magic-words';
   static const notFound = '/not-found';
 }
