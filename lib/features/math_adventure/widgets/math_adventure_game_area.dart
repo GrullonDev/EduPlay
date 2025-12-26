@@ -14,55 +14,85 @@ class MathAdventureGameArea extends StatelessWidget {
 
     return Column(
       children: [
-        Text(
-          'Pregunta: ${bloc.currentQuestion}',
-          style: const TextStyle(
-              fontSize: 32, fontWeight: FontWeight.bold, color: Colors.blue),
+        // Question Board using Card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                '¡Resuelve!',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                bloc.currentQuestion,
+                style: GoogleFonts.nunito(
+                  fontSize: 48,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF2D3142),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 30),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: GridView.count(
-            shrinkWrap: true,
-            crossAxisCount: 2, // 2 columnas
+        const SizedBox(height: 40),
+        // Answers Grid
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
             crossAxisSpacing: 20,
             mainAxisSpacing: 20,
-            childAspectRatio: 2, // Ajuste del tamaño de los botones
-            children: bloc.currentAnswers.asMap().entries.map(
-              (entry) {
-                int index = entry.key;
-                String answer = entry.value;
-                return GestureDetector(
-                  onTap: () => bloc.checkAnswer(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade400,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.orange.shade800.withAlpha(1),
-                          spreadRadius: 2,
-                          blurRadius: 8,
-                          offset: const Offset(2, 4),
-                        ),
-                      ],
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      answer,
-                      style: GoogleFonts.patrickHand(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+            childAspectRatio: 1.3,
+          ),
+          itemCount: bloc.currentAnswers.length,
+          itemBuilder: (context, index) {
+            final answer = bloc.currentAnswers[index];
+            return Material(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(24),
+              elevation: 4,
+              child: InkWell(
+                onTap: () => bloc.checkAnswer(index),
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      width: 2,
                     ),
                   ),
-                );
-              },
-            ).toList(),
-          ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    answer,
+                    style: GoogleFonts.nunito(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF6C63FF), // Primary Color
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

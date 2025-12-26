@@ -1,16 +1,19 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:flutter/material.dart';
 
 class MathAdventureProvider with ChangeNotifier {
-  MathAdventureProvider({required this.context}) {
-    _loadNextQuestion();
+  MathAdventureProvider({
+    required this.context,
+    required this.age,
+  }) {
+    _generateQuestion();
   }
 
   final BuildContext context;
+  final int age;
 
   int _score = 0;
   int _lives = 3;
@@ -25,33 +28,63 @@ class MathAdventureProvider with ChangeNotifier {
   String get currentQuestion => _currentQuestion;
   List<String> get currentAnswers => _currentAnswers;
 
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'question': '¿Cuánto es 2 + 2?',
-      'answers': ['3', '4', '5', '6'],
-      'correctIndex': 1,
-    },
-    {
-      'question': '¿Cuánto es 3 + 5?',
-      'answers': ['7', '8', '9', '10'],
-      'correctIndex': 1,
-    },
-    {
-      'question': '¿Cuánto es 7 - 3?',
-      'answers': ['3', '4', '5', '6'],
-      'correctIndex': 1,
-    },
-    // Agrega más preguntas aquí
-  ];
-
-  void _loadNextQuestion() {
+  void _generateQuestion() {
     final random = Random();
-    final questionIndex = random.nextInt(_questions.length);
-    final questionData = _questions[questionIndex];
+    int num1, num2, result;
+    String operator;
 
-    _currentQuestion = questionData['question'];
-    _currentAnswers = List<String>.from(questionData['answers']);
-    _correctAnswerIndex = questionData['correctIndex'];
+    // Logic based on age
+    if (age < 6) {
+      // Simple Addition (Sum up to 10)
+      num1 = random.nextInt(6); // 0-5
+      num2 = random.nextInt(5) + 1; // 1-5
+      result = num1 + num2;
+      operator = '+';
+    } else if (age >= 6 && age <= 8) {
+      // Addition and Subtraction (Up to 20)
+      if (random.nextBool()) {
+        num1 = random.nextInt(11); // 0-10
+        num2 = random.nextInt(10) + 1; // 1-10
+        result = num1 + num2;
+        operator = '+';
+      } else {
+        num1 = random.nextInt(11) + 5; // 5-15
+        num2 = random.nextInt(5) + 1; // 1-5
+        result = num1 - num2;
+        operator = '-';
+      }
+    } else {
+      // Simple Multiplication and Division
+      if (random.nextBool()) {
+        num1 = random.nextInt(9) + 1; // 1-9
+        num2 = random.nextInt(9) + 1; // 1-9
+        result = num1 * num2;
+        operator = '×';
+      } else {
+        // Division (Ensure integer result)
+        num2 = random.nextInt(5) + 2; // 2-6
+        result = random.nextInt(5) + 1; // 1-5
+        num1 = result * num2;
+        operator = '÷';
+      }
+    }
+
+    _currentQuestion = '¿Cuánto es $num1 $operator $num2?';
+
+    // Generate answers
+    Set<String> answers = {};
+    answers.add(result.toString());
+
+    while (answers.length < 4) {
+      int wrongAnswer = result + random.nextInt(10) - 5;
+      if (wrongAnswer >= 0 && wrongAnswer != result) {
+        answers.add(wrongAnswer.toString());
+      }
+    }
+
+    _currentAnswers = answers.toList()..shuffle();
+    _correctAnswerIndex = _currentAnswers.indexOf(result.toString());
+    notifyListeners();
   }
 
   void checkAnswer(int answerIndex) {
@@ -61,8 +94,7 @@ class MathAdventureProvider with ChangeNotifier {
     } else {
       _loseLife();
     }
-    _loadNextQuestion();
-    notifyListeners();
+    _generateQuestion(); // Generate next question immediately
   }
 
   void _increaseScore() {
@@ -126,11 +158,6 @@ class MathAdventureProvider with ChangeNotifier {
     _score = 0;
     _lives = 3;
     _level = 1;
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      RouterPaths.menu,
-      (route) => false,
-    );
     notifyListeners();
   }
 

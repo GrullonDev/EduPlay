@@ -14,24 +14,57 @@ class MathAdventureHeader extends StatelessWidget {
     final bloc = context.watch<MathAdventureProvider>();
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'Score: ${bloc.score}',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        _buildInfoPill(
+          icon: Icons.star_rounded,
+          color: Colors.amber,
+          label: '${bloc.score}',
+          context: context,
         ),
-        const SizedBox(width: 20),
-        Text(
-          'Vidas: ${bloc.lives}',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(width: 20),
-        ElevatedButton(
-          onPressed: bloc.resetScore,
-          child: const Text('Reset Score'),
+        _buildInfoPill(
+          icon: Icons.favorite_rounded,
+          color: Colors.red,
+          label: '${bloc.lives}',
+          context: context,
         ),
       ],
+    );
+  }
+
+  Widget _buildInfoPill({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required BuildContext context,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF2D3142),
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
