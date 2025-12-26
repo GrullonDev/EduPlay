@@ -22,7 +22,8 @@ class MenuPage extends StatelessWidget {
       create: (context) => MenuProvider(
         context: context,
         age: age,
-      , username: username),
+        username: username,
+      ),
       builder: (_, __) => Scaffold(
         appBar: AppBar(
           title: const Text(

@@ -56,8 +56,8 @@ class LoginLayout extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, RouterPaths.register),
+                        onPressed: () => Navigator.pushNamed(
+                            context, RouterPaths.registerParents),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(

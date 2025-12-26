@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:provider/provider.dart';
 
 class RegisterChildProvider with ChangeNotifier {
   RegisterChildProvider({
@@ -34,6 +36,9 @@ class RegisterChildProvider with ChangeNotifier {
       } else {
         // Registrar al niño en la base de datos
         await _repository.registerChild(name, age);
+
+        // Update Global Age in RegisterProvider
+        Provider.of<RegisterProvider>(_context, listen: false).setAge(age);
 
         Navigator.pushNamedAndRemoveUntil(
           _context,

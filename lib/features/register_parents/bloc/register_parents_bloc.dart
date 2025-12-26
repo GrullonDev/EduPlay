@@ -54,6 +54,10 @@ class RegisterParentsBloc with ChangeNotifier {
     if (!mounted) return;
 
     if (user != null) {
+      // Assuming parent also sets the child's age or context for the session?
+      // Actually, parent registration goes to child registration, so maybe we don't set it here?
+      // Wait, 'age' here refers to PARENT age. We don't want to set game difficulty based on parent age.
+      // Skipping setAge here. Logic check: Parent enters THEIR age.
       Navigator.pushNamedAndRemoveUntil(
         _context,
         RouterPaths.registerChild,

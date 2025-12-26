@@ -22,10 +22,8 @@ class MathAdventurePage extends StatelessWidget {
 
     return ChangeNotifierProvider<MathAdventureProvider>(
       create: (context) => MathAdventureProvider(
-        
         context: context,
         age: age,
-      ,
         userName: userName,
       ),
       builder: (_, __) => Scaffold(

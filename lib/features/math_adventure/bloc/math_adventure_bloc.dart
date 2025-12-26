@@ -6,10 +6,8 @@ import 'package:flutter/material.dart';
 
 class MathAdventureProvider with ChangeNotifier {
   MathAdventureProvider({
-    
     required this.context,
     required this.age,
-  ,
     required this.userName,
   }) {
     _generateQuestion();
@@ -66,7 +64,7 @@ class MathAdventureProvider with ChangeNotifier {
     ),
   ];
 
-  void _loadNextQuestion() {
+  void _generateQuestion() {
     final random = Random();
     int num1, num2, result;
     String operator;
@@ -199,6 +197,19 @@ class MathAdventureProvider with ChangeNotifier {
 
   void resetScore() {
     _score = 0;
+    _lives = 3;
     notifyListeners();
   }
+}
+
+class Question {
+  final String question;
+  final List<String> options;
+  final int answer;
+
+  Question({
+    required this.question,
+    required this.options,
+    required this.answer,
+  });
 }
