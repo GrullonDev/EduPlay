@@ -61,7 +61,8 @@ class MenuProvider with ChangeNotifier {
           title: 'Exploradores de la Naturaleza',
           color: const Color(0xFFFF9800), // Orange
           icon: Icons.forest_rounded,
-          onTap: () {},
+          onTap: () =>
+              Navigator.pushNamed(context, RouterPaths.natureExplorers),
         ),
         Game(
           title: 'Viaje en el Tiempo',

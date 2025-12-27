@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -61,6 +62,88 @@ class DatabaseHelper {
         FOREIGN KEY (child_id) REFERENCES children (id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE nature_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        icon_code_point INTEGER NOT NULL,
+        color_value INTEGER NOT NULL
+      )
+    ''');
+
+    await _seedNatureItems(db);
+  }
+
+  Future<void> _seedNatureItems(Database db) async {
+    final List<Map<String, dynamic>> items = [
+      {
+        'name': 'León',
+        'icon_code_point': Icons.pets.codePoint,
+        'color_value': Colors.orange.value
+      },
+      {
+        'name': 'Árbol',
+        'icon_code_point': Icons.forest.codePoint,
+        'color_value': Colors.green.value
+      },
+      {
+        'name': 'Sol',
+        'icon_code_point': Icons.wb_sunny.codePoint,
+        'color_value': Colors.yellow.value
+      },
+      {
+        'name': 'Nube',
+        'icon_code_point': Icons.cloud.codePoint,
+        'color_value': Colors.blue.value
+      },
+      {
+        'name': 'Flor',
+        'icon_code_point': Icons.local_florist.codePoint,
+        'color_value': Colors.pink.value
+      },
+      {
+        'name': 'Montaña',
+        'icon_code_point': Icons.landscape.codePoint,
+        'color_value': Colors.brown.value
+      },
+      {
+        'name': 'Agua',
+        'icon_code_point': Icons.water_drop.codePoint,
+        'color_value': Colors.blueAccent.value
+      },
+      {
+        'name': 'Fuego',
+        'icon_code_point': Icons.local_fire_department.codePoint,
+        'color_value': Colors.red.value
+      },
+      {
+        'name': 'Estrella',
+        'icon_code_point': Icons.star.codePoint,
+        'color_value': Colors.amber.value
+      },
+      {
+        'name': 'Luna',
+        'icon_code_point': Icons.nightlight_round.codePoint,
+        'color_value': Colors.indigo.value
+      },
+      {
+        'name': 'Pájaro',
+        'icon_code_point': Icons.flutter_dash.codePoint,
+        'color_value': Colors.teal.value
+      },
+      {
+        'name': 'Pez',
+        'icon_code_point': Icons.set_meal.codePoint,
+        'color_value': Colors.cyan.value
+      },
+    ];
+
+    final batch = db.batch();
+    for (var item in items) {
+      batch.insert('nature_items', item);
+    }
+    await batch.commit();
   }
 
   // CRUD Operations
@@ -97,5 +180,75 @@ class DatabaseHelper {
       whereArgs: [childId],
       orderBy: 'date DESC',
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getNatureItems() async {
+    if (kIsWeb) {
+      // Fallback for Web: Return static data mimicking the DB structure
+      return [
+        {
+          'name': 'León',
+          'icon_code_point': Icons.pets.codePoint,
+          'color_value': Colors.orange.value
+        },
+        {
+          'name': 'Árbol',
+          'icon_code_point': Icons.forest.codePoint,
+          'color_value': Colors.green.value
+        },
+        {
+          'name': 'Sol',
+          'icon_code_point': Icons.wb_sunny.codePoint,
+          'color_value': Colors.yellow.value
+        },
+        {
+          'name': 'Nube',
+          'icon_code_point': Icons.cloud.codePoint,
+          'color_value': Colors.blue.value
+        },
+        {
+          'name': 'Flor',
+          'icon_code_point': Icons.local_florist.codePoint,
+          'color_value': Colors.pink.value
+        },
+        {
+          'name': 'Montaña',
+          'icon_code_point': Icons.landscape.codePoint,
+          'color_value': Colors.brown.value
+        },
+        {
+          'name': 'Agua',
+          'icon_code_point': Icons.water_drop.codePoint,
+          'color_value': Colors.blueAccent.value
+        },
+        {
+          'name': 'Fuego',
+          'icon_code_point': Icons.local_fire_department.codePoint,
+          'color_value': Colors.red.value
+        },
+        {
+          'name': 'Estrella',
+          'icon_code_point': Icons.star.codePoint,
+          'color_value': Colors.amber.value
+        },
+        {
+          'name': 'Luna',
+          'icon_code_point': Icons.nightlight_round.codePoint,
+          'color_value': Colors.indigo.value
+        },
+        {
+          'name': 'Pájaro',
+          'icon_code_point': Icons.flutter_dash.codePoint,
+          'color_value': Colors.teal.value
+        },
+        {
+          'name': 'Pez',
+          'icon_code_point': Icons.set_meal.codePoint,
+          'color_value': Colors.cyan.value
+        },
+      ];
+    }
+    final db = await database;
+    return await db.query('nature_items');
   }
 }

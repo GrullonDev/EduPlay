@@ -10,4 +10,5 @@ class RouterPaths {
   static const notFound = '/not-found';
   static const String guestEntry = 'guestEntry';
   static const String parentsDashboard = 'parentsDashboard';
+  static const natureExplorers = '/nature-explorers';
 }
