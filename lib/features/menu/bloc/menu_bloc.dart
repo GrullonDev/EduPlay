@@ -68,31 +68,33 @@ class MenuProvider with ChangeNotifier {
           title: 'Viaje en el Tiempo',
           color: const Color(0xFF9C27B0), // Purple
           icon: Icons.access_time_filled_rounded,
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, RouterPaths.timeTravel),
         ),
         Game(
           title: 'Mapa del Tesoro',
           color: const Color(0xFFFFEB3B), // Yellow
           icon: Icons.map_rounded,
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, RouterPaths.treasureMap),
         ),
         Game(
           title: 'Artistas en Acción',
           color: const Color(0xFFE91E63), // Pink
           icon: Icons.palette_rounded,
-          onTap: () {},
+          onTap: () =>
+              Navigator.pushNamed(context, RouterPaths.artistsInAction),
         ),
         Game(
           title: 'Concierto de Colores',
           color: const Color(0xFF009688), // Teal
           icon: Icons.music_note_rounded,
-          onTap: () {},
+          onTap: () => Navigator.pushNamed(context, RouterPaths.colorConcert),
         ),
         Game(
           title: 'Desafío Deportivo',
           color: const Color(0xFF795548), // Brown
           icon: Icons.sports_soccer_rounded,
-          onTap: () {},
+          onTap: () =>
+              Navigator.pushNamed(context, RouterPaths.sportsChallenge),
         ),
       ];
 }

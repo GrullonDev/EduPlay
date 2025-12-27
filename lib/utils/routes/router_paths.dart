@@ -11,4 +11,9 @@ class RouterPaths {
   static const String guestEntry = 'guestEntry';
   static const String parentsDashboard = 'parentsDashboard';
   static const natureExplorers = '/nature-explorers';
+  static const timeTravel = '/time-travel';
+  static const treasureMap = '/treasure-map';
+  static const artistsInAction = '/artists-in-action';
+  static const colorConcert = '/color-concert';
+  static const sportsChallenge = '/sports-challenge';
 }

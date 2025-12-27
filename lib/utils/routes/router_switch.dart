@@ -11,6 +11,11 @@ import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
 import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
+import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
+import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
+import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
+import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
+import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -54,6 +59,26 @@ class AppRouter {
       case RouterPaths.natureExplorers:
         return MaterialPageRoute(
           builder: (_) => const NatureExplorersPage(),
+        );
+      case RouterPaths.timeTravel:
+        return MaterialPageRoute(
+          builder: (_) => const TimeTravelPage(),
+        );
+      case RouterPaths.treasureMap:
+        return MaterialPageRoute(
+          builder: (_) => const TreasureMapPage(),
+        );
+      case RouterPaths.artistsInAction:
+        return MaterialPageRoute(
+          builder: (_) => const ArtistsInActionPage(),
+        );
+      case RouterPaths.colorConcert:
+        return MaterialPageRoute(
+          builder: (_) => const ColorConcertPage(),
+        );
+      case RouterPaths.sportsChallenge:
+        return MaterialPageRoute(
+          builder: (_) => const SportsChallengePage(),
         );
       case RouterPaths.parentsDashboard:
         return MaterialPageRoute(
