@@ -1,81 +1,77 @@
-# EduPlay
+# EduPlay 🚀
 
-EduPlay es una plataforma educativa gamificada dirigida a niños y adolescentes. El objetivo es proporcionar una herramienta interactiva que fomente el aprendizaje en diversas áreas de una manera divertida y atractiva.
+**EduPlay** es una plataforma educativa gamificada diseñada para transformar el aprendizaje de niños y adolescentes en una aventura interactiva. Combinando diseño moderno y pedagogía lúdica, EduPlay ofrece un entorno seguro donde aprender matemáticas, idiomas, arte y más es pura diversión.
 
-## 🚀 Características
+## 🌟 Características Principales
 
-### 🎮 Juegos Educativos (Adaptables a la Edad)
-*   **Aventura Matemática (Math Adventure):** Resuelve problemas matemáticos adaptados a la edad del niño (Suma, Resta, Multiplicación).
-*   **Palabras Mágicas (Magic Words):** Juego de ortografía y asociación de palabras con niveles de dificultad (Ver y Elegir, Completar Espacios, Anagramas).
-*   **Inglés Divertido (Fun English):** Juego de construcción de vocabulario (Colores, Animales, Números) con modos visuales y de traducción.
+### 🎮 Universo de Juegos Educativos
+Nuestra colección de juegos se adapta automáticamente a la edad del niño (7-17 años):
 
-### 🌟 Experiencia Central
-*   **Modo Invitado (Guest Mode):** Permite a los niños jugar inmediatamente sin un registro completo. Entrada tipo "Mago" amigable para niños.
-*   **Zona de Padres (Parent Dashboard):** Área administrativa para que los padres vean a los niños registrados y sus puntuaciones más altas en los juegos.
-*   **Tema Global:** Diseño vibrante, lúdico y responsivo "tipo Web" utilizando estética personalizada de Glassmorphism y Neumorphism.
+*   **🧮 Aventura Matemática:** Domina sumas, restas y multiplicaciones en un entorno de reto progresivo.
+*   **✨ Palabras Mágicas:** Mejora la ortografía y vocabulario con anagramas y desafios de palabras.
+*   **🗣️ Inglés Divertido:** Aprende vocabulario básico (Colores, Animales, Números) con ayudas visuales y auditivas.
+*   **🌿 Exploradores de la Naturaleza:** Descubre el mundo natural identificando elementos y aprendiendo sobre el medio ambiente.
+*   **🎨 Artistas en Acción:** Desata la creatividad con herramientas de dibujo y pintura libre.
+*   **🎹 Concierto de Colores:** Experimenta con la música y los colores en un juego sensorial.
+*   **⚽ Reto Deportivo:** Aprende sobre deportes y mantente activo (conceptualmente) con trivias y juegos rápidos.
+*   **⏳ Viajeros del Tiempo:** Explora la historia y eventos importantes de una manera interactiva.
+*   **🗺️ Mapa del Tesoro:** Resuelve acertijos de lógica para encontrar recompensas.
+*   **📒 Álbum de Estampas:** ¡Colecciona logros! Cada victoria desbloquea estampas únicas para tu álbum personal.
 
-### 🛠 Destacados Técnicos
-*   **Base de Datos Local:** Utiliza `sqflite` (SQLite) para almacenar perfiles de niños y el progreso del juego localmente en el dispositivo.
-*   **Gestión de Estado:** Impulsado por `Provider` para un manejo eficiente del estado global (Sesión de Usuario, Lógica del Juego).
-*   **UI Responsiva:** Diseños dinámicos (GridViews, LayoutBuilders) que se adaptan a pantallas Web, Tablet y Escritorio.
+### 🛡️ Experiencia de Usuario Premium
+*   **Pasaporte EduPlay:** Nuevo flujo de registro inmersivo donde los niños crean su "Pasaporte de Agente", seleccionando su propio **Avatar** y edad con un selector visual e interactivo.
+*   **Modo Invitado:** ¿Prisa por jugar? El botón "¡JUGAR YA!" permite acceso inmediato a juegos seleccionados sin registro previo.
+*   **Zona de Padres:** Dashboard protegido donde los padres pueden monitorear el progreso, ver las puntuaciones altas y gestionar perfiles.
+*   **Auto-Login Inteligente:** El sistema recuerda a tus hijos. Si ya hay perfiles registrados, la app inicia directamente en el menú principal para una experiencia sin fricción.
 
-## 💻 Stack Tecnológico
+### 🎨 Diseño y Tecnología
+*   **Interfaz Vibrante:** Estética moderna con colores vivos, animaciones fluidas y elementos visuales grandes ("Kid-First Design").
+*   **Base de Datos Local:** Integración con `sqflite` para guardar perfiles y progreso 100% offline.
+*   **Multiplataforma:** Optimizado para funcionar en Web, Tablets y Escritorio con diseños responsivos.
 
-- **Flutter:** 3.x
-- **Lenguaje:** Dart
-- **Gestión de Estado:** Provider
-- **Almacenamiento Local:** sqflite, path
-- **Estilos:** Google Fonts (Nunito), Esquemas de Color Personalizados
+## 🛠 Stack Tecnológico
+
+*   **Framework:** Flutter 3.x
+*   **Lenguaje:** Dart
+*   **Gestión de Estado:** Provider
+*   **Backend / Auth:** Firebase Auth (Padres) + SQLite (Datos locales de niños)
+*   **Fuentes:** Google Fonts (Nunito, Fredoka, Courier Prime)
 
 ## 📦 Instalación
 
 ### Requisitos Previos
+*   [Flutter SDK](https://flutter.dev/docs/get-started/install)
 
-- [SDK de Flutter](https://flutter.dev/docs/get-started/install)
-- [FVM (Opcional pero Recomendado)](https://fvm.app/docs/getting_started/installation)
-
-### Clonar el Repositorio
-
-```sh
-git clone https://github.com/GrullonDev/EduPlay.git
-cd EduPlay
-```
-
-### Configuración y Ejecución
-
-1.  **Instalar Dependencias:**
-    ```sh
-    fvm flutter pub get
-    # o simplemente 'flutter pub get' si no usas FVM
+### Pasos
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/GrullonDev/EduPlay.git
+    cd EduPlay
     ```
 
-2.  **Ejecutar la App:**
-    ```sh
-    # Para Chrome (Web)
-    fvm flutter run -d chrome
-
-    # Para Windows
-    fvm flutter run -d windows
+2.  **Instalar dependencias:**
+    ```bash
+    flutter pub get
     ```
 
-> **Nota para Web:** Si encuentras errores de `AssetManifest`, ejecuta `flutter clean` seguido de `flutter build web --profile` antes de ejecutar.
+3.  **Ejecutar:**
+    ```bash
+    flutter run
+    ```
 
 ## 🤝 Contribuciones
 
-Firmado por **GrullonDev**. Si deseas contribuir:
-
-1.  Haz un Fork del repositorio.
-2.  Crea una rama: `git checkout -b feature/funcionalidad-increible`
-3.  Haz commit de los cambios: `git commit -m "Agregar funcionalidad increíble"`
-4.  Push a la rama: `git push origin feature/funcionalidad-increible`
-5.  Abre un Pull Request.
+Este proyecto es mantenido por **GrullonDev**. Las contribuciones son bienvenidas mediante Pull Requests.
 
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT.
 
-## 📞 Contacto
+## 📞 Contacto y Comunidad
 
-- **GitHub:** [GrullonDev](https://github.com/GrullonDev)
-- **LinkedIn:** [Jorge Luis Grullón Marroquín](https://www.linkedin.com/in/jorge-luis-grull%C3%B3n-marroquin)
-- **WhatsApp:** [GrullonDev](https://wa.me/50242909548)
+¡Únete a nuestra creciente comunidad para recibir noticias, actualizaciones y soporte!
+
+*   **📢 Canal de Novedades:** [Suscríbete en WhatsApp](https://whatsapp.com/channel/0029Vb7iH085K3zPbsXjht3v)
+*   **💬 Grupo de Comunidad:** [Únete al Chat](https://chat.whatsapp.com/G63n7QTzAXo2To8StWI3eb)
+*   **💻 GitHub:** [GrullonDev](https://github.com/GrullonDev)
+*   **🔗 LinkedIn:** [Jorge Luis Grullón Marroquín](https://www.linkedin.com/in/jorge-luis-grull%C3%B3n-marroquin)
