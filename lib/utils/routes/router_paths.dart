@@ -16,4 +16,5 @@ class RouterPaths {
   static const artistsInAction = '/artists-in-action';
   static const colorConcert = '/color-concert';
   static const sportsChallenge = '/sports-challenge';
+  static const stickerAlbum = '/sticker-album';
 }

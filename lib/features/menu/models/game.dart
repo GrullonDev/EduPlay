@@ -6,11 +6,13 @@ class Game {
   final VoidCallback onTap;
 
   final IconData icon;
+  final bool isDailyChallenge;
 
   Game({
     required this.title,
     required this.color,
     required this.icon,
     required this.onTap,
+    this.isDailyChallenge = false,
   });
 }
