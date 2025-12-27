@@ -16,7 +16,7 @@ class MockAuthRepository implements AuthRepository {
     required List<String> children,
   }) async {
     // Return a mock user
-    _currentUser = MockUser(uid: 'mock_uid_${email}', email: email);
+    _currentUser = MockUser(uid: 'mock_uid_$email', email: email);
     return _currentUser;
   }
 
@@ -26,7 +26,7 @@ class MockAuthRepository implements AuthRepository {
     required String password,
   }) async {
     // "Success" for any login attemp for now
-    _currentUser = MockUser(uid: 'mock_uid_${email}', email: email);
+    _currentUser = MockUser(uid: 'mock_uid_$email', email: email);
     return _currentUser;
   }
 

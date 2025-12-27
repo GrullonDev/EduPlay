@@ -151,7 +151,7 @@ class _TimeTravelPageState extends State<TimeTravelPage>
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -284,7 +284,7 @@ class _TimeTravelPageState extends State<TimeTravelPage>
               scale: _scaleAnimation,
               child: Container(
                 padding: const EdgeInsets.all(30),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [

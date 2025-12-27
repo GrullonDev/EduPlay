@@ -19,9 +19,9 @@ class FunEnglishProvider with ChangeNotifier {
 
   int _score = 0;
   int _lives = 3;
-  int _level = 1;
+  final int _level = 1;
   String _currentQuestion = ''; // The word to translate/match
-  String _currentImage = '';
+  final String _currentImage = '';
   List<String> _currentOptions = [];
   int _correctAnswerIndex = 0;
 
@@ -61,9 +61,9 @@ class FunEnglishProvider with ChangeNotifier {
 
     // Pick Category based on random chance
     int catRoll = random.nextInt(3);
-    if (catRoll == 0)
+    if (catRoll == 0) {
       category = _vocabColors;
-    else if (catRoll == 1)
+    } else if (catRoll == 1)
       category = _vocabAnimals;
     else
       category = _vocabNumbers;

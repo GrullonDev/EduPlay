@@ -2,7 +2,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
@@ -149,6 +148,11 @@ class DatabaseHelper {
   // CRUD Operations
 
   Future<int> insertChild(String name, int age, {String? avatar}) async {
+    if (kIsWeb) {
+      // Fallback: Web doesn't support persistence yet. Return dummy ID.
+      debugPrint('Web: insertChild ignored (no persistence)');
+      return 1;
+    }
     final db = await database;
     return await db.insert('children', {
       'name': name,
@@ -158,11 +162,17 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getChildren() async {
+    if (kIsWeb) {
+      // Fallback: Return empty list or mock data
+      debugPrint('Web: getChildren returning empty/mock list');
+      return [];
+    }
     final db = await database;
     return await db.query('children');
   }
 
   Future<int> insertScore(int childId, String gameType, int score) async {
+    if (kIsWeb) return 1; // Fallback
     final db = await database;
     return await db.insert('scores', {
       'child_id': childId,
@@ -173,6 +183,7 @@ class DatabaseHelper {
   }
 
   Future<List<Map<String, dynamic>>> getScores(int childId) async {
+    if (kIsWeb) return []; // Fallback
     final db = await database;
     return await db.query(
       'scores',

@@ -9,7 +9,7 @@ class ParentsDashboardBloc with ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   List<Map<String, dynamic>> _children = [];
-  Map<int, List<Map<String, dynamic>>> _scores = {};
+  final Map<int, List<Map<String, dynamic>>> _scores = {};
   bool _isLoading = true;
 
   List<Map<String, dynamic>> get children => _children;

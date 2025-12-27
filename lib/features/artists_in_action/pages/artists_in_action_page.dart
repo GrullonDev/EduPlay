@@ -138,7 +138,7 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
               decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                         color: Colors.black26,
                         blurRadius: 10,
@@ -276,7 +276,7 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
               width: width,
               height: width,
               decoration:
-                  BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
+                  const BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
         ),
       ),
     );
@@ -306,7 +306,7 @@ class _SketchPainter extends CustomPainter {
           ),
         );
         textPainter.layout();
-        textPainter.paint(canvas, obj.position! - Offset(20, 20)); // Center it
+        textPainter.paint(canvas, obj.position! - const Offset(20, 20)); // Center it
       } else if (obj.points != null && obj.points!.isNotEmpty) {
         // Draw Stroke
         final paint = Paint()

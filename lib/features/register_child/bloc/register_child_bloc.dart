@@ -22,6 +22,19 @@ class RegisterChildProvider with ChangeNotifier {
   String get name => nameController.text;
   String get age => ageController.text;
 
+  String _selectedAvatar = 'lion'; // Default
+  String get selectedAvatar => _selectedAvatar;
+
+  void selectAvatar(String avatar) {
+    _selectedAvatar = avatar;
+    notifyListeners();
+  }
+
+  void setAge(int age) {
+    ageController.text = age.toString();
+    notifyListeners();
+  }
+
   Future<void> registerChild() async {
     try {
       final bool isRegistered = await _repository.isChildRegistered(name);
@@ -43,7 +56,7 @@ class RegisterChildProvider with ChangeNotifier {
           final dbHelper = DatabaseHelper();
           // Try parse age to int, default to 6 if fail
           int ageInt = int.tryParse(age) ?? 6;
-          await dbHelper.insertChild(name, ageInt);
+          await dbHelper.insertChild(name, ageInt, avatar: _selectedAvatar);
         } catch (e) {
           debugPrint("Local DB Error: $e");
         }

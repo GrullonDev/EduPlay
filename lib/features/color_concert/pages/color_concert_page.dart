@@ -224,7 +224,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
                               color: Colors.black,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 4),
-                              boxShadow: [
+                              boxShadow: const [
                                 BoxShadow(color: Colors.black45, blurRadius: 10)
                               ]),
                           child: Center(

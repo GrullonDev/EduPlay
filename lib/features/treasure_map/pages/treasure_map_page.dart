@@ -13,7 +13,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
   final int _cols = 6;
   int _playerPos = 0;
   int _treasurePos = 35;
-  List<int> _obstacles = [];
+  final List<int> _obstacles = [];
   int _level = 1;
   final Random _random = Random();
 
@@ -127,19 +127,14 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
                   ),
                   itemBuilder: (context, index) {
                     Widget? child;
-                    Color cellColor =
-                        const Color(0xFFE0F7FA); // Light Blue water
 
                     if (index == _playerPos) {
-                      cellColor = Colors.transparent;
                       child = const Icon(Icons.sailing,
                           color: Colors.blue, size: 32);
                     } else if (index == _treasurePos) {
-                      cellColor = Colors.transparent;
                       child = const Icon(Icons.api_rounded,
                           color: Colors.amber, size: 32); // Chest/Island
                     } else if (_obstacles.contains(index)) {
-                      cellColor = Colors.transparent;
                       // Randomize monster slightly for fun? specific icon
                       child = const Icon(Icons.waves,
                           color: Colors.blueGrey,
@@ -210,8 +205,8 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
       width: 70,
       height: 70,
       margin: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-          color: const Color(0xFF5D4037),
+      decoration: const BoxDecoration(
+          color: Color(0xFF5D4037),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
