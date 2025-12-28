@@ -50,10 +50,12 @@ class ImplAuthRepository implements AuthRepository {
     );
   }
 
+  @override
   Future<bool> isChildRegistered(String name) async {
     return await _authDatasource.isChildRegistered(name);
   }
 
+  @override
   Future<void> registerChild(String name, String age) async {
     await _authDatasource.registerChild(name, age);
   }

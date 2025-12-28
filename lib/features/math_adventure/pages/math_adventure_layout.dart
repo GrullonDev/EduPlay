@@ -12,14 +12,22 @@ class MathAdventureLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<MathAdventureProvider>(
-      builder: (context, bloc, __) => const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            MathAdventureHeader(),
-            SizedBox(height: 30),
-            MathAdventureGameArea(),
-          ],
+      builder: (context, bloc, __) => Center(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const MathAdventureHeader(),
+                const SizedBox(height: 40),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: const MathAdventureGameArea(),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

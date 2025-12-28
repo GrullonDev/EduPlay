@@ -17,31 +17,74 @@ class MenuButtons extends StatelessWidget {
     final bloc = context.read<MenuProvider>();
     final games = bloc.games;
 
-    return GridView.count(
-      crossAxisCount: bloc.getCrossAxisCount(context),
-      crossAxisSpacing: 10,
-      mainAxisSpacing: 10,
-      children: games.map(
-        (game) {
-          return ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: game.color,
-              padding: const EdgeInsets.all(16.0),
-            ),
-            onPressed: game.onTap,
-            child: Text(
-              game.title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color:
-                    game.color == Colors.yellow ? Colors.black : Colors.white,
+    return GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: bloc.getCrossAxisCount(context),
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.1,
+      ),
+      itemCount: games.length,
+      padding: const EdgeInsets.only(bottom: 24),
+      itemBuilder: (context, index) {
+        final game = games[index];
+        return Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          color: Colors.white,
+          child: InkWell(
+            onTap: game.onTap,
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    game.color.withValues(alpha: 0.1),
+                    game.color.withValues(alpha: 0.05),
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: game.color.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      game.icon,
+                      size: 40,
+                      color: game.color,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      game.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2D3142),
+                            fontSize: fontSize * 0.8, // Adjust font size
+                          ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      ).toList(),
+          ),
+        );
+      },
     );
   }
 }

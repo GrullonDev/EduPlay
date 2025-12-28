@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 import 'package:edu_play/features/register_parents/widgets/register_parents_button.dart';
 import 'package:edu_play/features/register_parents/widgets/register_parents_child_form.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 class RegisterParentsLayout extends StatelessWidget {
   const RegisterParentsLayout({super.key});
@@ -37,6 +38,15 @@ class RegisterParentsLayout extends StatelessWidget {
                     const RegisterParentsChildForm(),
                     const SizedBox(height: 20),
                     const RegisterParentsButton(),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                            context, RouterPaths.parentsDashboard);
+                      },
+                      icon: const Icon(Icons.dashboard_rounded),
+                      label: const Text('Ver Progreso (Zona de Padres)'),
+                    ),
                   ],
                 ),
               ),

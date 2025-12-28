@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:edu_play/features/login/bloc/login_bloc.dart';
+
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class LoginLayout extends StatelessWidget {
@@ -8,41 +7,77 @@ class LoginLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<LoginBloc>(
-      builder: (context, bloc, __) => Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: bloc.emailController,
-              decoration: const InputDecoration(
-                labelText: 'Correo Electrónico',
+    return Center(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 450),
+            child: Card(
+              elevation: 8,
+              shadowColor: Colors.black26,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 48.0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Placeholder for Logo
+                    const Icon(
+                      Icons.school_rounded,
+                      size: 80,
+                      color: Color(0xFF6C63FF), // Primary color from theme
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      '¡EduPlay!',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF6C63FF),
+                            letterSpacing: 1.2,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Aprende jugando en esta aventura mágica.',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.grey[700],
+                            fontSize: 18,
+                          ),
+                    ),
+                    const SizedBox(height: 48),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pushNamed(
+                            context, RouterPaths.registerParents),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                        child: const Text(
+                          '¡COMENZAR!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: bloc.passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Contraseña',
-              ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 32.0),
-            ElevatedButton(
-              onPressed: () {
-                // Lógica de inicio de sesión
-              },
-              child: const Text('Iniciar Sesión'),
-            ),
-            const SizedBox(height: 16.0),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, RouterPaths.registerParents);
-              },
-              child: const Text('¿No tienes cuenta? Regístrate aquí'),
-            ),
-          ],
+          ),
         ),
       ),
     );
