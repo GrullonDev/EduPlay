@@ -41,6 +41,7 @@ class RegisterChildProvider with ChangeNotifier {
 
       if (isRegistered) {
         // El niño ya está registrado como hijo de un padre
+        if (!_context.mounted) return;
         Navigator.pushNamedAndRemoveUntil(
           _context,
           RouterPaths.menu,
@@ -62,8 +63,10 @@ class RegisterChildProvider with ChangeNotifier {
         }
 
         // Update Global Age in RegisterProvider
+        if (!_context.mounted) return;
         Provider.of<RegisterProvider>(_context, listen: false).setAge(age);
 
+        if (!_context.mounted) return;
         Navigator.pushNamedAndRemoveUntil(
           _context,
           RouterPaths.menu,

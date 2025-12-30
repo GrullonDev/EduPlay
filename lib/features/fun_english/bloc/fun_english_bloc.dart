@@ -63,10 +63,11 @@ class FunEnglishProvider with ChangeNotifier {
     int catRoll = random.nextInt(3);
     if (catRoll == 0) {
       category = _vocabColors;
-    } else if (catRoll == 1)
+    } else if (catRoll == 1) {
       category = _vocabAnimals;
-    else
+    } else {
       category = _vocabNumbers;
+    }
 
     correctItem = category[random.nextInt(category.length)];
 

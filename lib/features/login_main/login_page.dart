@@ -1,4 +1,4 @@
-import 'package:edu_play/features/login_main/login_layout.dart';
+// import 'package:edu_play/features/login_main/login_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
@@ -50,7 +50,8 @@ class _LoginMainPageState extends State<LoginMainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.greenAccent[200],
-      body: const LoginMainLayout(),
+      body: const Center(
+          child: Text("Login Main Layout Missing")), // const LoginMainLayout(),
     );
   }
 }

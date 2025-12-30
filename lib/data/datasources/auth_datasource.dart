@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthDatasource {
@@ -58,10 +59,10 @@ class ImplAuthDatasource implements AuthDatasource {
 
       return user;
     } on FirebaseAuthException catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
       return null;
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
       return null;
     }
   }
@@ -98,10 +99,10 @@ class ImplAuthDatasource implements AuthDatasource {
 
       return userCredential.user;
     } on FirebaseAuthException catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
       return null;
     } catch (e) {
-      print('Error: $e');
+      debugPrint('Error: $e');
       return null;
     }
   }

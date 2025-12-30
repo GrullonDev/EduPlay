@@ -51,7 +51,7 @@ class RegisterParentsBloc with ChangeNotifier {
       children: _children,
     );
 
-    if (!mounted) return;
+    if (!_context.mounted) return;
 
     if (user != null) {
       // Assuming parent also sets the child's age or context for the session?

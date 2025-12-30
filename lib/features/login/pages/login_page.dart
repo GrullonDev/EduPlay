@@ -17,8 +17,6 @@ class LoginPage extends StatelessWidget {
               Color(0xFF00BFA6), // Secondary
             ],
           ),
-          centerTitle: true,
-          automaticallyImplyLeading: true,
         ),
         child: const LoginLayout(),
       ),

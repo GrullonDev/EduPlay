@@ -259,7 +259,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
         width: 140,
         height: 140,
         decoration: BoxDecoration(
-            color: isLit ? color : color.withOpacity(0.6),
+            color: isLit ? color : color.withValues(alpha: 0.6),
             borderRadius: geometry,
             boxShadow: isLit
                 ? [BoxShadow(color: color, blurRadius: 30, spreadRadius: 5)]

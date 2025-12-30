@@ -79,62 +79,62 @@ class DatabaseHelper {
       {
         'name': 'León',
         'icon_code_point': Icons.pets.codePoint,
-        'color_value': Colors.orange.value
+        'color_value': Colors.orange.toARGB32()
       },
       {
         'name': 'Árbol',
         'icon_code_point': Icons.forest.codePoint,
-        'color_value': Colors.green.value
+        'color_value': Colors.green.toARGB32()
       },
       {
         'name': 'Sol',
         'icon_code_point': Icons.wb_sunny.codePoint,
-        'color_value': Colors.yellow.value
+        'color_value': Colors.yellow.toARGB32()
       },
       {
         'name': 'Nube',
         'icon_code_point': Icons.cloud.codePoint,
-        'color_value': Colors.blue.value
+        'color_value': Colors.blue.toARGB32()
       },
       {
         'name': 'Flor',
         'icon_code_point': Icons.local_florist.codePoint,
-        'color_value': Colors.pink.value
+        'color_value': Colors.pink.toARGB32()
       },
       {
         'name': 'Montaña',
         'icon_code_point': Icons.landscape.codePoint,
-        'color_value': Colors.brown.value
+        'color_value': Colors.brown.toARGB32()
       },
       {
         'name': 'Agua',
         'icon_code_point': Icons.water_drop.codePoint,
-        'color_value': Colors.blueAccent.value
+        'color_value': Colors.blueAccent.toARGB32()
       },
       {
         'name': 'Fuego',
         'icon_code_point': Icons.local_fire_department.codePoint,
-        'color_value': Colors.red.value
+        'color_value': Colors.red.toARGB32()
       },
       {
         'name': 'Estrella',
         'icon_code_point': Icons.star.codePoint,
-        'color_value': Colors.amber.value
+        'color_value': Colors.amber.toARGB32()
       },
       {
         'name': 'Luna',
         'icon_code_point': Icons.nightlight_round.codePoint,
-        'color_value': Colors.indigo.value
+        'color_value': Colors.indigo.toARGB32()
       },
       {
         'name': 'Pájaro',
         'icon_code_point': Icons.flutter_dash.codePoint,
-        'color_value': Colors.teal.value
+        'color_value': Colors.teal.toARGB32()
       },
       {
         'name': 'Pez',
         'icon_code_point': Icons.set_meal.codePoint,
-        'color_value': Colors.cyan.value
+        'color_value': Colors.cyan.toARGB32()
       },
     ];
 
@@ -200,62 +200,62 @@ class DatabaseHelper {
         {
           'name': 'León',
           'icon_code_point': Icons.pets.codePoint,
-          'color_value': Colors.orange.value
+          'color_value': Colors.orange.toARGB32()
         },
         {
           'name': 'Árbol',
           'icon_code_point': Icons.forest.codePoint,
-          'color_value': Colors.green.value
+          'color_value': Colors.green.toARGB32()
         },
         {
           'name': 'Sol',
           'icon_code_point': Icons.wb_sunny.codePoint,
-          'color_value': Colors.yellow.value
+          'color_value': Colors.yellow.toARGB32()
         },
         {
           'name': 'Nube',
           'icon_code_point': Icons.cloud.codePoint,
-          'color_value': Colors.blue.value
+          'color_value': Colors.blue.toARGB32()
         },
         {
           'name': 'Flor',
           'icon_code_point': Icons.local_florist.codePoint,
-          'color_value': Colors.pink.value
+          'color_value': Colors.pink.toARGB32()
         },
         {
           'name': 'Montaña',
           'icon_code_point': Icons.landscape.codePoint,
-          'color_value': Colors.brown.value
+          'color_value': Colors.brown.toARGB32()
         },
         {
           'name': 'Agua',
           'icon_code_point': Icons.water_drop.codePoint,
-          'color_value': Colors.blueAccent.value
+          'color_value': Colors.blueAccent.toARGB32()
         },
         {
           'name': 'Fuego',
           'icon_code_point': Icons.local_fire_department.codePoint,
-          'color_value': Colors.red.value
+          'color_value': Colors.red.toARGB32()
         },
         {
           'name': 'Estrella',
           'icon_code_point': Icons.star.codePoint,
-          'color_value': Colors.amber.value
+          'color_value': Colors.amber.toARGB32()
         },
         {
           'name': 'Luna',
           'icon_code_point': Icons.nightlight_round.codePoint,
-          'color_value': Colors.indigo.value
+          'color_value': Colors.indigo.toARGB32()
         },
         {
           'name': 'Pájaro',
           'icon_code_point': Icons.flutter_dash.codePoint,
-          'color_value': Colors.teal.value
+          'color_value': Colors.teal.toARGB32()
         },
         {
           'name': 'Pez',
           'icon_code_point': Icons.set_meal.codePoint,
-          'color_value': Colors.cyan.value
+          'color_value': Colors.cyan.toARGB32()
         },
       ];
     }
