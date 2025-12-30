@@ -1,0 +1,32 @@
+name: Deploy to Firebase Hosting
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Web App
+        # IMPORTANT: preserving the flag to fix icon issues
+        run: flutter build web --no-tree-shake-icons
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EDUPLAY_8792F }}'
+          channelId: live
+          projectId: eduplay-8792f
