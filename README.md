@@ -1,5 +1,7 @@
 # EduPlay 🚀
 
+![Deploy to Firebase Hosting](https://github.com/GrullonDev/EduPlay/actions/workflows/firebase_hosting.yml/badge.svg)
+
 **EduPlay** es una plataforma educativa gamificada diseñada para transformar el aprendizaje de niños y adolescentes en una aventura interactiva. Combinando diseño moderno y pedagogía lúdica, EduPlay ofrece un entorno seguro donde aprender matemáticas, idiomas, arte y más es pura diversión.
 
 ## 🌟 Características Principales
