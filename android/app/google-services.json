@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "489239455681",
-    "project_id": "eduplay-2b5bd",
-    "storage_bucket": "eduplay-2b5bd.firebasestorage.app"
+    "project_number": "729553550400",
+    "project_id": "eduplay-8792f",
+    "storage_bucket": "eduplay-8792f.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:489239455681:android:fb52cb9ea8895a6e6af140",
+        "mobilesdk_app_id": "1:729553550400:android:9cf0c6db595ad89901f3a5",
         "android_client_info": {
           "package_name": "com.example.edu_play"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAVVU1UmVT0Ciu0c9FOuEeu4zyuXizgj-E"
+          "current_key": "AIzaSyB3ezyvcOOizcxXod727hEAy6cG8FfRMCU"
         }
       ],
       "services": {

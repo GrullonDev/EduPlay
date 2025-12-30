@@ -1,1 +1,47 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"eduplay-2b5bd","appId":"1:489239455681:android:fb52cb9ea8895a6e6af140","fileOutput":"android/app/google-services.json"}},"ios":{"default":{"projectId":"eduplay-2b5bd","appId":"1:489239455681:ios:11403730d4d38ef06af140","uploadDebugSymbols":false,"fileOutput":"ios/Runner/GoogleService-Info.plist"}},"dart":{"lib/firebase_options.dart":{"projectId":"eduplay-2b5bd","configurations":{"android":"1:489239455681:android:fb52cb9ea8895a6e6af140","ios":"1:489239455681:ios:11403730d4d38ef06af140"}}}}}}
+{
+    "hosting": {
+        "public": "build/web",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "rewrites": [
+            {
+                "source": "**",
+                "destination": "/index.html"
+            }
+        ]
+    },
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "eduplay-8792f",
+                    "appId": "1:729553550400:android:9cf0c6db595ad89901f3a5",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "eduplay-2b5bd",
+                    "appId": "1:489239455681:ios:11403730d4d38ef06af140",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "eduplay-8792f",
+                    "configurations": {
+                        "android": "1:729553550400:android:9cf0c6db595ad89901f3a5",
+                        "ios": "1:729553550400:ios:4480b23f2ab981e101f3a5",
+                        "macos": "1:729553550400:ios:4480b23f2ab981e101f3a5",
+                        "web": "1:729553550400:web:dfff11b6e7dc86f301f3a5",
+                        "windows": "1:729553550400:web:e5a66561d6c5a17201f3a5"
+                    }
+                }
+            }
+        }
+    }
+}
