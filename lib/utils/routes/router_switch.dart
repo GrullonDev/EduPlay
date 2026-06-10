@@ -34,7 +34,8 @@ class AppRouter {
         page = const LandingPage();
         break;
       case RouterPaths.login:
-        page = const LoginPage();
+        final userType = settings.arguments as String?;
+        page = LoginPage(userType: userType);
         break;
       case RouterPaths.registerParents:
         page = const RegisterParentsPage();
