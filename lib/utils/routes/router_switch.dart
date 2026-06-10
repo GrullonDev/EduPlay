@@ -1,6 +1,7 @@
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edu_play/features/landing/pages/landing_page.dart';
 import 'package:edu_play/features/login/pages/login_page.dart';
 // import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
@@ -28,6 +29,9 @@ class AppRouter {
     switch (name) {
       case RouterPaths.root:
         page = const MainPage();
+        break;
+      case RouterPaths.landing:
+        page = const LandingPage();
         break;
       case RouterPaths.login:
         page = const LoginPage();

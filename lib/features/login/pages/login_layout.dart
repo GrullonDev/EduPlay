@@ -73,6 +73,12 @@ class LoginLayout extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, RouterPaths.landing),
+                      child: const Text('Conoce EduPlay'),
+                    ),
                   ],
                 ),
               ),
