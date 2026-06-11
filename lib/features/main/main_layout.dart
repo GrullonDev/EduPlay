@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
 
-const _kNavyColor = Color(0xFF24235B);
-const _kFooterColor = Color(0xFFEAEAF7);
+const _kNavy = Color(0xFF24235B);
+const _kCoral = Color(0xFFFF6E6C);
+const _kLavender = Color(0xFFEEEDF8);
+const _kIconLavender = Color(0xFFE2E1F4);
 
-/// Home screen profile picker: lets the user choose whether they're a
-/// kid, a parent or a teacher, and routes them accordingly.
+/// Home screen profile picker – matches the Stitch design:
+/// lavender dotted background, three role cards, help link at the bottom.
 class MainLayout extends StatelessWidget {
   const MainLayout({super.key});
 
@@ -17,107 +18,147 @@ class MainLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _MainHeader(desktop: desktop),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: desktop ? 64 : 20,
-                vertical: desktop ? 64 : 40,
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '¿Quién va a aprender hoy?',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.fredoka(
-                      fontSize: desktop ? 42 : 28,
-                      fontWeight: FontWeight.w700,
-                      color: _kNavyColor,
-                    ),
+    return Stack(
+      children: [
+        // ── Dotted background ──────────────────────────────────────────────
+        Positioned.fill(child: _DottedBackground()),
+        // ── Content ───────────────────────────────────────────────────────
+        SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _Header(desktop: desktop),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: desktop ? 80 : 20,
+                    vertical: desktop ? 56 : 40,
                   ),
-                  SizedBox(height: desktop ? 56 : 36),
-                  desktop
-                      ? IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(child: _buildKidsCard(context)),
-                              const SizedBox(width: 24),
-                              Expanded(child: _buildParentsCard(context)),
-                              const SizedBox(width: 24),
-                              Expanded(child: _buildTeachersCard(context)),
-                            ],
-                          ),
-                        )
-                      : Column(
-                          children: [
-                            _buildKidsCard(context),
-                            const SizedBox(height: 20),
-                            _buildParentsCard(context),
-                            const SizedBox(height: 20),
-                            _buildTeachersCard(context),
-                          ],
+                  child: Column(
+                    children: [
+                      Text(
+                        '¿Quién va a aprender hoy?',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.fredoka(
+                          fontSize: desktop ? 44 : 30,
+                          fontWeight: FontWeight.w700,
+                          color: _kNavy,
                         ),
-                  SizedBox(height: desktop ? 48 : 32),
-                  const _HelpLink(),
-                ],
-              ),
+                      ),
+                      SizedBox(height: desktop ? 52 : 36),
+                      desktop
+                          ? IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(child: _kidsCard(context)),
+                                  const SizedBox(width: 20),
+                                  Expanded(child: _parentsCard(context)),
+                                  const SizedBox(width: 20),
+                                  Expanded(child: _teachersCard(context)),
+                                ],
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                _kidsCard(context),
+                                const SizedBox(height: 16),
+                                _parentsCard(context),
+                                const SizedBox(height: 16),
+                                _teachersCard(context),
+                              ],
+                            ),
+                      SizedBox(height: desktop ? 44 : 32),
+                      const _HelpLink(),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const _MainFooter(),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildKidsCard(BuildContext context) {
-    return _ProfileCard(
-      icon: Icons.sentiment_very_satisfied_rounded,
-      title: 'Niños',
-      subtitle: '¡Entra a jugar y aprender!',
-      buttonLabel: 'Jugar Ahora',
-      buttonIcon: Icons.arrow_forward_rounded,
-      highlighted: true,
-      onPressed: () => Navigator.pushNamed(context, RouterPaths.guestEntry),
-    );
-  }
+  Widget _kidsCard(BuildContext context) => _RoleCard(
+        iconWidget: const Icon(
+          Icons.sentiment_satisfied_alt_rounded,
+          size: 40,
+          color: Colors.white,
+        ),
+        iconBg: Colors.white.withValues(alpha: 0.28),
+        iconShape: BoxShape.circle,
+        cardBg: _kCoral,
+        title: 'Niños',
+        titleColor: Colors.white,
+        subtitle: '¡Entra a jugar y aprender!',
+        subtitleColor: Colors.white.withValues(alpha: 0.88),
+        button: _PillButton(
+          label: 'Jugar Ahora',
+          icon: Icons.arrow_forward_rounded,
+          onPressed: () =>
+              Navigator.pushNamed(context, RouterPaths.guestEntry),
+          style: _PillButtonStyle.whiteOnCoral,
+        ),
+      );
 
-  Widget _buildParentsCard(BuildContext context) {
-    return _ProfileCard(
-      icon: Icons.family_restroom_rounded,
-      title: 'Padres',
-      subtitle: 'Sigue el progreso de tus hijos',
-      buttonLabel: 'Panel Familiar',
-      buttonIcon: Icons.login_rounded,
-      onPressed: () => Navigator.pushNamed(
-        context,
-        RouterPaths.login,
-        arguments: 'parent',
-      ),
-    );
-  }
+  Widget _parentsCard(BuildContext context) => _RoleCard(
+        iconWidget: const Icon(
+          Icons.family_restroom_rounded,
+          size: 28,
+          color: Colors.white,
+        ),
+        iconBg: _kNavy,
+        iconShape: BoxShape.rectangle,
+        iconRadius: 14,
+        cardBg: Colors.white,
+        title: 'Padres',
+        titleColor: _kNavy,
+        subtitle: 'Sigue el progreso de tus hijos',
+        subtitleColor: const Color(0xFF888888),
+        button: _PillButton(
+          label: 'Panel Familiar',
+          icon: Icons.login_rounded,
+          onPressed: () => Navigator.pushNamed(
+            context,
+            RouterPaths.login,
+            arguments: 'parent',
+          ),
+          style: _PillButtonStyle.filledNavy,
+        ),
+      );
 
-  Widget _buildTeachersCard(BuildContext context) {
-    return _ProfileCard(
-      icon: Icons.school_rounded,
-      title: 'Profesores',
-      subtitle: 'Gestiona tus clases y recursos',
-      buttonLabel: 'Herramientas Docentes',
-      buttonIcon: Icons.login_rounded,
-      onPressed: () => Navigator.pushNamed(
-        context,
-        RouterPaths.login,
-        arguments: 'teacher',
-      ),
-    );
-  }
+  Widget _teachersCard(BuildContext context) => _RoleCard(
+        iconWidget: Icon(
+          Icons.school_rounded,
+          size: 28,
+          color: _kNavy.withValues(alpha: 0.7),
+        ),
+        iconBg: _kIconLavender,
+        iconShape: BoxShape.rectangle,
+        iconRadius: 14,
+        cardBg: Colors.white,
+        title: 'Profesores',
+        titleColor: _kNavy,
+        subtitle: 'Gestiona tus clases y recursos',
+        subtitleColor: const Color(0xFF888888),
+        button: _PillButton(
+          label: 'Herramientas Docentes',
+          icon: Icons.login_rounded,
+          onPressed: () => Navigator.pushNamed(
+            context,
+            RouterPaths.login,
+            arguments: 'teacher',
+          ),
+          style: _PillButtonStyle.outlinedNavy,
+        ),
+      );
 }
 
-class _MainHeader extends StatelessWidget {
-  const _MainHeader({required this.desktop});
+// ── Header ────────────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  const _Header({required this.desktop});
 
   final bool desktop;
 
@@ -125,23 +166,17 @@ class _MainHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: desktop ? 64 : 20,
+        horizontal: desktop ? 80 : 20,
         vertical: 20,
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.rocket_launch_rounded,
-            color: AppTheme.primaryColor,
-            size: 28,
-          ),
-          const SizedBox(width: 8),
           Text(
             'EduPlay',
             style: GoogleFonts.fredoka(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: AppTheme.primaryColor,
+              color: _kNavy,
             ),
           ),
         ],
@@ -150,40 +185,81 @@ class _MainHeader extends StatelessWidget {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({
-    required this.icon,
+// ── Dotted background ─────────────────────────────────────────────────────────
+
+class _DottedBackground extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DotPainter(),
+      child: Container(color: _kLavender),
+    );
+  }
+}
+
+class _DotPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    const dotColor = Color(0xFFCAC9E8);
+    const spacing = 28.0;
+    const radius = 1.8;
+    final paint = Paint()..color = dotColor;
+
+    for (double x = spacing; x < size.width; x += spacing) {
+      for (double y = spacing; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotPainter oldDelegate) => false;
+}
+
+// ── Role card ─────────────────────────────────────────────────────────────────
+
+class _RoleCard extends StatelessWidget {
+  const _RoleCard({
+    required this.iconWidget,
+    required this.iconBg,
+    required this.iconShape,
+    required this.cardBg,
     required this.title,
+    required this.titleColor,
     required this.subtitle,
-    required this.buttonLabel,
-    required this.buttonIcon,
-    required this.onPressed,
-    this.highlighted = false,
+    required this.subtitleColor,
+    required this.button,
+    this.iconRadius,
   });
 
-  final IconData icon;
+  final Widget iconWidget;
+  final Color iconBg;
+  final BoxShape iconShape;
+  final double? iconRadius;
+  final Color cardBg;
   final String title;
+  final Color titleColor;
   final String subtitle;
-  final String buttonLabel;
-  final IconData buttonIcon;
-  final VoidCallback onPressed;
-  final bool highlighted;
+  final Color subtitleColor;
+  final Widget button;
 
   @override
   Widget build(BuildContext context) {
-    final foregroundColor = highlighted ? Colors.white : _kNavyColor;
+    final bool isHighlighted = cardBg == _kCoral;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
       decoration: BoxDecoration(
-        color: highlighted ? AppTheme.accentColor : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: highlighted ? null : Border.all(color: Colors.grey.shade200),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: isHighlighted
+            ? null
+            : Border.all(color: const Color(0xFFDDDDEE), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: highlighted ? 0.12 : 0.04),
-            blurRadius: 16,
+            color: Colors.black.withValues(alpha: isHighlighted ? 0.10 : 0.04),
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
@@ -191,28 +267,14 @@ class _ProfileCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: highlighted
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : AppTheme.primaryColor.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 40,
-              color: highlighted ? Colors.white : AppTheme.primaryColor,
-            ),
-          ),
+          _iconContainer(),
           const SizedBox(height: 20),
           Text(
             title,
             style: GoogleFonts.fredoka(
-              fontSize: 26,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: foregroundColor,
+              color: titleColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -220,48 +282,112 @@ class _ProfileCard extends StatelessWidget {
             subtitle,
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
-              fontSize: 15,
-              color: highlighted
-                  ? Colors.white.withValues(alpha: 0.9)
-                  : Colors.grey[600],
+              fontSize: 14,
+              color: subtitleColor,
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 28),
-          highlighted
-              ? ElevatedButton.icon(
-                  onPressed: onPressed,
-                  icon: Icon(buttonIcon, color: AppTheme.accentColor),
-                  label: Text(buttonLabel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppTheme.accentColor,
-                  ),
-                )
-              : OutlinedButton.icon(
-                  onPressed: onPressed,
-                  icon: Icon(buttonIcon, color: _kNavyColor),
-                  label: Text(buttonLabel),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _kNavyColor,
-                    side: const BorderSide(color: _kNavyColor),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    textStyle: GoogleFonts.nunito(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+          button,
         ],
       ),
     );
   }
+
+  Widget _iconContainer() {
+    final decoration = iconShape == BoxShape.circle
+        ? BoxDecoration(color: iconBg, shape: BoxShape.circle)
+        : BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(iconRadius ?? 14),
+          );
+
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: decoration,
+      child: Center(child: iconWidget),
+    );
+  }
 }
+
+// ── Pill button ───────────────────────────────────────────────────────────────
+
+enum _PillButtonStyle { whiteOnCoral, filledNavy, outlinedNavy }
+
+class _PillButton extends StatelessWidget {
+  const _PillButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    required this.style,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final _PillButtonStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(30),
+    );
+    final textStyle = GoogleFonts.nunito(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+    );
+
+    switch (style) {
+      case _PillButtonStyle.whiteOnCoral:
+        return ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: _kCoral,
+            elevation: 0,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+            shape: shape,
+            textStyle: textStyle,
+          ),
+        );
+      case _PillButtonStyle.filledNavy:
+        return ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _kNavy,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+            shape: shape,
+            textStyle: textStyle,
+          ),
+        );
+      case _PillButtonStyle.outlinedNavy:
+        return OutlinedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(icon, size: 18),
+          label: Text(label),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _kNavy,
+            side: const BorderSide(color: _kNavy, width: 1.5),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: shape,
+            textStyle: textStyle,
+          ),
+        );
+    }
+  }
+}
+
+// ── Help link ─────────────────────────────────────────────────────────────────
 
 class _HelpLink extends StatelessWidget {
   const _HelpLink();
@@ -271,60 +397,17 @@ class _HelpLink extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.help_outline_rounded, color: Colors.grey[500], size: 20),
+        const Icon(Icons.help_outline_rounded,
+            color: Color(0xFFAAAAAA), size: 18),
         const SizedBox(width: 8),
         Text(
           '¿Necesitas ayuda para empezar?',
-          style: GoogleFonts.nunito(color: Colors.grey[600], fontSize: 15),
+          style: GoogleFonts.nunito(
+            color: const Color(0xFF888888),
+            fontSize: 14,
+          ),
         ),
       ],
-    );
-  }
-}
-
-class _MainFooter extends StatelessWidget {
-  const _MainFooter();
-
-  @override
-  Widget build(BuildContext context) {
-    final desktop = isLandingDesktop(context);
-
-    return Container(
-      width: double.infinity,
-      color: _kFooterColor,
-      padding: EdgeInsets.symmetric(
-        horizontal: desktop ? 64 : 20,
-        vertical: 20,
-      ),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: 16,
-        runSpacing: 8,
-        children: [
-          Text(
-            '© 2026 EduPlay. Aprendizaje basado en evidencia para la '
-            'próxima generación.',
-            style: GoogleFonts.nunito(color: Colors.grey[600], fontSize: 13),
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Privacidad',
-                style:
-                    GoogleFonts.nunito(color: Colors.grey[600], fontSize: 13),
-              ),
-              const SizedBox(width: 24),
-              Text(
-                'Términos',
-                style:
-                    GoogleFonts.nunito(color: Colors.grey[600], fontSize: 13),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
