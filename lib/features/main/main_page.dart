@@ -6,9 +6,9 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.greenAccent[200],
-      body: const MainLayout(),
+    return const Scaffold(
+      backgroundColor: Color(0xFFF8F8FC),
+      body: MainLayout(),
     );
   }
 }

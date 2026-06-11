@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:edu_play/data/datasources/auth_datasource.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
-import 'package:edu_play/data/repositories/mock_auth_repository.dart';
+// import 'package:edu_play/data/repositories/mock_auth_repository.dart';
 
 class InjectionContainer {}
 
@@ -12,7 +12,8 @@ void init() {
   sl.registerLazySingleton<AuthDatasource>(() => ImplAuthDatasource());
 
   // Repositories
+  // Repositories
   sl.registerLazySingleton<AuthRepository>(
-    () => MockAuthRepository(),
+    () => ImplAuthRepository(authDatasource: sl()),
   );
 }

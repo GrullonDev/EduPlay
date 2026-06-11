@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,19 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAVVU1UmVT0Ciu0c9FOuEeu4zyuXizgj-E',
-    appId: '1:489239455681:android:fb52cb9ea8895a6e6af140',
-    messagingSenderId: '489239455681',
-    projectId: 'eduplay-2b5bd',
-    storageBucket: 'eduplay-2b5bd.firebasestorage.app',
+    apiKey: 'AIzaSyB3ezyvcOOizcxXod727hEAy6cG8FfRMCU',
+    appId: '1:729553550400:android:9cf0c6db595ad89901f3a5',
+    messagingSenderId: '729553550400',
+    projectId: 'eduplay-8792f',
+    storageBucket: 'eduplay-8792f.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBa3kKlYyEz4EyHZM9hb9nOyrBX4o7FlIU',
-    appId: '1:489239455681:ios:11403730d4d38ef06af140',
-    messagingSenderId: '489239455681',
-    projectId: 'eduplay-2b5bd',
-    storageBucket: 'eduplay-2b5bd.firebasestorage.app',
+    apiKey: 'AIzaSyDZsCiKQJhQ2fvWTTTy2Txxuy1R6Ak9BEI',
+    appId: '1:729553550400:ios:4480b23f2ab981e101f3a5',
+    messagingSenderId: '729553550400',
+    projectId: 'eduplay-8792f',
+    storageBucket: 'eduplay-8792f.firebasestorage.app',
     iosBundleId: 'com.example.eduPlay',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyD3iyJW0cffV7lIe2bR88KqxrMaBUuJZxk',
+    appId: '1:729553550400:web:dfff11b6e7dc86f301f3a5',
+    messagingSenderId: '729553550400',
+    projectId: 'eduplay-8792f',
+    authDomain: 'eduplay-8792f.firebaseapp.com',
+    storageBucket: 'eduplay-8792f.firebasestorage.app',
+    measurementId: 'G-0GQCJB4X0X',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDZsCiKQJhQ2fvWTTTy2Txxuy1R6Ak9BEI',
+    appId: '1:729553550400:ios:4480b23f2ab981e101f3a5',
+    messagingSenderId: '729553550400',
+    projectId: 'eduplay-8792f',
+    storageBucket: 'eduplay-8792f.firebasestorage.app',
+    iosBundleId: 'com.example.eduPlay',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyD3iyJW0cffV7lIe2bR88KqxrMaBUuJZxk',
+    appId: '1:729553550400:web:e5a66561d6c5a17201f3a5',
+    messagingSenderId: '729553550400',
+    projectId: 'eduplay-8792f',
+    authDomain: 'eduplay-8792f.firebaseapp.com',
+    storageBucket: 'eduplay-8792f.firebasestorage.app',
+    measurementId: 'G-DKQPVG46XM',
+  );
+
 }

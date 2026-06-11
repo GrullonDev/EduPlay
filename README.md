@@ -1,5 +1,7 @@
 # EduPlay 🚀
 
+![Deploy to Firebase Hosting](https://github.com/GrullonDev/EduPlay/actions/workflows/firebase_hosting.yml/badge.svg)
+
 **EduPlay** es una plataforma educativa gamificada diseñada para transformar el aprendizaje de niños y adolescentes en una aventura interactiva. Combinando diseño moderno y pedagogía lúdica, EduPlay ofrece un entorno seguro donde aprender matemáticas, idiomas, arte y más es pura diversión.
 
 ## 🌟 Características Principales
@@ -26,7 +28,6 @@ Nuestra colección de juegos se adapta automáticamente a la edad del niño (7-1
 
 ### 🎨 Diseño y Tecnología
 *   **Interfaz Vibrante:** Estética moderna con colores vivos, animaciones fluidas y elementos visuales grandes ("Kid-First Design").
-*   **Base de Datos Local:** Integración con `sqflite` para guardar perfiles y progreso 100% offline.
 *   **Multiplataforma:** Optimizado para funcionar en Web, Tablets y Escritorio con diseños responsivos.
 
 ## 🛠 Stack Tecnológico
@@ -34,15 +35,19 @@ Nuestra colección de juegos se adapta automáticamente a la edad del niño (7-1
 *   **Framework:** Flutter 3.x
 *   **Lenguaje:** Dart
 *   **Gestión de Estado:** Provider
-*   **Backend / Auth:** Firebase Auth (Padres) + SQLite (Datos locales de niños)
+*   **Base de Datos (Nube):** Firebase Cloud Firestore
+*   **Autenticación:** Firebase Auth
+*   **Hosting:** Firebase Hosting
+*   **CI/CD:** GitHub Actions (Deploy automático)
 *   **Fuentes:** Google Fonts (Nunito, Fredoka, Courier Prime)
 
-## 📦 Instalación
+## 📦 Instalación y Despliegue
 
 ### Requisitos Previos
 *   [Flutter SDK](https://flutter.dev/docs/get-started/install)
+*   [Firebase CLI](https://firebase.google.com/docs/cli)
 
-### Pasos
+### Instalación Local
 1.  **Clonar el repositorio:**
     ```bash
     git clone https://github.com/GrullonDev/EduPlay.git
@@ -58,6 +63,22 @@ Nuestra colección de juegos se adapta automáticamente a la edad del niño (7-1
     ```bash
     flutter run
     ```
+
+### 🚀 Despliegue en Firebase Hosting
+
+#### Opción 1: Despliegue Manual
+Para asegurar que los iconos dinámicos se visualicen correctamente, utiliza el siguiente comando de compilación:
+
+```bash
+fvm flutter build web --no-tree-shake-icons
+firebase deploy
+```
+
+#### Opción 2: Despliegue Automático (CI/CD)
+Este repositorio cuenta con un flujo de trabajo de GitHub Actions (`.github/workflows/firebase_hosting.yml`) que despliega automáticamente a Firebase cuando se hacen cambios en la rama `main` o `master`.
+
+**Configuración Requerida:**
+Para que esto funcione en tu propio fork o repositorio, debes agregar el secreto `FIREBASE_SERVICE_ACCOUNT_EDUPLAY_8792F` en **Settings > Secrets and variables > Actions**.
 
 ## 🤝 Contribuciones
 

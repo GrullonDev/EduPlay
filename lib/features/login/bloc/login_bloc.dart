@@ -1,10 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 class LoginBloc extends ChangeNotifier {
+  LoginBloc({
+    required BuildContext context,
+    required this.authRepository,
+  }) : _context = context;
+
+  final BuildContext _context;
+  final AuthRepository authRepository;
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  // Agregar lógica de inicio de sesión aquí
+  bool isLoading = false;
+  bool obscurePassword = true;
+
+  void togglePasswordVisibility() {
+    obscurePassword = !obscurePassword;
+    notifyListeners();
+  }
+
+  Future<void> login() async {
+    isLoading = true;
+    notifyListeners();
+
+    User? user = await authRepository.loginParent(
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    isLoading = false;
+    notifyListeners();
+
+    if (!_context.mounted) return;
+
+    if (user != null) {
+      Navigator.pushNamedAndRemoveUntil(
+        _context,
+        RouterPaths.parentsDashboard,
+        (route) => false,
+      );
+    } else {
+      showDialog(
+        context: _context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Correo o contraseña incorrectos.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
