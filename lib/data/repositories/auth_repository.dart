@@ -25,11 +25,10 @@ abstract class AuthRepository {
 }
 
 class ImplAuthRepository implements AuthRepository {
-  final AuthDatasource _authDatasource;
-
   ImplAuthRepository({
     required AuthDatasource authDatasource,
   }) : _authDatasource = authDatasource;
+  final AuthDatasource _authDatasource;
 
   @override
   Future<User?> registerParent({

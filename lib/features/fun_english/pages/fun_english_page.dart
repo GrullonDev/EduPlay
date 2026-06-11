@@ -163,10 +163,9 @@ class _FunEnglishLayout extends StatelessWidget {
 }
 
 class _OptionButton extends StatelessWidget {
+  const _OptionButton({required this.text, required this.onTap});
   final String text;
   final VoidCallback onTap;
-
-  const _OptionButton({required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

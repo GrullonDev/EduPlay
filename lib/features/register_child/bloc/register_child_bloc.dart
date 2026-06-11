@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/data/datasources/local/database_helper.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:provider/provider.dart';
@@ -52,14 +54,26 @@ class RegisterChildProvider with ChangeNotifier {
         // Registrar al niño en la base de datos
         await _repository.registerChild(name, age);
 
+        // Try parse age to int, default to 6 if fail
+        int ageInt = int.tryParse(age) ?? 6;
+
         // Save to Local DB (Offline support)
         try {
           final dbHelper = DatabaseHelper();
-          // Try parse age to int, default to 6 if fail
-          int ageInt = int.tryParse(age) ?? 6;
           await dbHelper.insertChild(name, ageInt, avatar: _selectedAvatar);
         } catch (e) {
-          debugPrint("Local DB Error: $e");
+          debugPrint('Local DB Error: $e');
+        }
+
+        // Create/update the Firestore gamification profile
+        try {
+          await sl<StudentRepository>().ensureProfile(
+            name: name,
+            age: ageInt,
+            avatar: _selectedAvatar,
+          );
+        } catch (e) {
+          debugPrint('StudentRepository ensureProfile failed: $e');
         }
 
         // Update Global Age in RegisterProvider

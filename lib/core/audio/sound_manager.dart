@@ -2,9 +2,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 class SoundManager {
-  static final SoundManager _instance = SoundManager._internal();
   factory SoundManager() => _instance;
   SoundManager._internal();
+  static final SoundManager _instance = SoundManager._internal();
 
   final AudioPlayer _player = AudioPlayer();
   bool _isMuted = false;

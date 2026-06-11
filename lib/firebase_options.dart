@@ -85,5 +85,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'eduplay-8792f.firebasestorage.app',
     measurementId: 'G-DKQPVG46XM',
   );
-
 }

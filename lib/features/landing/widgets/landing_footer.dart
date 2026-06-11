@@ -97,8 +97,7 @@ class LandingFooter extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(flex: 2, child: brand),
-                      for (final column in columns)
-                        Expanded(child: column),
+                      for (final column in columns) Expanded(child: column),
                     ],
                   )
                 : Column(

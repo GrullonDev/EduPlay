@@ -64,8 +64,7 @@ class LandingFamiliesSection extends StatelessWidget {
         const _FeatureRow(
           icon: Icons.star_rounded,
           title: 'Álbum de logros',
-          description:
-              'Cada victoria desbloquea estampas coleccionables que '
+          description: 'Cada victoria desbloquea estampas coleccionables que '
               'celebran su esfuerzo.',
         ),
         const _FeatureRow(
@@ -79,13 +78,11 @@ class LandingFamiliesSection extends StatelessWidget {
         Align(
           alignment: desktop ? Alignment.centerLeft : Alignment.center,
           child: OutlinedButton.icon(
-            onPressed: () =>
-                Navigator.pushNamed(context, RouterPaths.login),
+            onPressed: () => Navigator.pushNamed(context, RouterPaths.login),
             icon: const Icon(Icons.shield_rounded),
             label: const Text('Ir a la Zona de Padres'),
             style: OutlinedButton.styleFrom(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
               side: const BorderSide(color: AppTheme.primaryColor, width: 2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
@@ -290,9 +287,7 @@ class _DashboardMockup extends StatelessWidget {
               ),
               Expanded(
                 child: _MockupStat(
-                    icon: Icons.star_rounded,
-                    value: '320',
-                    label: 'Puntos'),
+                    icon: Icons.star_rounded, value: '320', label: 'Puntos'),
               ),
             ],
           ),

@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Data model:
+// - students/{studentId}: gamification profile (name, age, avatar, points,
+//   streak, lastPlayedDate, createdAt). studentId is a random id generated
+//   client-side and persisted in SharedPreferences (no Firebase Auth, since
+//   guests/children don't sign in).
+// - students/{studentId}/scores/{scoreId}: per-game score history entries.
+//
+// Because there is no authenticated user identity for students, these rules
+// validate the *shape* of the data rather than ownership. Reads are public
+// so the leaderboard (student dashboard) and roster (teacher dashboard) can
+// be built from real, shared data.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isValidStudent(data) {
+      return data.name is string
+        && data.age is int
+        && data.points is int
+        && data.streak is int;
+    }
+
+    function isValidScore(data) {
+      return data.subjectKey is string
+        && data.gameTitle is string
+        && data.score is int
+        && data.date is timestamp;
+    }
+
+    match /students/{studentId} {
+      allow read: if true;
+      allow create, update: if isValidStudent(request.resource.data);
+      allow delete: if false;
+
+      match /scores/{scoreId} {
+        allow read: if true;
+        allow create: if isValidScore(request.resource.data);
+        allow update, delete: if false;
+      }
+    }
+  }
+}

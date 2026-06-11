@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 
 class TreasureMapPage extends StatefulWidget {
@@ -89,6 +91,11 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
+                sl<StudentRepository>().recordScore(
+                  subjectKey: 'logic',
+                  gameTitle: 'Mapa del Tesoro',
+                  score: _level * 10,
+                );
                 setState(() {
                   _level++;
                 });

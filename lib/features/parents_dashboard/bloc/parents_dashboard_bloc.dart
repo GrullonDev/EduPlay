@@ -34,7 +34,7 @@ class ParentsDashboardBloc with ChangeNotifier {
         _scores[id] = childScores;
       }
     } catch (e) {
-      debugPrint("Error loading dashboard data: $e");
+      debugPrint('Error loading dashboard data: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -155,6 +157,12 @@ class MathAdventureProvider with ChangeNotifier {
       ),
     );
 
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'math',
+      gameTitle: 'Aventura Matemática',
+      score: _score,
+    );
+
     _score = 0;
     _lives = 3;
     _level = 1;
@@ -169,13 +177,12 @@ class MathAdventureProvider with ChangeNotifier {
 }
 
 class Question {
-  final String question;
-  final List<String> options;
-  final int answer;
-
   Question({
     required this.question,
     required this.options,
     required this.answer,
   });
+  final String question;
+  final List<String> options;
+  final int answer;
 }

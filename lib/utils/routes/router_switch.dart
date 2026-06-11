@@ -6,11 +6,12 @@ import 'package:edu_play/features/login/pages/login_page.dart';
 // import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
-import 'package:edu_play/features/menu/pages/menu_page.dart';
+import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
 import 'package:edu_play/features/register_child/pages/register_child_page.dart';
 import 'package:edu_play/features/register_parents/pages/register_parents_page.dart';
 import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
 import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
 import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
@@ -45,7 +46,7 @@ class AppRouter {
         break;
       case RouterPaths.menu:
         final userName = settings.arguments as String?;
-        page = MenuPage(username: userName);
+        page = StudentDashboardPage(username: userName);
         break;
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
@@ -94,6 +95,10 @@ class AppRouter {
       case RouterPaths.parentsDashboard:
         return MaterialPageRoute(
           builder: (_) => const ParentsDashboardPage(),
+        );
+      case RouterPaths.teacherDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const TeacherDashboardPage(),
         );
       default:
         page = const Scaffold(

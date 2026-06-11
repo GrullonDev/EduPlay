@@ -1,3 +1,5 @@
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 
 class TimeTravelPage extends StatefulWidget {
@@ -100,6 +102,11 @@ class _TimeTravelPageState extends State<TimeTravelPage>
         _currentQuestionIndex++;
       } else {
         _isFinished = true;
+        sl<StudentRepository>().recordScore(
+          subjectKey: 'history',
+          gameTitle: 'Viaje en el Tiempo',
+          score: _score,
+        );
       }
     });
   }

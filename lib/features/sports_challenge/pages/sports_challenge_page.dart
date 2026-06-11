@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 
 class SportsChallengePage extends StatefulWidget {
@@ -230,6 +232,12 @@ class _SportsChallengePageState extends State<SportsChallengePage>
       _isGameActive = false;
       _isItemVisible = false;
     });
+
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'sports',
+      gameTitle: 'Desafío Deportivo',
+      score: _score,
+    );
 
     showDialog(
       context: context,

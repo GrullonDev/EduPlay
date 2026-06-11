@@ -4,11 +4,7 @@ enum DrawMode { pen, eraser, sticker }
 
 // Represents either a freehand stroke or a placed sticker
 class DrawObject {
-  final List<Offset>? points; // For pen
-  final Color color;
-  final double width;
-  final Offset? position; // For stickers
-  final IconData? icon; // For stickers
+  // For stickers
 
   DrawObject.stroke(this.points, this.color, this.width)
       : position = null,
@@ -16,6 +12,11 @@ class DrawObject {
   DrawObject.sticker(this.position, this.icon, this.color)
       : points = null,
         width = 0;
+  final List<Offset>? points; // For pen
+  final Color color;
+  final double width;
+  final Offset? position; // For stickers
+  final IconData? icon;
 
   bool get isSticker => position != null;
 }
@@ -275,8 +276,8 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
           child: Container(
               width: width,
               height: width,
-              decoration:
-                  const BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
+              decoration: const BoxDecoration(
+                  color: Colors.black, shape: BoxShape.circle)),
         ),
       ),
     );
@@ -284,9 +285,8 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
 }
 
 class _SketchPainter extends CustomPainter {
-  final List<DrawObject> objects;
-
   _SketchPainter(this.objects);
+  final List<DrawObject> objects;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -306,7 +306,8 @@ class _SketchPainter extends CustomPainter {
           ),
         );
         textPainter.layout();
-        textPainter.paint(canvas, obj.position! - const Offset(20, 20)); // Center it
+        textPainter.paint(
+            canvas, obj.position! - const Offset(20, 20)); // Center it
       } else if (obj.points != null && obj.points!.isNotEmpty) {
         // Draw Stroke
         final paint = Paint()
