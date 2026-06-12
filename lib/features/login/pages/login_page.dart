@@ -19,6 +19,7 @@ class LoginPage extends StatelessWidget {
       create: (context) => LoginBloc(
         context: context,
         authRepository: sl.get<AuthRepository>(),
+        userType: userType,
       ),
       child: Scaffold(
         body: Container(

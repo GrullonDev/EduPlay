@@ -8,10 +8,15 @@ class LoginBloc extends ChangeNotifier {
   LoginBloc({
     required BuildContext context,
     required this.authRepository,
+    this.userType,
   }) : _context = context;
 
   final BuildContext _context;
   final AuthRepository authRepository;
+
+  /// Context the user came from: 'parent' or 'teacher'. Determines which
+  /// dashboard to navigate to after a successful login.
+  final String? userType;
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -41,7 +46,9 @@ class LoginBloc extends ChangeNotifier {
     if (user != null) {
       Navigator.pushNamedAndRemoveUntil(
         _context,
-        RouterPaths.parentsDashboard,
+        userType == 'teacher'
+            ? RouterPaths.teacherDashboard
+            : RouterPaths.parentsDashboard,
         (route) => false,
       );
     } else {

@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -175,6 +177,12 @@ class MagicWordsProvider with ChangeNotifier {
         },
       ),
     );
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'language',
+      gameTitle: 'Palabras Mágicas',
+      score: _score,
+    );
+
     _score = 0;
     _lives = 3;
     _level = 1;

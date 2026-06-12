@@ -13,17 +13,15 @@ class LandingTestimonialsSection extends StatelessWidget {
       icon: Icons.school_rounded,
       name: 'Profe Ana',
       role: 'Maestra de primaria',
-      quote:
-          '"Mis estudiantes piden jugar Aventura Matemática incluso en el '
-              'recreo. ¡Practican operaciones sin darse cuenta!"',
+      quote: '"Mis estudiantes piden jugar Aventura Matemática incluso en el '
+          'recreo. ¡Practican operaciones sin darse cuenta!"',
     ),
     (
       icon: Icons.family_restroom_rounded,
       name: 'Familia Pérez',
       role: 'Padres de dos niños',
-      quote:
-          '"La Zona de Padres nos muestra en qué necesita ayuda cada hijo, '
-              'todo desde el celular y en pocos minutos."',
+      quote: '"La Zona de Padres nos muestra en qué necesita ayuda cada hijo, '
+          'todo desde el celular y en pocos minutos."',
     ),
   ];
 

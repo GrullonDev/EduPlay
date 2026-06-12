@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -130,6 +132,12 @@ class FunEnglishProvider with ChangeNotifier {
   }
 
   void _gameOver() {
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'english',
+      gameTitle: 'Inglés Divertido',
+      score: _score,
+    );
+
     showDialog(
       context: context,
       builder: (context) => CustomDialog(

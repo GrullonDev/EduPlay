@@ -1,16 +1,24 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/nature_explorers/repositories/nature_explorers_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 class NatureItem {
+  NatureItem({required this.name, required this.icon, required this.color});
   final String name;
   final IconData icon;
   final Color color;
-
-  NatureItem({required this.name, required this.icon, required this.color});
 }
 
 class NatureExplorersProvider with ChangeNotifier {
+  NatureExplorersProvider({
+    required this.context,
+    required this.age,
+    required NatureExplorersRepository repository,
+  }) : _repository = repository {
+    _init();
+  }
   final BuildContext context;
   final int age;
 
@@ -29,14 +37,6 @@ class NatureExplorersProvider with ChangeNotifier {
   String get feedbackMessage => _feedbackMessage;
   Color get feedbackColor => _feedbackColor;
   bool get isCorrect => _isCorrect;
-
-  NatureExplorersProvider({
-    required this.context,
-    required this.age,
-    required NatureExplorersRepository repository,
-  }) : _repository = repository {
-    _init();
-  }
 
   final NatureExplorersRepository _repository;
   bool _isLoading = true;
@@ -121,5 +121,15 @@ class NatureExplorersProvider with ChangeNotifier {
     _score = 0;
     _level = 1;
     _startNewLevel();
+  }
+
+  @override
+  void dispose() {
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'science',
+      gameTitle: 'Exploradores de la Naturaleza',
+      score: _score,
+    );
+    super.dispose();
   }
 }

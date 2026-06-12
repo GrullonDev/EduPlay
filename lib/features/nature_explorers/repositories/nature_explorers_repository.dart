@@ -3,10 +3,9 @@ import 'package:edu_play/data/datasources/local/database_helper.dart';
 import 'package:edu_play/features/nature_explorers/bloc/nature_explorers_bloc.dart';
 
 class NatureExplorersRepository {
-  final DatabaseHelper _databaseHelper;
-
   NatureExplorersRepository({DatabaseHelper? databaseHelper})
       : _databaseHelper = databaseHelper ?? DatabaseHelper();
+  final DatabaseHelper _databaseHelper;
 
   static final Map<int, IconData> _iconsMap = {
     Icons.pets.codePoint: Icons.pets,
