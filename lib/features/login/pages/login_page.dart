@@ -9,8 +9,7 @@ import 'package:edu_play/utils/injection_container.dart';
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key, this.userType});
 
-  /// Context the user came from: 'parent' or 'teacher'. Customizes the
-  /// copy shown on the login screen.
+  /// Context the user came from: 'parent' or 'teacher'.
   final String? userType;
 
   @override
@@ -22,19 +21,8 @@ class LoginPage extends StatelessWidget {
         userType: userType,
       ),
       child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF6C63FF), // Primary
-                Color(0xFF00BFA6), // Secondary
-              ],
-            ),
-          ),
-          child: LoginLayout(userType: userType),
-        ),
+        backgroundColor: Colors.white,
+        body: LoginLayout(userType: userType),
       ),
     );
   }

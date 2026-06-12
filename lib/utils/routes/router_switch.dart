@@ -1,4 +1,5 @@
 import 'package:edu_play/features/main/main_page.dart';
+import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/landing/pages/landing_page.dart';
@@ -44,7 +45,9 @@ class AppRouter {
       case RouterPaths.registerChild:
         page = const RegisterChildPage();
         break;
+      // Legacy alias kept for back-compat
       case RouterPaths.menu:
+      case RouterPaths.studentDashboard:
         final userName = settings.arguments as String?;
         page = StudentDashboardPage(username: userName);
         break;
@@ -91,6 +94,10 @@ class AppRouter {
       case RouterPaths.stickerAlbum:
         return MaterialPageRoute(
           builder: (_) => const StickerAlbumPage(),
+        );
+      case RouterPaths.gamesCatalog:
+        return MaterialPageRoute(
+          builder: (_) => const GamesCatalogPage(),
         );
       case RouterPaths.parentsDashboard:
         return MaterialPageRoute(
