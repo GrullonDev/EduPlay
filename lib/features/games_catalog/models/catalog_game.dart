@@ -52,6 +52,17 @@ class CatalogGame {
         return 'Age 12+';
     }
   }
+
+  String get difficultyLabel {
+    switch (difficulty) {
+      case Difficulty.beginner:
+        return 'Principiante';
+      case Difficulty.intermediate:
+        return 'Intermedio';
+      case Difficulty.advanced:
+        return 'Avanzado';
+    }
+  }
 }
 
 const _navy = Color(0xFF1E1B6A);

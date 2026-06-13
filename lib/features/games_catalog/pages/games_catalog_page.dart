@@ -720,14 +720,16 @@ class _HeroCard extends StatelessWidget {
               ),
             ),
           ),
-          // Decorative icon (large, faded)
+          // Geometric art overlay
+          CustomPaint(painter: _CatalogArtPainter(game.gradientColors)),
+          // Central icon (large, styled)
           Positioned(
-            right: -20,
-            top: -20,
+            right: 28,
+            bottom: 28,
             child: Icon(
               game.icon,
-              size: 220,
-              color: Colors.white.withValues(alpha: 0.06),
+              size: 130,
+              color: Colors.white.withValues(alpha: 0.13),
             ),
           ),
           // Content
@@ -736,12 +738,34 @@ class _HeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _FeaturedBadge(tag: game.featuredTag ?? '', yellow: true),
+                Row(
+                  children: [
+                    _FeaturedBadge(tag: game.featuredTag ?? '', yellow: true),
+                    const SizedBox(width: 10),
+                    // Difficulty pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        game.difficultyLabel,
+                        style: GoogleFonts.nunito(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const Spacer(),
                 Text(
                   game.title,
                   style: GoogleFonts.fredoka(
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                     height: 1.15,
@@ -758,15 +782,29 @@ class _HeroCard extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Stats row
+                Row(
+                  children: [
+                    _HeroStat(icon: Icons.star_rounded, label: 'Nivel ${game.level}'),
+                    const SizedBox(width: 16),
+                    _HeroStat(icon: Icons.people_alt_rounded, label: game.ageLabel),
+                    const SizedBox(width: 16),
+                    _HeroStat(
+                      icon: Icons.local_fire_department_rounded,
+                      label: '${(game.xpProgress * 100).toInt()}% XP',
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 Row(
                   children: [
                     ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamed(
-                          context, game.route),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, game.route),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
                       label: Text(
-                        'Play Now',
+                        'Jugar ahora',
                         style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700),
                       ),
@@ -775,7 +813,7 @@ class _HeroCard extends StatelessWidget {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                            horizontal: 22, vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
@@ -789,13 +827,13 @@ class _HeroCard extends StatelessWidget {
                         side: const BorderSide(
                             color: Colors.white54, width: 1.5),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
+                            horizontal: 20, vertical: 13),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
                       ),
                       child: Text(
-                        'Details',
+                        'Detalles',
                         style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700),
                       ),
@@ -811,6 +849,31 @@ class _HeroCard extends StatelessWidget {
   }
 }
 
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: Colors.white.withValues(alpha: 0.7)),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.white.withValues(alpha: 0.85),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _SideFeaturedCard extends StatelessWidget {
   const _SideFeaturedCard({required this.game});
 
@@ -820,24 +883,45 @@ class _SideFeaturedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = _isYellow
-        ? const Color(0xFFFFF3CD)
-        : const Color(0xFFEEEDF8);
-    final textColor = _isYellow ? const Color(0xFF3D2B00) : _kNavy;
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: bg),
+          // Gradient bg (subtle)
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _isYellow
+                    ? [const Color(0xFFFFF8DC), const Color(0xFFFFF0A0)]
+                    : [const Color(0xFFEEEDF8), const Color(0xFFE0DEF5)],
+              ),
+            ),
+          ),
+          // Geometric circles
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: (_isYellow ? const Color(0xFFFFD700) : _kNavy)
+                    .withValues(alpha: 0.07),
+              ),
+            ),
+          ),
           Positioned(
             right: -16,
             bottom: -16,
             child: Icon(
               game.icon,
-              size: 100,
-              color: textColor.withValues(alpha: 0.08),
+              size: 80,
+              color: (_isYellow ? const Color(0xFF8B6914) : _kNavy)
+                  .withValues(alpha: 0.12),
             ),
           ),
           Padding(
@@ -852,9 +936,9 @@ class _SideFeaturedCard extends StatelessWidget {
                 Text(
                   game.title,
                   style: GoogleFonts.fredoka(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: textColor,
+                    color: _isYellow ? const Color(0xFF3D2B00) : _kNavy,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -863,10 +947,37 @@ class _SideFeaturedCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: textColor.withValues(alpha: 0.65),
+                    fontSize: 11,
+                    color: (_isYellow ? const Color(0xFF3D2B00) : _kNavy)
+                        .withValues(alpha: 0.6),
                     height: 1.3,
                   ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: (_isYellow
+                                ? const Color(0xFF8B6914)
+                                : _kNavy)
+                            .withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        game.ageLabel,
+                        style: GoogleFonts.nunito(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _isYellow
+                              ? const Color(0xFF8B6914)
+                              : _kNavy,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1058,15 +1169,15 @@ class _GameCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image area with gradient
+          // Image area with gradient + geometric art
           Expanded(
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(16)),
-                  child: Container(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16)),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topRight,
@@ -1074,38 +1185,61 @@ class _GameCard extends StatelessWidget {
                         colors: game.gradientColors,
                       ),
                     ),
-                    child: Center(
-                      child: Icon(
-                        game.icon,
-                        size: 64,
-                        color: Colors.white.withValues(alpha: 0.35),
+                  ),
+                  CustomPaint(
+                      painter: _CatalogArtPainter(game.gradientColors)),
+                  Center(
+                    child: Icon(
+                      game.icon,
+                      size: 60,
+                      color: Colors.white.withValues(alpha: 0.65),
+                    ),
+                  ),
+                  // Subject badge
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: game.subjectColor,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        game.subjectLabel,
+                        style: GoogleFonts.nunito(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Subject badge
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: game.subjectColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      game.subjectLabel,
-                      style: GoogleFonts.nunito(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.5,
-                        color: Colors.white,
+                  // Level chip bottom left
+                  Positioned(
+                    bottom: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        'Nivel ${game.level}',
+                        style: GoogleFonts.nunito(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Info area
@@ -1501,4 +1635,45 @@ class _FooterLinks extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Geometric art CustomPainter ───────────────────────────────────────────────
+
+class _CatalogArtPainter extends CustomPainter {
+  const _CatalogArtPainter(this.colors);
+  final List<Color> colors;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..style = PaintingStyle.fill;
+
+    // Large circle top-right
+    p.color = Colors.white.withValues(alpha: 0.07);
+    canvas.drawCircle(
+        Offset(size.width * 1.05, size.height * -0.05), size.width * 0.65, p);
+
+    // Medium circle bottom-left
+    p.color = Colors.white.withValues(alpha: 0.05);
+    canvas.drawCircle(
+        Offset(size.width * -0.1, size.height * 1.05), size.width * 0.5, p);
+
+    // Small bright accent circle
+    p.color = Colors.white.withValues(alpha: 0.09);
+    canvas.drawCircle(
+        Offset(size.width * 0.2, size.height * 0.15), size.width * 0.15, p);
+
+    // Diagonal stripe
+    final stripe = Paint()
+      ..color = Colors.white.withValues(alpha: 0.04)
+      ..strokeWidth = size.width * 0.28
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(
+      Offset(0, size.height * 1.15),
+      Offset(size.width * 1.15, 0),
+      stripe,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CatalogArtPainter old) => false;
 }
