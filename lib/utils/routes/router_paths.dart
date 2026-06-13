@@ -21,4 +21,5 @@ class RouterPaths {
   static const sportsChallenge = '/sports-challenge';
   static const stickerAlbum = '/sticker-album';
   static const gamesCatalog = '/games-catalog';
+  static const childPin = '/child-pin';
 }

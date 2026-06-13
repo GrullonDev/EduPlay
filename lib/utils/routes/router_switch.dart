@@ -1,5 +1,7 @@
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
+import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/landing/pages/landing_page.dart';
@@ -48,9 +50,17 @@ class AppRouter {
       // Legacy alias kept for back-compat
       case RouterPaths.menu:
       case RouterPaths.studentDashboard:
-        final userName = settings.arguments as String?;
-        page = StudentDashboardPage(username: userName);
+        // Accepts either a ChildProfile (from PIN flow) or a plain String username
+        final args = settings.arguments;
+        if (args is ChildProfile) {
+          page = StudentDashboardPage(username: args.name, childProfile: args);
+        } else {
+          page = StudentDashboardPage(username: args as String?);
+        }
         break;
+      case RouterPaths.childPin:
+        return MaterialPageRoute(builder: (_) => const ChildPinPage());
+
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
         page = MathAdventurePage(userName: userName);

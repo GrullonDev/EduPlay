@@ -97,7 +97,7 @@ class MainLayout extends StatelessWidget {
           label: 'Jugar Ahora',
           icon: Icons.arrow_forward_rounded,
           onPressed: () =>
-              Navigator.pushNamed(context, RouterPaths.guestEntry),
+              Navigator.pushNamed(context, RouterPaths.childPin),
           style: _PillButtonStyle.whiteOnCoral,
         ),
       );
