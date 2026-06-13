@@ -11,9 +11,15 @@ import 'package:edu_play/features/student_dashboard/pages/student_dashboard_layo
 /// (via [StudentDashboardBloc]) plus the existing games catalog (via
 /// [MenuProvider]) to the dashboard layout.
 class StudentDashboardPage extends StatelessWidget {
-  const StudentDashboardPage({super.key, required this.username});
+  const StudentDashboardPage({
+    super.key,
+    required this.username,
+    this.childProfile,
+  });
 
   final String? username;
+  /// Optional ChildProfile passed from the PIN login flow.
+  final Object? childProfile;
 
   @override
   Widget build(BuildContext context) {
