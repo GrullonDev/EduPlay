@@ -4,12 +4,17 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/practice_session/models/practice_session.dart';
+import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
 const _kRed = Color(0xFFC0392B);
+const _kCoral = Color(0xFFFF6E6C);
 const _kBg = Color(0xFFF8F7FF);
+const _kLavender = Color(0xFFEEEDF8);
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -21,7 +26,6 @@ class ParentsDashboardPage extends StatefulWidget {
 }
 
 class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
-  int _navIndex = 0;
   List<ChildProfile> _profiles = [];
   String _parentName = 'Mamá';
   bool _loading = true;
@@ -46,20 +50,10 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
   }
 
   Future<void> _addProfile() async {
-    final result = await showDialog<ChildProfile>(
-      context: context,
-      builder: (_) => _AddProfileDialog(existingCount: _profiles.length),
-    );
-    if (result != null) {
-      // Show the generated PIN to the parent
-      if (mounted) {
-        await showDialog(
-          context: context,
-          builder: (_) => _PinRevealDialog(profile: result),
-        );
-        setState(() => _profiles.add(result));
-      }
-    }
+    // Navigate to the full Create Explorer wizard page
+    await Navigator.of(context).pushNamed(RouterPaths.createExplorer);
+    // Reload profiles after returning (wizard saves to SharedPreferences)
+    _load();
   }
 
   Future<void> _deleteProfile(ChildProfile p) async {
@@ -98,145 +92,22 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          _ParentsNavBar(
-            navIndex: _navIndex,
+          EduPlayNavBar.parent(
+            activeParentTab: ParentTab.inicio,
             parentName: _parentName,
-            onNavTap: (i) => setState(() => _navIndex = i),
           ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _navIndex == 0
-                    ? _OverviewBody(
-                        profiles: _profiles,
-                        parentName: _parentName,
-                        onAddProfile: _addProfile,
-                        onDeleteProfile: _deleteProfile,
-                      )
-                    : _PlaceholderTab(index: _navIndex),
+                : _OverviewBody(
+                    profiles: _profiles,
+                    parentName: _parentName,
+                    onAddProfile: _addProfile,
+                    onDeleteProfile: _deleteProfile,
+                  ),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Top nav bar ───────────────────────────────────────────────────────────────
-
-class _ParentsNavBar extends StatelessWidget {
-  const _ParentsNavBar({
-    required this.navIndex,
-    required this.parentName,
-    required this.onNavTap,
-  });
-
-  final int navIndex;
-  final String parentName;
-  final ValueChanged<int> onNavTap;
-
-  static const _tabs = ['Inicio', 'Progreso', 'Recursos', 'Configuración'];
-
-  @override
-  Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
-
-    return Material(
-      color: Colors.white,
-      elevation: 1,
-      shadowColor: Colors.black12,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 40 : 16, vertical: 12),
-          child: Row(
-            children: [
-              Text(
-                'EduPlay',
-                style: GoogleFonts.fredoka(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: _kNavy,
-                ),
-              ),
-              if (isDesktop) ...[
-                const SizedBox(width: 36),
-                for (int i = 0; i < _tabs.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 28),
-                    child: GestureDetector(
-                      onTap: () => onNavTap(i),
-                      child: _NavTab(
-                          label: _tabs[i], selected: navIndex == i),
-                    ),
-                  ),
-              ],
-              const Spacer(),
-              Icon(Icons.notifications_outlined,
-                  color: Colors.grey[400], size: 22),
-              const SizedBox(width: 16),
-              Icon(Icons.settings_outlined,
-                  color: Colors.grey[400], size: 22),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 15,
-                    backgroundImage: const AssetImage(
-                        'assets/icons/default_avatar.png'),
-                    backgroundColor: _kNavy.withValues(alpha: 0.1),
-                    onBackgroundImageError: (_, __) {},
-                    child: Icon(Icons.person_rounded,
-                        size: 16, color: _kNavy.withValues(alpha: 0.5)),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    parentName,
-                    style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      color: _kNavy,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavTab extends StatelessWidget {
-  const _NavTab({required this.label, required this.selected});
-  final String label;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            color: selected ? _kNavy : Colors.grey[500],
-          ),
-        ),
-        const SizedBox(height: 3),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 2,
-          width: selected ? 24 : 0,
-          decoration: BoxDecoration(
-            color: _kNavy,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -296,6 +167,27 @@ class _OverviewBody extends StatelessWidget {
                   ],
                 ),
               ),
+              // Start Session button
+              Builder(builder: (ctx) => ElevatedButton.icon(
+                onPressed: () =>
+                    Navigator.of(ctx).pushNamed(RouterPaths.createSession),
+                icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+                label: Text(
+                  'Start Session',
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kCoral,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              )),
+              const SizedBox(width: 10),
               ElevatedButton.icon(
                 onPressed: onAddProfile,
                 icon: const Icon(Icons.add_rounded, size: 18),
@@ -365,6 +257,8 @@ class _OverviewBody extends StatelessWidget {
         _WeeklySummaryCard(totalMinutes: _totalMinutes, topSubject: _topSubject),
         const SizedBox(height: 16),
         const _QuickControlsCard(),
+        const SizedBox(height: 16),
+        const _ActiveSessionsCard(),
       ],
     );
 
@@ -965,6 +859,176 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Active Sessions card ──────────────────────────────────────────────────────
+
+class _ActiveSessionsCard extends StatelessWidget {
+  const _ActiveSessionsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<PracticeSession>>(
+      stream: PracticeSessionsService.watchActiveSessions(),
+      builder: (context, snapshot) {
+        final isLoading = snapshot.connectionState == ConnectionState.waiting;
+        final sessions = snapshot.data ?? [];
+
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _kNavyDark,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Icon(Icons.play_circle_outline_rounded,
+                    size: 16, color: Colors.white54),
+                const SizedBox(width: 8),
+                Text('Active Sessions',
+                    style: GoogleFonts.fredoka(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+                const Spacer(),
+                // Live indicator — pulses while stream is connected
+                if (!isLoading)
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF27AE60),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ]),
+              const SizedBox(height: 14),
+              if (isLoading)
+                const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Colors.white54),
+                  ),
+                )
+              else if (sessions.isEmpty)
+                Column(
+                  children: [
+                    const Text('🎮', style: TextStyle(fontSize: 28)),
+                    const SizedBox(height: 6),
+                    Text('No active sessions',
+                        style: GoogleFonts.nunito(
+                            color: Colors.white54, fontSize: 12)),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(context)
+                            .pushNamed(RouterPaths.createSession),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: _kCoral),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text('Start Session',
+                            style: GoogleFonts.nunito(
+                                color: _kCoral,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13)),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                ...sessions.map(
+                  (s) => _SessionRow(
+                    session: s,
+                    onEnd: () => PracticeSessionsService.endSession(s.id),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SessionRow extends StatelessWidget {
+  const _SessionRow({required this.session, required this.onEnd});
+
+  final PracticeSession session;
+  final VoidCallback onEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Expanded(
+              child: Text(session.childName,
+                  style: GoogleFonts.fredoka(
+                      color: Colors.white, fontSize: 13,
+                      fontWeight: FontWeight.w600)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF27AE60).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text('Active',
+                  style: GoogleFonts.nunito(
+                      color: const Color(0xFF27AE60), fontSize: 10,
+                      fontWeight: FontWeight.w800)),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Text('PIN: ${session.pin}  •  ${session.totalCount} games',
+              style: GoogleFonts.nunito(
+                  color: Colors.white54, fontSize: 11)),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: session.progressFraction,
+              minHeight: 4,
+              backgroundColor: Colors.white.withOpacity(0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(_kCoral),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(children: [
+            Text(
+              '${session.completedCount}/${session.totalCount} done',
+              style: GoogleFonts.nunito(color: Colors.white38, fontSize: 10),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: onEnd,
+              child: Text('End',
+                  style: GoogleFonts.nunito(
+                      color: _kCoral,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
+            ),
+          ]),
         ],
       ),
     );
