@@ -23,6 +23,7 @@ import 'package:edu_play/features/register_parents/pages/register_parents_page.d
 import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
+import 'package:edu_play/features/teacher_registration/pages/teacher_registration_page.dart';
 import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
 import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
 import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
@@ -51,6 +52,9 @@ class AppRouter {
         break;
       case RouterPaths.registerParents:
         page = const RegisterParentsPage();
+        break;
+      case RouterPaths.registerTeacher:
+        page = const TeacherRegistrationPage();
         break;
       case RouterPaths.registerChild:
         page = const RegisterChildPage();

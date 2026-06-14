@@ -3,6 +3,7 @@ class RouterPaths {
   static const landing = '/landing';
   static const login = '/login';
   static const registerParents = '/register-parents';
+  static const registerTeacher = '/register-teacher';
   static const registerChild = '/register-child';
   static const menu = '/menu';
   static const mathAdventure = '/math-adventure';
