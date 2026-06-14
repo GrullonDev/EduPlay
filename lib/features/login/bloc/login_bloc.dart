@@ -23,15 +23,27 @@ class LoginBloc extends ChangeNotifier {
 
   bool isLoading = false;
   bool obscurePassword = true;
+  bool rememberMe = false;
 
   void togglePasswordVisibility() {
     obscurePassword = !obscurePassword;
     notifyListeners();
   }
 
+  void toggleRememberMe() {
+    rememberMe = !rememberMe;
+    notifyListeners();
+  }
+
   Future<void> login() async {
     isLoading = true;
     notifyListeners();
+
+    // Set persistence before signing in: LOCAL keeps the session after
+    // browser restart; SESSION clears it when the tab closes.
+    await FirebaseAuth.instance.setPersistence(
+      rememberMe ? Persistence.LOCAL : Persistence.SESSION,
+    );
 
     User? user = await authRepository.loginParent(
       email: emailController.text.trim(),

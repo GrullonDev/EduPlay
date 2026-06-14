@@ -335,8 +335,9 @@ class _LoginForm extends StatelessWidget {
                 width: 18,
                 height: 18,
                 child: Checkbox(
-                  value: false,
-                  onChanged: (_) {},
+                  value: bloc.rememberMe,
+                  onChanged: (_) => bloc.toggleRememberMe(),
+                  activeColor: _kNavy,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),

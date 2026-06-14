@@ -54,6 +54,7 @@ class ImplAuthDatasource implements AuthDatasource {
           'email': email,
           'age': age,
           'children': children,
+          'role': 'parent', // used by AuthGate to route back after reload
         });
       }
 
