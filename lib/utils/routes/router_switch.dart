@@ -1,6 +1,14 @@
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
+import 'package:edu_play/features/settings/pages/settings_page.dart';
+import 'package:edu_play/features/progress_reports/pages/progress_reports_page.dart';
+import 'package:edu_play/features/create_explorer/pages/create_explorer_page.dart';
+import 'package:edu_play/features/practice_session/pages/create_session_page.dart';
+import 'package:edu_play/features/practice_session/pages/session_entry_page.dart';
+import 'package:edu_play/features/practice_session/pages/practice_kiosk_page.dart';
+import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:flutter/material.dart';
 
@@ -116,6 +124,35 @@ class AppRouter {
       case RouterPaths.teacherDashboard:
         return MaterialPageRoute(
           builder: (_) => const TeacherDashboardPage(),
+        );
+      case RouterPaths.parentGuide:
+        return MaterialPageRoute(
+          builder: (_) => const ParentGuidePage(),
+        );
+      case RouterPaths.settings:
+        return MaterialPageRoute(
+          builder: (_) => const SettingsPage(),
+        );
+      case RouterPaths.progressReports:
+        return MaterialPageRoute(
+          builder: (_) => const ProgressReportsPage(),
+        );
+      case RouterPaths.createExplorer:
+        return MaterialPageRoute(
+          builder: (_) => const CreateExplorerPage(),
+        );
+      case RouterPaths.createSession:
+        return MaterialPageRoute(
+          builder: (_) => const CreateSessionPage(),
+        );
+      case RouterPaths.practiceSession:
+        return MaterialPageRoute(
+          builder: (_) => const SessionEntryPage(),
+        );
+      case RouterPaths.practiceKiosk:
+        final session = settings.arguments as PracticeSession;
+        return MaterialPageRoute(
+          builder: (_) => PracticeKioskPage(session: session),
         );
       default:
         page = const Scaffold(

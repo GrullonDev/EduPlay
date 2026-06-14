@@ -22,4 +22,11 @@ class RouterPaths {
   static const stickerAlbum = '/sticker-album';
   static const gamesCatalog = '/games-catalog';
   static const childPin = '/child-pin';
+  static const parentGuide = '/parent-guide';
+  static const settings = '/settings';
+  static const progressReports = '/progress-reports';
+  static const createExplorer = '/create-explorer';
+  static const createSession = '/create-session';
+  static const practiceSession = '/practice-session';
+  static const practiceKiosk = '/practice';
 }
