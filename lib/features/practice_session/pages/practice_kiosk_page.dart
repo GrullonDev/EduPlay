@@ -180,12 +180,14 @@ class _TopBar extends StatelessWidget {
         children: [
           Text('EduPlay',
               style: GoogleFonts.fredoka(
-                  fontSize: 20, color: Colors.white, fontWeight: FontWeight.w700)),
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700)),
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
-              color: _kCoral.withOpacity(0.9),
+              color: _kCoral.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text('Practice Mode',
@@ -197,7 +199,7 @@ class _TopBar extends StatelessWidget {
           const Spacer(),
           CircleAvatar(
             radius: 16,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             child: Text(
               session.childName.isNotEmpty
                   ? session.childName[0].toUpperCase()
@@ -212,9 +214,7 @@ class _TopBar extends StatelessWidget {
           Text(
             session.childName,
             style: GoogleFonts.nunito(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w700),
+                color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -264,9 +264,8 @@ class _ProgressBanner extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: pct,
                     minHeight: 8,
-                    backgroundColor: Colors.white.withOpacity(0.15),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(_kCoral),
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    valueColor: const AlwaysStoppedAnimation<Color>(_kCoral),
                   ),
                 ),
               ],
@@ -300,19 +299,18 @@ class _KioskGameCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: completed ? game.color.withOpacity(0.08) : Colors.white,
+          color: completed ? game.color.withValues(alpha: 0.08) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: completed
-                ? const Color(0xFF27AE60)
-                : const Color(0xFFE8E8F0),
+            color:
+                completed ? const Color(0xFF27AE60) : const Color(0xFFE8E8F0),
             width: completed ? 2 : 1,
           ),
           boxShadow: completed
               ? []
               : [
                   BoxShadow(
-                    color: game.color.withOpacity(0.15),
+                    color: game.color.withValues(alpha: 0.15),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -329,7 +327,7 @@ class _KioskGameCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: game.color.withOpacity(0.15),
+                      color: game.color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
@@ -343,15 +341,14 @@ class _KioskGameCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF27AE60).withOpacity(0.12),
+                        color: const Color(0xFF27AE60).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(Icons.check_rounded,
-                              size: 11,
-                              color: Color(0xFF27AE60)),
+                              size: 11, color: Color(0xFF27AE60)),
                           const SizedBox(width: 3),
                           Text('Done',
                               style: GoogleFonts.nunito(
@@ -433,12 +430,26 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
   bool _finishing = false;
   int _currentScore = 0;
 
+  // Stopwatch records time-on-task for games that don't have
+  // their own score callback yet. Score = seconds × 2, capped at 300.
+  final Stopwatch _stopwatch = Stopwatch();
+
+  @override
+  void initState() {
+    super.initState();
+    _stopwatch.start();
+  }
+
+  int get _timeBasedScore => (_stopwatch.elapsed.inSeconds * 2).clamp(0, 300);
+
   Future<void> _finishGame() async {
+    _stopwatch.stop();
     setState(() => _finishing = true);
+    final score = _currentScore > 0 ? _currentScore : _timeBasedScore;
     await PracticeSessionsService.recordGameCompletion(
       widget.session.id,
       widget.game.id,
-      score: _currentScore > 0 ? _currentScore : 0,
+      score: score,
     );
     if (mounted) Navigator.pop(context);
   }
@@ -451,7 +462,9 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
           onScoreUpdate: (s) => setState(() => _currentScore = s),
         );
       case 'magic-words':
-        return const MagicWordsPage();
+        return MagicWordsPage(
+          onScoreUpdate: (s) => setState(() => _currentScore = s),
+        );
       case 'fun-english':
         return const FunEnglishPage();
       case 'nature-explorers':
@@ -527,8 +540,7 @@ class _KioskBar extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               const Text('🚀', style: TextStyle(fontSize: 18)),
@@ -586,8 +598,8 @@ class _CompletionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalScore = session.scoreMap.values
-        .fold<int>(0, (sum, s) => sum + s);
+    final totalScore =
+        session.scoreMap.values.fold<int>(0, (sum, s) => sum + s);
 
     return Scaffold(
       body: Container(
@@ -631,10 +643,10 @@ class _CompletionScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.white.withOpacity(0.2)),
+                          color: Colors.white.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       children: [
@@ -687,8 +699,7 @@ class _CompletionScreen extends StatelessWidget {
                               ),
                               Text('$score pts',
                                   style: GoogleFonts.nunito(
-                                      color: Colors.white60,
-                                      fontSize: 13)),
+                                      color: Colors.white60, fontSize: 13)),
                             ]),
                           );
                         }),
@@ -699,8 +710,8 @@ class _CompletionScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   Text(
                     'Ask your parent to see your progress report!',
-                    style: GoogleFonts.nunito(
-                        color: Colors.white60, fontSize: 14),
+                    style:
+                        GoogleFonts.nunito(color: Colors.white60, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -757,8 +768,7 @@ class _StatPill extends StatelessWidget {
                 fontSize: 20,
                 fontWeight: FontWeight.w700)),
         Text(label,
-            style: GoogleFonts.nunito(
-                color: Colors.white60, fontSize: 11)),
+            style: GoogleFonts.nunito(color: Colors.white60, fontSize: 11)),
       ],
     );
   }

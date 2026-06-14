@@ -10,12 +10,14 @@ class MagicWordsProvider with ChangeNotifier {
   MagicWordsProvider({
     required this.context,
     required this.age,
+    this.onScoreUpdate,
   }) {
     _generateLevel();
   }
 
   final BuildContext context;
   final int age;
+  final void Function(int score)? onScoreUpdate;
 
   int _score = 0;
   int _lives = 3;
@@ -129,6 +131,7 @@ class MagicWordsProvider with ChangeNotifier {
 
   void _increaseScore() {
     _score += 10;
+    onScoreUpdate?.call(_score);
     if (_score % 50 == 0) {
       _showReward('¡Excelente!', '¡Has ganado puntos extras!');
     }

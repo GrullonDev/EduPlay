@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MagicWordsPage extends StatelessWidget {
-  const MagicWordsPage({super.key});
+  const MagicWordsPage({super.key, this.onScoreUpdate});
+
+  final void Function(int score)? onScoreUpdate;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,7 @@ class MagicWordsPage extends StatelessWidget {
       create: (context) => MagicWordsProvider(
         context: context,
         age: age,
+        onScoreUpdate: onScoreUpdate,
       ),
       builder: (_, __) => Scaffold(
         body: Container(
