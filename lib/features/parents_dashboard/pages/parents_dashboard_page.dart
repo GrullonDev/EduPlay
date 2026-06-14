@@ -7,6 +7,8 @@ import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/features/subscription/models/subscription.dart';
+import 'package:edu_play/features/subscription/services/subscription_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -159,10 +161,17 @@ class _OverviewBody extends StatelessWidget {
                         color: _kNavy,
                       ),
                     ),
-                    Text(
-                      'Aquí tienes el resumen de hoy para tu familia.',
-                      style: GoogleFonts.nunito(
-                          fontSize: 14, color: Colors.grey[500]),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          'Aquí tienes el resumen de hoy para tu familia.',
+                          style: GoogleFonts.nunito(
+                              fontSize: 14, color: Colors.grey[500]),
+                        ),
+                        const SizedBox(width: 10),
+                        _TierBadge(),
+                      ],
                     ),
                   ],
                 ),
@@ -1818,6 +1827,61 @@ class _SessionHistoryCard extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Tier badge ────────────────────────────────────────────────────────────────
+
+class _TierBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Subscription>(
+      stream: SubscriptionService.watchSubscription(),
+      builder: (context, snap) {
+        final sub = snap.data;
+        if (sub == null) return const SizedBox.shrink();
+        final isPro = sub.isPro;
+        return GestureDetector(
+          onTap: () => Navigator.of(context).pushNamed(RouterPaths.settings),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isPro
+                  ? const Color(0xFFF39C12).withValues(alpha: 0.15)
+                  : _kNavy.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isPro
+                    ? const Color(0xFFF39C12)
+                    : _kNavy.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isPro ? Icons.star_rounded : Icons.lock_outline_rounded,
+                  size: 11,
+                  color: isPro ? const Color(0xFFF39C12) : _kNavy,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  isPro ? 'PRO' : 'GRATIS',
+                  style: GoogleFonts.nunito(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: isPro ? const Color(0xFFF39C12) : _kNavy,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

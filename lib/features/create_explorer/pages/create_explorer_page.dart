@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/subscription/services/subscription_service.dart';
+import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -112,6 +114,16 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
       );
       return;
     }
+
+    // ── Free-tier child limit check ──────────────────────────────────────────
+    final allowed =
+        await SubscriptionService.canAddChild(_existingCount);
+    if (!allowed) {
+      if (!mounted) return;
+      await showUpgradePrompt(context, UpgradeReason.childLimit);
+      return;
+    }
+
     setState(() => _loading = true);
 
     final profile = await ChildProfilesService.addProfile(
