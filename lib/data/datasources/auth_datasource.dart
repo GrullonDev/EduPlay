@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:edu_play/features/subscription/services/subscription_service.dart';
+
 abstract class AuthDatasource {
   Future<User?> registerParent({
     required String email,
@@ -56,6 +58,8 @@ class ImplAuthDatasource implements AuthDatasource {
           'children': children,
           'role': 'parent', // used by AuthGate to route back after reload
         });
+        // Seed subscription document (free tier).
+        await SubscriptionService.initSubscription(user.uid);
         // Send verification email immediately after account creation.
         // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
         // For better inbox placement, configure a custom sender domain in

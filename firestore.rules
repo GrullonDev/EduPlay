@@ -90,6 +90,28 @@ service cloud.firestore {
         && resource.data.parentUid == request.auth.uid;
     }
 
+    // ── Subscriptions ─────────────────────────────────────────────────────────
+    // Top-level collection: subscriptions/{uid}
+    // Parents read their own subscription. App client writes usage counters
+    // (sessionsThisMonth). Tier upgrades come via Cloud Functions / Stripe
+    // webhooks, so only Cloud Functions can set tier:'pro'.
+    // For now, allow the client to write usage counters but not the tier field.
+    match /subscriptions/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Allow client to create their own subscription doc (seeded at registration)
+      // and increment usage counters, but not self-promote tier.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.tier == 'free';
+
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && (!request.resource.data.diff(resource.data)
+               .affectedKeys()
+               .hasAny(['tier']));
+    }
+
     // ── Leaderboard ───────────────────────────────────────────────────────────
     // Any authenticated user can read the leaderboard.
     // Each user writes only their own entry.
