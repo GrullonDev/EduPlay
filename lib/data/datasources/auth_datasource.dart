@@ -56,6 +56,11 @@ class ImplAuthDatasource implements AuthDatasource {
           'children': children,
           'role': 'parent', // used by AuthGate to route back after reload
         });
+        // Send verification email immediately after account creation.
+        // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
+        // For better inbox placement, configure a custom sender domain in
+        // Firebase Console → Authentication → Templates → Customize action URL.
+        await user.sendEmailVerification();
       }
 
       return user;

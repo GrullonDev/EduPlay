@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layout.dart';
@@ -52,14 +53,27 @@ class AuthGate extends StatelessWidget {
               return const _SplashLoader();
             }
 
-            switch (roleSnap.data) {
+            final role = roleSnap.data;
+
+            // Unknown role — sign out to avoid an infinite loop.
+            if (role == null) {
+              Future.microtask(() => FirebaseAuth.instance.signOut());
+              return const MainPage();
+            }
+
+            // Email not yet verified → show the hard gate.
+            // Anonymous users (child kiosk) are always considered verified so
+            // they are never blocked by this check.
+            if (!user.isAnonymous && !(user.emailVerified)) {
+              return EmailVerificationGatePage(role: role);
+            }
+
+            switch (role) {
               case 'teacher':
                 return const TeacherDashboardLayout();
               case 'parent':
                 return const ParentsDashboardPage();
               default:
-                // UID found in Firebase Auth but not in either collection —
-                // sign out and return to main to avoid infinite loop.
                 Future.microtask(() => FirebaseAuth.instance.signOut());
                 return const MainPage();
             }
