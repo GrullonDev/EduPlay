@@ -105,8 +105,7 @@ class _RetosPanelState extends State<RetosPanel>
     final wide = MediaQuery.of(context).size.width >= 900;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-          horizontal: wide ? 32 : 16, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -118,16 +117,15 @@ class _RetosPanelState extends State<RetosPanel>
           Container(
             decoration: BoxDecoration(
               border: Border(
-                  bottom: BorderSide(
-                      color: Colors.grey.shade200, width: 1)),
+                  bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
             ),
             child: TabBar(
               controller: _tabs,
               isScrollable: true,
-              labelStyle: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w800, fontSize: 14),
-              unselectedLabelStyle: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w500, fontSize: 14),
+              labelStyle:
+                  GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
+              unselectedLabelStyle:
+                  GoogleFonts.nunito(fontWeight: FontWeight.w500, fontSize: 14),
               labelColor: _kNavy,
               unselectedLabelColor: Colors.grey.shade500,
               indicatorColor: _kNavy,
@@ -191,10 +189,9 @@ class _Header extends StatelessWidget {
             backgroundColor: _kCoral,
             foregroundColor: Colors.white,
             elevation: 0,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
       ],
@@ -254,7 +251,7 @@ class _RetoCard extends StatelessWidget {
             ? []
             : [
                 BoxShadow(
-                    color: _kNavy.withOpacity(0.07),
+                    color: _kNavy.withValues(alpha: 0.07),
                     blurRadius: 10,
                     offset: const Offset(0, 3))
               ],
@@ -267,7 +264,7 @@ class _RetoCard extends StatelessWidget {
             _StatusBadge(status: reto.status),
             const Spacer(),
             if (_isFeatured)
-              Icon(Icons.star_border_rounded,
+              const Icon(Icons.star_border_rounded,
                   size: 18, color: Colors.white54)
             else if (!_isDraft)
               Icon(Icons.more_vert_rounded,
@@ -289,16 +286,15 @@ class _RetoCard extends StatelessWidget {
             '${reto.subject} • ${reto.group}',
             style: GoogleFonts.nunito(
               fontSize: 12,
-              color: _isFeatured
-                  ? Colors.white60
-                  : Colors.grey.shade500,
+              color: _isFeatured ? Colors.white60 : Colors.grey.shade500,
             ),
           ),
           const SizedBox(height: 14),
 
           // Middle content
           if (reto.status == _RetoStatus.active) ...[
-            _progressRow('Progreso Grupal',
+            _progressRow(
+                'Progreso Grupal',
                 reto.progressFraction ?? 0,
                 Colors.amber,
                 '${((reto.progressFraction ?? 0) * 100).round()}%',
@@ -310,7 +306,8 @@ class _RetoCard extends StatelessWidget {
                 color: const Color(0xFFF3F2FF),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: const Color(0xFFE0DEFF), width: 1,
+                    color: const Color(0xFFE0DEFF),
+                    width: 1,
                     style: BorderStyle.solid),
               ),
               child: Center(
@@ -322,7 +319,8 @@ class _RetoCard extends StatelessWidget {
               ),
             ),
           ] else if (reto.status == _RetoStatus.featured) ...[
-            _progressRow('Participación Activa',
+            _progressRow(
+                'Participación Activa',
                 reto.participationFraction ?? 0,
                 Colors.white,
                 '${((reto.participationFraction ?? 0) * 100).round()}%',
@@ -375,20 +373,23 @@ class _RetoCard extends StatelessWidget {
                 width: 52,
                 height: 22,
                 child: Stack(
-                  children: List.generate(3, (i) => Positioned(
-                    left: i * 14.0,
-                    child: CircleAvatar(
-                      radius: 10,
-                      backgroundColor: const Color(0xFFDBEAFE),
-                      child: Text(['A', 'B', 'C'][i],
-                          style: const TextStyle(
-                              fontSize: 8, color: Color(0xFF3B82F6))),
-                    ),
-                  )),
+                  children: List.generate(
+                      3,
+                      (i) => Positioned(
+                            left: i * 14.0,
+                            child: CircleAvatar(
+                              radius: 10,
+                              backgroundColor: const Color(0xFFDBEAFE),
+                              child: Text(['A', 'B', 'C'][i],
+                                  style: const TextStyle(
+                                      fontSize: 8, color: Color(0xFF3B82F6))),
+                            ),
+                          )),
                 ),
               ),
-              Text('+12', style: GoogleFonts.nunito(
-                  fontSize: 10, color: Colors.grey.shade400)),
+              Text('+12',
+                  style: GoogleFonts.nunito(
+                      fontSize: 10, color: Colors.grey.shade400)),
             ])
           else if (reto.status == _RetoStatus.scheduled)
             Row(children: [
@@ -444,8 +445,7 @@ class _RetoCard extends StatelessWidget {
     );
   }
 
-  Widget _progressRow(
-      String label, double frac, Color barColor, String pctText,
+  Widget _progressRow(String label, double frac, Color barColor, String pctText,
       {required bool featured}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,7 +470,7 @@ class _RetoCard extends StatelessWidget {
             value: frac,
             minHeight: 8,
             backgroundColor: featured
-                ? Colors.white.withOpacity(0.2)
+                ? Colors.white.withValues(alpha: 0.2)
                 : const Color(0xFFE8E8F0),
             valueColor: AlwaysStoppedAnimation<Color>(
                 featured ? Colors.white : barColor),
@@ -490,21 +490,36 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, bg, color, icon) = switch (status) {
-      _RetoStatus.active =>
-        ('Active', const Color(0xFFDCFCE7), const Color(0xFF16A34A),
-            Icons.circle),
-      _RetoStatus.scheduled =>
-        ('Scheduled', const Color(0xFFFEF3C7), const Color(0xFFD97706),
-            Icons.access_time_rounded),
-      _RetoStatus.featured =>
-        ('DESTACADO', Colors.white.withOpacity(0.15), Colors.white,
-            null),
-      _RetoStatus.completed =>
-        ('Completed', const Color(0xFFEEEDF8), const Color(0xFF6366F1),
-            Icons.check_circle_rounded),
-      _RetoStatus.draft =>
-        ('BORRADOR', Colors.transparent, const Color(0xFF9CA3AF),
-            Icons.edit_note_rounded),
+      _RetoStatus.active => (
+          'Active',
+          const Color(0xFFDCFCE7),
+          const Color(0xFF16A34A),
+          Icons.circle
+        ),
+      _RetoStatus.scheduled => (
+          'Scheduled',
+          const Color(0xFFFEF3C7),
+          const Color(0xFFD97706),
+          Icons.access_time_rounded
+        ),
+      _RetoStatus.featured => (
+          'DESTACADO',
+          Colors.white.withValues(alpha: 0.15),
+          Colors.white,
+          null
+        ),
+      _RetoStatus.completed => (
+          'Completed',
+          const Color(0xFFEEEDF8),
+          const Color(0xFF6366F1),
+          Icons.check_circle_rounded
+        ),
+      _RetoStatus.draft => (
+          'BORRADOR',
+          Colors.transparent,
+          const Color(0xFF9CA3AF),
+          Icons.edit_note_rounded
+        ),
     };
 
     return Container(
@@ -547,7 +562,7 @@ class _CreateRetoCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: _kNavy.withOpacity(0.06),
+                color: _kNavy.withValues(alpha: 0.06),
                 blurRadius: 10,
                 offset: const Offset(0, 3))
           ],
@@ -558,8 +573,8 @@ class _CreateRetoCard extends StatelessWidget {
             Container(
               width: 52,
               height: 52,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEEDF8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEEDF8),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.add_rounded,
@@ -568,9 +583,7 @@ class _CreateRetoCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text('Crear nuevo reto',
                 style: GoogleFonts.nunito(
-                    fontSize: 14,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700)),
+                    fontSize: 14, color: _kNavy, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text('Explora la biblioteca de plantillas',
                 style: GoogleFonts.nunito(

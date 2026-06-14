@@ -18,6 +18,7 @@ class StudentDashboardPage extends StatelessWidget {
   });
 
   final String? username;
+
   /// Optional ChildProfile passed from the PIN login flow.
   final Object? childProfile;
 

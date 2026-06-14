@@ -84,16 +84,16 @@ class _LeftPanel extends StatelessWidget {
           ),
           const Spacer(),
           // Feature cards
-          _FeatureCard(
+          const _FeatureCard(
             icon: Icons.school_rounded,
-            iconColor: const Color(0xFFF4A82B),
+            iconColor: Color(0xFFF4A82B),
             title: 'Para Escuelas',
             subtitle: 'Herramientas analíticas robustas para educadores.',
           ),
           const SizedBox(height: 16),
-          _FeatureCard(
+          const _FeatureCard(
             icon: Icons.videogame_asset_rounded,
-            iconColor: const Color(0xFFF4A82B),
+            iconColor: Color(0xFFF4A82B),
             title: 'Para Estudiantes',
             subtitle: 'Misiones y desafíos que motivan el progreso diario.',
           ),
@@ -241,10 +241,6 @@ class _RightPanel extends StatelessWidget {
                     const SizedBox(height: 32),
                     const _LoginForm(),
                     const SizedBox(height: 24),
-                    _Divider(),
-                    const SizedBox(height: 20),
-                    _SocialButtons(),
-                    const SizedBox(height: 28),
                     _RegisterLink(userType: userType),
                   ],
                 ),
@@ -319,8 +315,7 @@ Future<void> _showPasswordReset(BuildContext context) async {
                 if (error != null) ...[
                   const SizedBox(height: 10),
                   Text(error!,
-                      style: GoogleFonts.nunito(
-                          fontSize: 12, color: _kRed)),
+                      style: GoogleFonts.nunito(fontSize: 12, color: _kRed)),
                 ],
               ]),
         actions: sent
@@ -382,8 +377,8 @@ Future<void> _showPasswordReset(BuildContext context) async {
                               strokeWidth: 2.5, color: Colors.white),
                         )
                       : Text('Enviar enlace',
-                          style: GoogleFonts.nunito(
-                              fontWeight: FontWeight.w700)),
+                          style:
+                              GoogleFonts.nunito(fontWeight: FontWeight.w700)),
                 ),
               ],
       ),
@@ -402,7 +397,7 @@ class _LoginForm extends StatelessWidget {
       builder: (context, bloc, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _FieldLabel('Correo electrónico'),
+          const _FieldLabel('Correo electrónico'),
           const SizedBox(height: 6),
           _TextField(
             controller: bloc.emailController,
@@ -412,7 +407,7 @@ class _LoginForm extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _FieldLabel('Contraseña')),
+              const Expanded(child: _FieldLabel('Contraseña')),
               GestureDetector(
                 onTap: () => _showPasswordReset(context),
                 child: Text(
@@ -580,32 +575,6 @@ class _TextField extends StatelessWidget {
   }
 }
 
-// ── Divider "O CONTINUAR CON" ─────────────────────────────────────────────────
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Colors.grey[300])),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'O CONTINUAR CON',
-            style: GoogleFonts.nunito(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1,
-              color: Colors.grey[400],
-            ),
-          ),
-        ),
-        Expanded(child: Divider(color: Colors.grey[300])),
-      ],
-    );
-  }
-}
-
 // ── Register link (conditional on userType) ───────────────────────────────────
 
 class _RegisterLink extends StatelessWidget {
@@ -615,10 +584,10 @@ class _RegisterLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isTeacher = userType == 'teacher';
-    final label = isTeacher ? 'Regístrate como docente' : 'Crear cuenta de padre/madre';
-    final route = isTeacher
-        ? RouterPaths.registerTeacher
-        : RouterPaths.registerParents;
+    final label =
+        isTeacher ? 'Regístrate como docente' : 'Crear cuenta de padre/madre';
+    final route =
+        isTeacher ? RouterPaths.registerTeacher : RouterPaths.registerParents;
 
     return Center(
       child: RichText(
@@ -649,52 +618,3 @@ class _RegisterLink extends StatelessWidget {
   }
 }
 
-// ── Social buttons ────────────────────────────────────────────────────────────
-
-class _SocialButtons extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: _SocialButton(label: 'Google', iconPath: 'google')),
-        const SizedBox(width: 12),
-        Expanded(
-            child: _SocialButton(label: 'Microsoft', iconPath: 'microsoft')),
-      ],
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({required this.label, required this.iconPath});
-
-  final String label;
-  final String iconPath;
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = iconPath == 'google'
-        ? Icons.g_mobiledata_rounded
-        : Icons.window_rounded;
-
-    return OutlinedButton.icon(
-      onPressed: () {},
-      icon: Icon(icon, size: 20, color: _kNavy),
-      label: Text(
-        label,
-        style: GoogleFonts.nunito(
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-          color: _kNavy,
-        ),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        side: BorderSide(color: Colors.grey.shade300),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
-}

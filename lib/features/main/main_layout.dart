@@ -96,8 +96,7 @@ class MainLayout extends StatelessWidget {
         button: _PillButton(
           label: 'Jugar Ahora',
           icon: Icons.arrow_forward_rounded,
-          onPressed: () =>
-              Navigator.pushNamed(context, RouterPaths.childPin),
+          onPressed: () => Navigator.pushNamed(context, RouterPaths.childPin),
           style: _PillButtonStyle.whiteOnCoral,
         ),
       );
@@ -348,8 +347,7 @@ class _PillButton extends StatelessWidget {
             backgroundColor: Colors.white,
             foregroundColor: _kCoral,
             elevation: 0,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
             shape: shape,
             textStyle: textStyle,
           ),
@@ -363,8 +361,7 @@ class _PillButton extends StatelessWidget {
             backgroundColor: _kNavy,
             foregroundColor: Colors.white,
             elevation: 0,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
             shape: shape,
             textStyle: textStyle,
           ),
@@ -377,8 +374,7 @@ class _PillButton extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: _kNavy,
             side: const BorderSide(color: _kNavy, width: 1.5),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: shape,
             textStyle: textStyle,
           ),

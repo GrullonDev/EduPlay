@@ -3,6 +3,19 @@ import 'dart:math';
 /// A parent-created practice session that locks a child into a curated
 /// set of exercises. Stored locally via SharedPreferences (no backend).
 class PracticeSession {
+  factory PracticeSession.fromJson(Map<String, dynamic> j) => PracticeSession(
+        id: j['id'] as String,
+        childProfileId: j['childProfileId'] as String,
+        childName: j['childName'] as String? ?? '',
+        pin: j['pin'] as String,
+        assignedGameIds: (j['assignedGameIds'] as List<dynamic>).cast<String>(),
+        createdAt: DateTime.parse(j['createdAt'] as String),
+        isActive: j['isActive'] as bool? ?? true,
+        completedGameIds:
+            (j['completedGameIds'] as List<dynamic>? ?? []).cast<String>(),
+        scoreMap: (j['scoreMap'] as Map<String, dynamic>? ?? {})
+            .map((k, v) => MapEntry(k, (v as num).toInt())),
+      );
   const PracticeSession({
     required this.id,
     required this.childProfileId,
@@ -40,8 +53,7 @@ class PracticeSession {
 
   bool get isCompleted =>
       assignedGameIds.isNotEmpty &&
-      assignedGameIds
-          .every((id) => completedGameIds.contains(id));
+      assignedGameIds.every((id) => completedGameIds.contains(id));
 
   int get completedCount => completedGameIds.length;
   int get totalCount => assignedGameIds.length;
@@ -50,8 +62,7 @@ class PracticeSession {
       totalCount == 0 ? 0 : completedCount / totalCount;
 
   /// Deep URL the child opens to join this session.
-  String sessionUrl(String baseUrl) =>
-      '$baseUrl/practice-session?pin=$pin';
+  String sessionUrl(String baseUrl) => '$baseUrl/practice-session?pin=$pin';
 
   // ── Serialisation ────────────────────────────────────────────────────────────
 
@@ -66,21 +77,6 @@ class PracticeSession {
         'completedGameIds': completedGameIds,
         'scoreMap': scoreMap.map((k, v) => MapEntry(k, v)),
       };
-
-  factory PracticeSession.fromJson(Map<String, dynamic> j) => PracticeSession(
-        id: j['id'] as String,
-        childProfileId: j['childProfileId'] as String,
-        childName: j['childName'] as String? ?? '',
-        pin: j['pin'] as String,
-        assignedGameIds:
-            (j['assignedGameIds'] as List<dynamic>).cast<String>(),
-        createdAt: DateTime.parse(j['createdAt'] as String),
-        isActive: j['isActive'] as bool? ?? true,
-        completedGameIds:
-            (j['completedGameIds'] as List<dynamic>? ?? []).cast<String>(),
-        scoreMap: (j['scoreMap'] as Map<String, dynamic>? ?? {})
-            .map((k, v) => MapEntry(k, (v as num).toInt())),
-      );
 
   PracticeSession copyWith({
     bool? isActive,

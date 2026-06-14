@@ -39,7 +39,8 @@ class TeacherDashboardBloc extends ChangeNotifier {
     final total = students.fold<double>(
       0,
       (acc, s) =>
-          acc + StudentRepository.xpProgress((s['points'] as num?)?.toInt() ?? 0),
+          acc +
+          StudentRepository.xpProgress((s['points'] as num?)?.toInt() ?? 0),
     );
     return total / students.length;
   }

@@ -18,7 +18,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  int _sectionIndex = 0; // 0=Profile, 1=Subscription, 2=Notifications, 3=Security
+  int _sectionIndex =
+      0; // 0=Profile, 1=Subscription, 2=Notifications, 3=Security
 
   static const _sections = [
     (icon: Icons.person_outline_rounded, label: 'Profile'),
@@ -35,7 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          EduPlayNavBar.parent(activeParentTab: ParentTab.configuracion),
+          const EduPlayNavBar.parent(activeParentTab: ParentTab.configuracion),
           Expanded(
             child: isDesktop
                 ? Row(
@@ -74,8 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 icon: _sections[i].icon,
                                 label: _sections[i].label,
                                 selected: _sectionIndex == i,
-                                onTap: () =>
-                                    setState(() => _sectionIndex = i),
+                                onTap: () => setState(() => _sectionIndex = i),
                               ),
                             ),
                           ),
@@ -152,11 +152,10 @@ class _SidebarPanel extends StatelessWidget {
             onTap: () {},
             borderRadius: BorderRadius.circular(10),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Row(
                 children: [
-                  Icon(Icons.logout_rounded, size: 18, color: _kRed),
+                  const Icon(Icons.logout_rounded, size: 18, color: _kRed),
                   const SizedBox(width: 12),
                   Text(
                     'Logout',
@@ -200,16 +199,13 @@ class _SidebarItem extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: selected
-                ? _kNavy
-                : Colors.transparent,
+            color: selected ? _kNavy : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
             children: [
               Icon(icon,
-                  size: 18,
-                  color: selected ? Colors.white : Colors.grey[500]),
+                  size: 18, color: selected ? Colors.white : Colors.grey[500]),
               const SizedBox(width: 12),
               Text(
                 label,
@@ -250,14 +246,12 @@ class _MobileTab extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? _kNavy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: selected ? _kNavy : Colors.grey.shade200),
+          border: Border.all(color: selected ? _kNavy : Colors.grey.shade200),
         ),
         child: Row(
           children: [
             Icon(icon,
-                size: 14,
-                color: selected ? Colors.white : Colors.grey[500]),
+                size: 14, color: selected ? Colors.white : Colors.grey[500]),
             const SizedBox(width: 6),
             Text(
               label,
@@ -317,7 +311,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
   final _currentPwCtrl = TextEditingController();
   final _newPwCtrl = TextEditingController();
   final _confirmPwCtrl = TextEditingController();
-  bool _showPw = false;
+  final bool _showPw = false;
 
   static const _gradeLevels = [
     'Primary School - Year 1',
@@ -370,11 +364,6 @@ class _ProfileSectionState extends State<_ProfileSection> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _kNavy.withValues(alpha: 0.12),
-                          image: const DecorationImage(
-                            image: AssetImage('assets/avatar.png'),
-                            onError: _silenceError,
-                            fit: BoxFit.cover,
-                          ),
                         ),
                         child: const Icon(Icons.person_rounded,
                             size: 40, color: _kNavy),
@@ -412,12 +401,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
                           )
                         : Column(
                             children: [
-                              _FieldGroup(
-                                  label: 'Full Name', ctrl: _nameCtrl),
+                              _FieldGroup(label: 'Full Name', ctrl: _nameCtrl),
                               const SizedBox(height: 16),
                               _FieldGroup(
-                                  label: 'Email Address',
-                                  ctrl: _emailCtrl),
+                                  label: 'Email Address', ctrl: _emailCtrl),
                             ],
                           ),
                   ),
@@ -431,10 +418,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _FieldLabel('Grade Level'),
+                              const _FieldLabel('Grade Level'),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                value: _gradeLevel,
+                                initialValue: _gradeLevel,
                                 style: GoogleFonts.nunito(
                                     fontSize: 14,
                                     color: const Color(0xFF111827)),
@@ -461,13 +448,12 @@ class _ProfileSectionState extends State<_ProfileSection> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FieldLabel('Grade Level'),
+                        const _FieldLabel('Grade Level'),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: _gradeLevel,
+                          initialValue: _gradeLevel,
                           style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              color: const Color(0xFF111827)),
+                              fontSize: 14, color: const Color(0xFF111827)),
                           decoration: _inputDec(''),
                           items: _gradeLevels
                               .map((g) => DropdownMenuItem(
@@ -475,12 +461,10 @@ class _ProfileSectionState extends State<_ProfileSection> {
                                     child: Text(g),
                                   ))
                               .toList(),
-                          onChanged: (v) =>
-                              setState(() => _gradeLevel = v!),
+                          onChanged: (v) => setState(() => _gradeLevel = v!),
                         ),
                         const SizedBox(height: 16),
-                        _FieldGroup(
-                            label: 'School ID', ctrl: _schoolCtrl),
+                        _FieldGroup(label: 'School ID', ctrl: _schoolCtrl),
                       ],
                     ),
             ],
@@ -579,15 +563,14 @@ class _ProfileSectionState extends State<_ProfileSection> {
         const SizedBox(height: 40),
 
         // Footer
-        _SettingsFooter(),
+        const _SettingsFooter(),
       ],
     );
   }
 
   InputDecoration _inputDec(String hint) => InputDecoration(
         hintText: hint,
-        hintStyle:
-            GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+        hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
         filled: true,
         fillColor: const Color(0xFFF9FAFB),
         border: OutlineInputBorder(
@@ -678,8 +661,7 @@ class _PwField extends StatelessWidget {
 
 InputDecoration _sharedInputDec(String hint) => InputDecoration(
       hintText: hint,
-      hintStyle:
-          GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+      hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       border: OutlineInputBorder(
@@ -694,11 +676,8 @@ InputDecoration _sharedInputDec(String hint) => InputDecoration(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: _kNavy, width: 1.5),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
-
-void _silenceError(Object e, StackTrace? st) {}
 
 // ── Settings card wrapper ─────────────────────────────────────────────────────
 
@@ -788,7 +767,7 @@ class _PlaceholderSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 40),
-        _SettingsFooter(),
+        const _SettingsFooter(),
       ],
     );
   }
@@ -832,15 +811,12 @@ class _SettingsFooter extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
-            child: _FooterLinks('RESOURCES', [
-              'Teacher Resources',
-              'Parent Guide',
-              'Support Center'
-            ]),
+            child: _FooterLinks('RESOURCES',
+                ['Teacher Resources', 'Parent Guide', 'Support Center']),
           ),
-          Expanded(
+          const Expanded(
             flex: 2,
             child: _FooterLinks('LEGAL', [
               'Privacy Policy',
@@ -879,8 +855,7 @@ class _FooterLinks extends StatelessWidget {
             child: Text(
               link,
               style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  color: _kNavy.withValues(alpha: 0.7)),
+                  fontSize: 12, color: _kNavy.withValues(alpha: 0.7)),
             ),
           ),
       ],

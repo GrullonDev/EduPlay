@@ -58,6 +58,19 @@ class PracticeSessionsService {
     return snap.docs.map(_fromDoc).toList();
   }
 
+  /// Real-time stream of this parent's completed (inactive) sessions,
+  /// newest first. Used for the session history view.
+  static Stream<List<PracticeSession>> watchCompletedSessions() {
+    final uid = _uid;
+    if (uid == null) return const Stream.empty();
+    return _col
+        .where('parentUid', isEqualTo: uid)
+        .where('isActive', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(_fromDoc).toList());
+  }
+
   /// Real-time stream of this parent's active sessions.
   /// Use with [StreamBuilder] in the dashboard for live score updates.
   static Stream<List<PracticeSession>> watchActiveSessions() {

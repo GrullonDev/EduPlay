@@ -171,8 +171,8 @@ class _Navbar extends StatelessWidget {
                   backgroundColor: _kRed,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -204,13 +204,13 @@ class _LeftContent extends StatelessWidget {
           child: Container(
             height: 240,
             width: double.infinity,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFFE8E6FF),
-                  const Color(0xFFD5D3F5),
+                  Color(0xFFE8E6FF),
+                  Color(0xFFD5D3F5),
                 ],
               ),
             ),
@@ -252,16 +252,16 @@ class _LeftContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        _BenefitItem(
+        const _BenefitItem(
           icon: Icons.bar_chart_rounded,
-          iconColor: const Color(0xFF6C63FF),
-          accentColor: const Color(0xFF6C63FF),
+          iconColor: Color(0xFF6C63FF),
+          accentColor: Color(0xFF6C63FF),
           title: 'Seguimiento en tiempo real',
           description:
               'Visualiza el progreso detallado de tus hijos en cada asignatura y competencia.',
         ),
         const SizedBox(height: 12),
-        _BenefitItem(
+        const _BenefitItem(
           icon: Icons.check_box_rounded,
           iconColor: _kRed,
           accentColor: _kRed,
@@ -708,8 +708,9 @@ class _Footer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _FooterBrand()),
-                Expanded(child: _FooterLinks('Product', _productLinks)),
-                Expanded(child: _FooterLinks('Resources', _resourceLinks)),
+                const Expanded(child: _FooterLinks('Product', _productLinks)),
+                const Expanded(
+                    child: _FooterLinks('Resources', _resourceLinks)),
                 Expanded(child: _FooterNewsletter()),
               ],
             )
@@ -718,9 +719,9 @@ class _Footer extends StatelessWidget {
               children: [
                 _FooterBrand(),
                 const SizedBox(height: 24),
-                _FooterLinks('Product', _productLinks),
+                const _FooterLinks('Product', _productLinks),
                 const SizedBox(height: 24),
-                _FooterLinks('Resources', _resourceLinks),
+                const _FooterLinks('Resources', _resourceLinks),
                 const SizedBox(height: 24),
                 _FooterNewsletter(),
               ],
@@ -832,8 +833,8 @@ class _FooterNewsletter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 ),
               ),
             ),
@@ -844,8 +845,8 @@ class _FooterNewsletter extends StatelessWidget {
                 backgroundColor: _kNavy,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

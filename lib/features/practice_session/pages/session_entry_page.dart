@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -156,10 +155,9 @@ class _SessionEntryPageState extends State<SessionEntryPage>
             ),
             const Spacer(),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -186,7 +184,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: Colors.white.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
@@ -235,15 +233,13 @@ class _SessionEntryPageState extends State<SessionEntryPage>
                       height: 52,
                       decoration: BoxDecoration(
                         color: filled
-                            ? (_error
-                                ? const Color(0xFFC0392B)
-                                : Colors.white)
-                            : Colors.white.withOpacity(0.12),
+                            ? (_error ? const Color(0xFFC0392B) : Colors.white)
+                            : Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: _error
                               ? const Color(0xFFC0392B)
-                              : Colors.white.withOpacity(0.25),
+                              : Colors.white.withValues(alpha: 0.25),
                           width: 1.5,
                         ),
                       ),
@@ -345,8 +341,7 @@ class _NumKey extends StatefulWidget {
   State<_NumKey> createState() => _NumKeyState();
 }
 
-class _NumKeyState extends State<_NumKey>
-    with SingleTickerProviderStateMixin {
+class _NumKeyState extends State<_NumKey> with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
 
@@ -386,10 +381,10 @@ class _NumKeyState extends State<_NumKey>
           height: 68,
           decoration: BoxDecoration(
             color: widget.label == '⌫'
-                ? Colors.white.withOpacity(0.08)
-                : Colors.white.withOpacity(0.12),
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -405,4 +400,3 @@ class _NumKeyState extends State<_NumKey>
     );
   }
 }
-

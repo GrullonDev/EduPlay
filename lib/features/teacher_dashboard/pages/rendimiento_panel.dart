@@ -1,4 +1,3 @@
-import 'dart:math' show max;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -24,14 +23,10 @@ const _kAlertas = [
 ];
 
 const _kRanking = [
-  ('AC', 'Alejandro Cano', '#4421', 9.8, 0.82, true, 42, 45,
-      Color(0xFF6366F1)),
-  ('SM', 'Sofía Martínez', '#4398', 9.4, 0.79, true, 38, 45,
-      Color(0xFF3B82F6)),
-  ('LG', 'Lucas García', '#4105', 8.7, 0.73, true, 35, 45,
-      Color(0xFF10B981)),
-  ('VL', 'Valeria Luna', '#4230', 7.9, 0.65, false, 28, 45,
-      Color(0xFFF59E0B)),
+  ('AC', 'Alejandro Cano', '#4421', 9.8, 0.82, true, 42, 45, Color(0xFF6366F1)),
+  ('SM', 'Sofía Martínez', '#4398', 9.4, 0.79, true, 38, 45, Color(0xFF3B82F6)),
+  ('LG', 'Lucas García', '#4105', 8.7, 0.73, true, 35, 45, Color(0xFF10B981)),
+  ('VL', 'Valeria Luna', '#4230', 7.9, 0.65, false, 28, 45, Color(0xFFF59E0B)),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -53,8 +48,7 @@ class _RendimientoPanelState extends State<RendimientoPanel> {
     final wide = MediaQuery.of(context).size.width >= 900;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-          horizontal: wide ? 32 : 16, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -269,9 +263,9 @@ class _SubjectProgressCard extends StatelessWidget {
                 style: GoogleFonts.fredoka(
                     fontSize: 16, color: _kNavy, fontWeight: FontWeight.w700)),
             const Spacer(),
-            _LegendDot(color: const Color(0xFF3B82F6), label: 'Media actual'),
+            const _LegendDot(color: Color(0xFF3B82F6), label: 'Media actual'),
             const SizedBox(width: 12),
-            _LegendDot(color: _kAmber, label: 'Objetivo'),
+            const _LegendDot(color: _kAmber, label: 'Objetivo'),
           ]),
           const SizedBox(height: 20),
           SizedBox(
@@ -292,9 +286,9 @@ class _LegendDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(children: [
         Container(
-            width: 10, height: 10,
-            decoration:
-                BoxDecoration(color: color, shape: BoxShape.circle)),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 5),
         Text(label,
             style: GoogleFonts.nunito(
@@ -326,10 +320,10 @@ class _GroupedBarChart extends StatelessWidget {
                         child: Container(
                           width: 18,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF3C7),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFEF3C7),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(4)),
                           ),
                         ),
                       ),
@@ -429,13 +423,13 @@ class _AlertaRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(children: [
         CircleAvatar(
           radius: 16,
-          backgroundColor: color.withOpacity(0.2),
+          backgroundColor: color.withValues(alpha: 0.2),
           child: Text(initials,
               style: GoogleFonts.nunito(
                   color: color, fontWeight: FontWeight.w800, fontSize: 11)),
@@ -451,8 +445,8 @@ class _AlertaRow extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       fontSize: 13)),
               Text(note,
-                  style: GoogleFonts.nunito(
-                      color: Colors.white60, fontSize: 11)),
+                  style:
+                      GoogleFonts.nunito(color: Colors.white60, fontSize: 11)),
             ],
           ),
         ),
@@ -496,8 +490,7 @@ class _RankingTable extends StatelessWidget {
           ),
           // Column headers
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
               children: [
                 SizedBox(
@@ -566,8 +559,7 @@ class _RankingRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(children: [
             // Student info
             SizedBox(
@@ -575,7 +567,7 @@ class _RankingRow extends StatelessWidget {
               child: Row(children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: data.$9.withOpacity(0.15),
+                  backgroundColor: data.$9.withValues(alpha: 0.15),
                   child: Text(data.$1,
                       style: GoogleFonts.nunito(
                           color: data.$9,
@@ -615,9 +607,7 @@ class _RankingRow extends StatelessWidget {
                       minHeight: 6,
                       backgroundColor: const Color(0xFFE8E8F0),
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          data.$6
-                              ? const Color(0xFF16A34A)
-                              : _kCoral),
+                          data.$6 ? const Color(0xFF16A34A) : _kCoral),
                     ),
                   ),
                 ),
@@ -632,17 +622,13 @@ class _RankingRow extends StatelessWidget {
                       ? Icons.trending_up_rounded
                       : Icons.trending_down_rounded,
                   size: 16,
-                  color: data.$6
-                      ? const Color(0xFF16A34A)
-                      : _kCoral,
+                  color: data.$6 ? const Color(0xFF16A34A) : _kCoral,
                 ),
                 const SizedBox(width: 4),
                 Text('+4%',
                     style: GoogleFonts.nunito(
                         fontSize: 12,
-                        color: data.$6
-                            ? const Color(0xFF16A34A)
-                            : _kCoral,
+                        color: data.$6 ? const Color(0xFF16A34A) : _kCoral,
                         fontWeight: FontWeight.w700)),
               ]),
             ),
@@ -650,8 +636,8 @@ class _RankingRow extends StatelessWidget {
             SizedBox(
               width: 120,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEEDF8),
                   borderRadius: BorderRadius.circular(20),
@@ -665,10 +651,10 @@ class _RankingRow extends StatelessWidget {
               ),
             ),
             // Actions
-            SizedBox(
+            const SizedBox(
               width: 60,
               child: Icon(Icons.visibility_outlined,
-                  size: 18, color: const Color(0xFF6366F1)),
+                  size: 18, color: Color(0xFF6366F1)),
             ),
           ]),
         ),
@@ -683,7 +669,7 @@ BoxDecoration _cardDecoration() => BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-            color: _kNavy.withOpacity(0.06),
+            color: _kNavy.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3))
       ],

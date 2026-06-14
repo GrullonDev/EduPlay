@@ -7,11 +7,11 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const _kNavy   = Color(0xFF1E1B6A);
+const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDk = Color(0xFF14125A);
-const _kCoral  = Color(0xFFFF6E6C);
-const _kRed    = Color(0xFFC0392B);
-const _kBg     = Color(0xFFF8F7FF);
+const _kCoral = Color(0xFFFF6E6C);
+const _kRed = Color(0xFFC0392B);
+const _kBg = Color(0xFFF8F7FF);
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -31,14 +31,14 @@ class TeacherRegistrationPage extends StatefulWidget {
 class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
   final _formKey = GlobalKey<FormState>();
 
-  final _firstNameCtrl  = TextEditingController();
-  final _lastNameCtrl   = TextEditingController();
-  final _emailCtrl      = TextEditingController();
-  final _passwordCtrl   = TextEditingController();
-  final _schoolCtrl     = TextEditingController();
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _schoolCtrl = TextEditingController();
 
   bool _obscurePassword = true;
-  bool _isLoading       = false;
+  bool _isLoading = false;
   String? _errorMessage;
 
   @override
@@ -54,15 +54,15 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
   Future<void> _register() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() {
-      _isLoading    = true;
+      _isLoading = true;
       _errorMessage = null;
     });
 
     try {
       // 1 — Create Firebase Auth account
-      final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(
-        email:    _emailCtrl.text.trim(),
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
       );
 
@@ -74,13 +74,16 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
           .collection('teachers')
           .doc(user.uid)
           .set({
-        'firstName':  _firstNameCtrl.text.trim(),
-        'lastName':   _lastNameCtrl.text.trim(),
-        'email':      _emailCtrl.text.trim(),
+        'firstName': _firstNameCtrl.text.trim(),
+        'lastName': _lastNameCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
         'schoolName': _schoolCtrl.text.trim(),
-        'role':       'teacher',
-        'createdAt':  FieldValue.serverTimestamp(),
+        'role': 'teacher',
+        'createdAt': FieldValue.serverTimestamp(),
       });
+
+      // Send verification email immediately after account creation.
+      await user.sendEmailVerification();
 
       if (!mounted) return;
 
@@ -94,12 +97,12 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = _authError(e.code);
-        _isLoading    = false;
+        _isLoading = false;
       });
     } catch (e) {
       setState(() {
         _errorMessage = 'Ocurrió un error inesperado. Intenta de nuevo.';
-        _isLoading    = false;
+        _isLoading = false;
       });
     }
   }
@@ -142,14 +145,19 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
               children: [
                 _backButton(),
                 const SizedBox(height: 48),
-                Text('EduPlay', style: GoogleFonts.fredoka(
-                  fontSize: 32, color: Colors.white, fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                )),
+                Text('EduPlay',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 32,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    )),
                 const SizedBox(height: 8),
-                Text('Panel Docente', style: GoogleFonts.nunito(
-                  fontSize: 14, color: Colors.white54,
-                )),
+                Text('Panel Docente',
+                    style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      color: Colors.white54,
+                    )),
                 const SizedBox(height: 56),
                 ..._benefits.map((b) => _BenefitRow(icon: b.$1, text: b.$2)),
               ],
@@ -162,15 +170,15 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 48),
             child: _FormCard(
-              formKey:        _formKey,
-              firstNameCtrl:  _firstNameCtrl,
-              lastNameCtrl:   _lastNameCtrl,
-              emailCtrl:      _emailCtrl,
-              passwordCtrl:   _passwordCtrl,
-              schoolCtrl:     _schoolCtrl,
+              formKey: _formKey,
+              firstNameCtrl: _firstNameCtrl,
+              lastNameCtrl: _lastNameCtrl,
+              emailCtrl: _emailCtrl,
+              passwordCtrl: _passwordCtrl,
+              schoolCtrl: _schoolCtrl,
               obscurePassword: _obscurePassword,
-              isLoading:      _isLoading,
-              errorMessage:   _errorMessage,
+              isLoading: _isLoading,
+              errorMessage: _errorMessage,
               onTogglePassword: () =>
                   setState(() => _obscurePassword = !_obscurePassword),
               onRegister: _register,
@@ -190,20 +198,23 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
         children: [
           _backButton(),
           const SizedBox(height: 24),
-          Text('Registro de Docentes', style: GoogleFonts.fredoka(
-            fontSize: 26, color: _kNavy, fontWeight: FontWeight.w700,
-          )),
+          Text('Registro de Docentes',
+              style: GoogleFonts.fredoka(
+                fontSize: 26,
+                color: _kNavy,
+                fontWeight: FontWeight.w700,
+              )),
           const SizedBox(height: 24),
           _FormCard(
-            formKey:         _formKey,
-            firstNameCtrl:   _firstNameCtrl,
-            lastNameCtrl:    _lastNameCtrl,
-            emailCtrl:       _emailCtrl,
-            passwordCtrl:    _passwordCtrl,
-            schoolCtrl:      _schoolCtrl,
+            formKey: _formKey,
+            firstNameCtrl: _firstNameCtrl,
+            lastNameCtrl: _lastNameCtrl,
+            emailCtrl: _emailCtrl,
+            passwordCtrl: _passwordCtrl,
+            schoolCtrl: _schoolCtrl,
             obscurePassword: _obscurePassword,
-            isLoading:       _isLoading,
-            errorMessage:    _errorMessage,
+            isLoading: _isLoading,
+            errorMessage: _errorMessage,
             onTogglePassword: () =>
                 setState(() => _obscurePassword = !_obscurePassword),
             onRegister: _register,
@@ -214,22 +225,25 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
   }
 
   Widget _backButton() => TextButton.icon(
-    onPressed: () => Navigator.of(context).maybePop(),
-    icon: const Icon(Icons.arrow_back_rounded, size: 18, color: Colors.white54),
-    label: Text('Volver', style: GoogleFonts.nunito(
-      color: Colors.white54, fontSize: 13,
-    )),
-    style: TextButton.styleFrom(padding: EdgeInsets.zero),
-  );
+        onPressed: () => Navigator.of(context).maybePop(),
+        icon: const Icon(Icons.arrow_back_rounded,
+            size: 18, color: Colors.white54),
+        label: Text('Volver',
+            style: GoogleFonts.nunito(
+              color: Colors.white54,
+              fontSize: 13,
+            )),
+        style: TextButton.styleFrom(padding: EdgeInsets.zero),
+      );
 }
 
 // ── Benefits list ─────────────────────────────────────────────────────────────
 
 const _benefits = [
-  (Icons.class_rounded,       'Gestiona tus clases y alumnos'),
-  (Icons.bar_chart_rounded,   'Seguimiento de rendimiento en tiempo real'),
-  (Icons.assignment_rounded,  'Crea y asigna retos gamificados'),
-  (Icons.picture_as_pdf,      'Genera informes para padres y dirección'),
+  (Icons.class_rounded, 'Gestiona tus clases y alumnos'),
+  (Icons.bar_chart_rounded, 'Seguimiento de rendimiento en tiempo real'),
+  (Icons.assignment_rounded, 'Crea y asigna retos gamificados'),
+  (Icons.picture_as_pdf, 'Genera informes para padres y dirección'),
 ];
 
 class _BenefitRow extends StatelessWidget {
@@ -243,17 +257,22 @@ class _BenefitRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(children: [
         Container(
-          width: 40, height: 40,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: _kCoral, size: 20),
         ),
         const SizedBox(width: 14),
-        Expanded(child: Text(text, style: GoogleFonts.nunito(
-          fontSize: 14, color: Colors.white70, height: 1.4,
-        ))),
+        Expanded(
+            child: Text(text,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: Colors.white70,
+                  height: 1.4,
+                ))),
       ]),
     );
   }
@@ -282,8 +301,8 @@ class _FormCard extends StatelessWidget {
   final TextEditingController emailCtrl;
   final TextEditingController passwordCtrl;
   final TextEditingController schoolCtrl;
-  final bool   obscurePassword;
-  final bool   isLoading;
+  final bool obscurePassword;
+  final bool isLoading;
   final String? errorMessage;
   final VoidCallback onTogglePassword;
   final VoidCallback onRegister;
@@ -309,24 +328,30 @@ class _FormCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Crear cuenta docente', style: GoogleFonts.fredoka(
-              fontSize: 24, fontWeight: FontWeight.w700, color: _kNavy,
-            )),
+            Text('Crear cuenta docente',
+                style: GoogleFonts.fredoka(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: _kNavy,
+                )),
             const SizedBox(height: 6),
             Text('Accede al panel de gestión académica',
-                style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600])),
+                style:
+                    GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600])),
             const SizedBox(height: 28),
 
             // Name row
             Row(children: [
-              Expanded(child: _field(
+              Expanded(
+                  child: _field(
                 ctrl: firstNameCtrl,
                 label: 'Nombre',
                 hint: 'Ana',
                 validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
               )),
               const SizedBox(width: 12),
-              Expanded(child: _field(
+              Expanded(
+                  child: _field(
                 ctrl: lastNameCtrl,
                 label: 'Apellido',
                 hint: 'García',
@@ -380,9 +405,10 @@ class _FormCard extends StatelessWidget {
                   const Icon(Icons.error_outline_rounded,
                       size: 16, color: _kRed),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(errorMessage!,
-                      style: GoogleFonts.nunito(
-                          fontSize: 12, color: _kRed))),
+                  Expanded(
+                      child: Text(errorMessage!,
+                          style:
+                              GoogleFonts.nunito(fontSize: 12, color: _kRed))),
                 ]),
               ),
               const SizedBox(height: 16),
@@ -394,7 +420,8 @@ class _FormCard extends StatelessWidget {
                 onPressed: isLoading ? null : onRegister,
                 icon: isLoading
                     ? const SizedBox(
-                        width: 18, height: 18,
+                        width: 18,
+                        height: 18,
                         child: CircularProgressIndicator(
                             strokeWidth: 2.5, color: Colors.white),
                       )
@@ -460,22 +487,26 @@ class _FormCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: GoogleFonts.nunito(
-          fontSize: 13, fontWeight: FontWeight.w700, color: _kNavy,
-        )),
+        Text(label,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _kNavy,
+            )),
         const SizedBox(height: 6),
         TextFormField(
-          controller:   ctrl,
-          obscureText:  obscure,
+          controller: ctrl,
+          obscureText: obscure,
           keyboardType: keyboardType,
-          validator:    validator,
+          validator: validator,
           decoration: InputDecoration(
-            hintText:  hint,
-            hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
-            filled:    true,
+            hintText: hint,
+            hintStyle:
+                GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+            filled: true,
             fillColor: const Color(0xFFF8F7FF),
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: Colors.grey.shade200),

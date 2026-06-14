@@ -205,7 +205,8 @@ class _NavTile extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Material(
-        color: selected ? accentColor.withValues(alpha: 0.12) : Colors.transparent,
+        color:
+            selected ? accentColor.withValues(alpha: 0.12) : Colors.transparent,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,

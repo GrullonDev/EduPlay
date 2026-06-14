@@ -20,7 +20,12 @@ class ParentGuidePage extends StatefulWidget {
 
 class _ParentGuidePageState extends State<ParentGuidePage> {
   int _filterIndex = 0; // 0=All, 1=Articles, 2=Video Guides, 3=Worksheets
-  static const _filters = ['All Resources', 'Articles', 'Video Guides', 'Worksheets'];
+  static const _filters = [
+    'All Resources',
+    'Articles',
+    'Video Guides',
+    'Worksheets'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +33,14 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          EduPlayNavBar.parent(activeParentTab: ParentTab.recursos),
+          const EduPlayNavBar.parent(activeParentTab: ParentTab.recursos),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Hero banner
-                  _HeroBanner(),
+                  const _HeroBanner(),
 
                   // Library categories
                   _LibrarySection(
@@ -45,16 +50,16 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
                   ),
 
                   // Screen Time + Teacher Recommendations
-                  _TwoColSection(),
+                  const _TwoColSection(),
 
                   // Printable Worksheets
-                  _WorksheetsSection(),
+                  const _WorksheetsSection(),
 
                   // Newsletter
-                  _NewsletterSection(),
+                  const _NewsletterSection(),
 
                   // Footer
-                  _GuideFooter(),
+                  const _GuideFooter(),
                 ],
               ),
             ),
@@ -132,8 +137,8 @@ class _HeroBanner extends StatelessWidget {
                           color: const Color(0xFFFFD700).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFFFD700)
-                                .withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
@@ -215,7 +220,7 @@ class _HeroBanner extends StatelessWidget {
                 // Art side
                 if (isDesktop) ...[
                   const SizedBox(width: 40),
-                  Expanded(
+                  const Expanded(
                     flex: 3,
                     child: _HeroArtWidget(),
                   ),
@@ -353,25 +358,25 @@ class _LibrarySection extends StatelessWidget {
           const SizedBox(height: 28),
 
           // Understanding Progress subsection
-          _SubsectionHeader(
+          const _SubsectionHeader(
             icon: Icons.insights_rounded,
             title: 'Understanding Progress',
           ),
           const SizedBox(height: 16),
 
           isDesktop
-              ? Row(
+              ? const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(flex: 5, child: _FeaturedArticleCard()),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(flex: 4, child: _VideoGuideCard()),
                   ],
                 )
-              : Column(
+              : const Column(
                   children: [
                     _FeaturedArticleCard(),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     _VideoGuideCard(),
                   ],
                 ),
@@ -384,9 +389,7 @@ class _LibrarySection extends StatelessWidget {
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip(
-      {required this.label,
-      required this.selected,
-      required this.onTap});
+      {required this.label, required this.selected, required this.onTap});
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -397,13 +400,11 @@ class _FilterChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: selected ? _kNavy : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-              color: selected ? _kNavy : Colors.grey.shade200),
+          border: Border.all(color: selected ? _kNavy : Colors.grey.shade200),
         ),
         child: Text(
           label,
@@ -462,83 +463,84 @@ class _FeaturedArticleCard extends StatelessWidget {
       ),
       child: IntrinsicHeight(
         child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Text side
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _ContentTypeBadge(label: 'FEATURED ARTICLE', color: _kNavy),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Decoding the EduPlay Progress Reports',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: _kNavy,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'A comprehensive guide for parents on interpreting skill mastery, adaptive learning curves, and emotional intelligence metrics.',
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: () {},
-                    icon: Text(
-                      'Read Article',
-                      style: GoogleFonts.nunito(
-                        fontSize: 13,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Text side
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _ContentTypeBadge(
+                        label: 'FEATURED ARTICLE', color: _kNavy),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Decoding the EduPlay Progress Reports',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: _kNavy,
                       ),
                     ),
-                    label: Icon(Icons.arrow_forward_rounded,
-                        size: 14, color: _kNavy),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    const SizedBox(height: 8),
+                    Text(
+                      'A comprehensive guide for parents on interpreting skill mastery, adaptive learning curves, and emotional intelligence metrics.',
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        height: 1.5,
+                      ),
                     ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: Text(
+                        'Read Article',
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _kNavy,
+                        ),
+                      ),
+                      label: const Icon(Icons.arrow_forward_rounded,
+                          size: 14, color: _kNavy),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Image placeholder
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
+              child: Container(
+                width: 160,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
                   ),
-                ],
-              ),
-            ),
-          ),
-          // Image placeholder
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(16),
-              bottomRight: Radius.circular(16),
-            ),
-            child: Container(
-              width: 160,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
                 ),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.laptop_mac_rounded,
-                  size: 52,
-                  color: Colors.white.withValues(alpha: 0.3),
+                child: Center(
+                  child: Icon(
+                    Icons.laptop_mac_rounded,
+                    size: 52,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ), // IntrinsicHeight
     );
   }
@@ -569,8 +571,8 @@ class _VideoGuideCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
                 child: Container(
                   height: 140,
                   width: double.infinity,
@@ -588,12 +590,11 @@ class _VideoGuideCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
+              const Positioned(
                 top: 10,
                 left: 10,
                 child: _ContentTypeBadge(
-                    label: 'VIDEO GUIDE',
-                    color: const Color(0xFF8E44AD)),
+                    label: 'VIDEO GUIDE', color: Color(0xFF8E44AD)),
               ),
               Positioned.fill(
                 child: Center(
@@ -627,8 +628,8 @@ class _VideoGuideCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '5-minute guide on collaborative goal setting.',
-                  style: GoogleFonts.nunito(
-                      fontSize: 12, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -681,7 +682,8 @@ class _TwoColSection extends StatelessWidget {
         type: 'ARTICLE',
         tag: '8 min read',
         title: 'The "One-for-One" Activity Rule',
-        subtitle: 'How to balance digital play with physical exercise effectively.',
+        subtitle:
+            'How to balance digital play with physical exercise effectively.',
         icon: Icons.device_unknown_rounded,
         isPdf: false,
       ),
@@ -689,7 +691,8 @@ class _TwoColSection extends StatelessWidget {
         type: 'PDF',
         tag: '1.2 MB',
         title: 'Family Digital Wellness Contract',
-        subtitle: 'A downloadable template for setting healthy household rules.',
+        subtitle:
+            'A downloadable template for setting healthy household rules.',
         icon: Icons.nights_stay_rounded,
         isPdf: true,
       ),
@@ -700,7 +703,8 @@ class _TwoColSection extends StatelessWidget {
         type: 'ARTICLE',
         tag: 'Recommended by Ms. Sarah',
         title: 'Top 10 Science Apps for Curiosity',
-        subtitle: 'Curated list of safe, exploratory apps for young scientists.',
+        subtitle:
+            'Curated list of safe, exploratory apps for young scientists.',
         icon: Icons.science_rounded,
         isPdf: false,
       ),
@@ -708,7 +712,8 @@ class _TwoColSection extends StatelessWidget {
         type: 'VIDEO',
         tag: '12:40 mins',
         title: 'Math Literacy: Home Strategies',
-        subtitle: 'Simple ways to incorporate math into daily household routines.',
+        subtitle:
+            'Simple ways to incorporate math into daily household routines.',
         icon: Icons.calculate_rounded,
         isPdf: false,
       ),
@@ -717,7 +722,7 @@ class _TwoColSection extends StatelessWidget {
     Widget col1 = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SubsectionHeader(
+        const _SubsectionHeader(
             icon: Icons.timer_outlined, title: 'Screen Time Tips'),
         const SizedBox(height: 14),
         for (final item in screenTimeItems)
@@ -738,7 +743,7 @@ class _TwoColSection extends StatelessWidget {
     Widget col2 = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SubsectionHeader(
+        const _SubsectionHeader(
             icon: Icons.school_rounded, title: 'Teacher Recommendations'),
         const SizedBox(height: 14),
         for (final item in teacherItems)
@@ -826,8 +831,7 @@ class _ResourceTile extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(icon,
-                    size: 28,
-                    color: Colors.white.withValues(alpha: 0.7)),
+                    size: 28, color: Colors.white.withValues(alpha: 0.7)),
               ),
             ),
           ),
@@ -892,10 +896,30 @@ class _WorksheetsSection extends StatelessWidget {
   const _WorksheetsSection();
 
   static const _worksheets = [
-    (subject: 'MATHEMATICS', title: 'Addition Garden Maze', color: Color(0xFF2ECC71), icon: Icons.calculate_rounded),
-    (subject: 'CREATIVE ARTS', title: 'Animal Habitats Coloring', color: Color(0xFFE91E63), icon: Icons.palette_rounded),
-    (subject: 'LITERACY', title: 'Phonics Flashcard Set', color: Color(0xFF3498DB), icon: Icons.auto_stories_rounded),
-    (subject: 'SCIENCE', title: 'Weather Observation Log', color: Color(0xFFFF9800), icon: Icons.wb_sunny_rounded),
+    (
+      subject: 'MATHEMATICS',
+      title: 'Addition Garden Maze',
+      color: Color(0xFF2ECC71),
+      icon: Icons.calculate_rounded
+    ),
+    (
+      subject: 'CREATIVE ARTS',
+      title: 'Animal Habitats Coloring',
+      color: Color(0xFFE91E63),
+      icon: Icons.palette_rounded
+    ),
+    (
+      subject: 'LITERACY',
+      title: 'Phonics Flashcard Set',
+      color: Color(0xFF3498DB),
+      icon: Icons.auto_stories_rounded
+    ),
+    (
+      subject: 'SCIENCE',
+      title: 'Weather Observation Log',
+      color: Color(0xFFFF9800),
+      icon: Icons.wb_sunny_rounded
+    ),
   ];
 
   @override
@@ -911,7 +935,7 @@ class _WorksheetsSection extends StatelessWidget {
         children: [
           Row(
             children: [
-              _SubsectionHeader(
+              const _SubsectionHeader(
                   icon: Icons.print_rounded, title: 'Printable Worksheets'),
               const Spacer(),
               TextButton(
@@ -991,8 +1015,7 @@ class _WorksheetCard extends StatelessWidget {
                   color: color.withValues(alpha: 0.1),
                   child: Center(
                     child: Icon(icon,
-                        size: 44,
-                        color: color.withValues(alpha: 0.4)),
+                        size: 44, color: color.withValues(alpha: 0.4)),
                   ),
                 ),
               ),
@@ -1061,8 +1084,8 @@ class _NewsletterSection extends StatelessWidget {
 
     return Container(
       color: _kLavender,
-      padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 56 : 24, vertical: 52),
+      padding:
+          EdgeInsets.symmetric(horizontal: isDesktop ? 56 : 24, vertical: 52),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -1139,8 +1162,8 @@ class _NewsletterSection extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 'No spam, only joy. Unsubscribe at any time.',
-                style: GoogleFonts.nunito(
-                    fontSize: 11, color: Colors.grey[400]),
+                style:
+                    GoogleFonts.nunito(fontSize: 11, color: Colors.grey[400]),
               ),
             ],
           ),
@@ -1192,7 +1215,7 @@ class _GuideFooter extends StatelessWidget {
                     ],
                   ),
                 ),
-                Expanded(
+                const Expanded(
                   flex: 2,
                   child: _FooterCol('Resources', [
                     'Teacher Resources',
@@ -1200,7 +1223,7 @@ class _GuideFooter extends StatelessWidget {
                     'Support',
                   ]),
                 ),
-                Expanded(
+                const Expanded(
                   flex: 2,
                   child: _FooterCol('Legal', [
                     'Privacy Policy',
@@ -1242,8 +1265,8 @@ class _GuideFooter extends StatelessWidget {
                                   'Download on the',
                                   style: GoogleFonts.nunito(
                                       fontSize: 9,
-                                      color: Colors.white.withValues(
-                                          alpha: 0.6)),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.6)),
                                 ),
                                 Text(
                                   'App Store',
@@ -1275,10 +1298,11 @@ class _GuideFooter extends StatelessWidget {
                       color: Colors.white),
                 ),
                 const SizedBox(height: 20),
-                _FooterCol('Resources',
+                const _FooterCol('Resources',
                     ['Teacher Resources', 'Parent Guide', 'Support']),
                 const SizedBox(height: 16),
-                _FooterCol('Legal', ['Privacy Policy', 'Terms of Service']),
+                const _FooterCol(
+                    'Legal', ['Privacy Policy', 'Terms of Service']),
               ],
             ),
           const SizedBox(height: 32),

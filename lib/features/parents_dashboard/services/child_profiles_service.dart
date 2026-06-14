@@ -30,10 +30,8 @@ class ChildProfilesService {
   static Future<ChildProfile?> findByPin(String pin) async {
     final uid = _uid;
     if (uid == null) return null;
-    final snapshot = await _profilesRef(uid)
-        .where('pin', isEqualTo: pin)
-        .limit(1)
-        .get();
+    final snapshot =
+        await _profilesRef(uid).where('pin', isEqualTo: pin).limit(1).get();
     if (snapshot.docs.isEmpty) return null;
     return ChildProfile.fromJson(snapshot.docs.first.data());
   }

@@ -59,8 +59,7 @@ class MisClasesPanel extends StatelessWidget {
     final wide = MediaQuery.of(context).size.width >= 900;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-          horizontal: wide ? 32 : 16, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -106,14 +105,12 @@ class _HeaderRow extends StatelessWidget {
           children: [
             Text('Gestión de Aulas',
                 style: GoogleFonts.fredoka(
-                    fontSize: 26,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700)),
+                    fontSize: 26, color: _kNavy, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
               'Supervisa el progreso y el compromiso de tus\nestudiantes en tiempo real.',
-              style: GoogleFonts.nunito(
-                  fontSize: 13, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -127,8 +124,7 @@ class _HeaderRow extends StatelessWidget {
             backgroundColor: _kCoral,
             foregroundColor: Colors.white,
             elevation: 0,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -147,8 +143,12 @@ class _QuickStats extends StatelessWidget {
       (Icons.school_rounded, 'TOTAL ESTUDIANTES', '142', Color(0xFF3B82F6)),
       (Icons.bolt_rounded, 'ENGAGEMENT PROMEDIO', '84%', Color(0xFFEC4899)),
       (Icons.assignment_rounded, 'TAREAS PENDIENTES', '12', Color(0xFFF59E0B)),
-      (Icons.trending_up_rounded, 'CRECIMIENTO MENSUAL', '+5.2%',
-          Color(0xFF10B981)),
+      (
+        Icons.trending_up_rounded,
+        'CRECIMIENTO MENSUAL',
+        '+5.2%',
+        Color(0xFF10B981)
+      ),
     ];
 
     return LayoutBuilder(builder: (_, c) {
@@ -194,7 +194,7 @@ class _QuickStatPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.05),
+              color: _kNavy.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2))
         ],
@@ -204,7 +204,7 @@ class _QuickStatPill extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
+            color: color.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 18, color: color),
@@ -290,7 +290,7 @@ class _ClassCard extends StatelessWidget {
         border: Border(top: BorderSide(color: cls.levelColor, width: 3)),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.06),
+              color: _kNavy.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 3))
         ],
@@ -303,7 +303,7 @@ class _ClassCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: cls.levelColor.withOpacity(0.12),
+                color: cls.levelColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(cls.level,
@@ -313,7 +313,8 @@ class _ClassCard extends StatelessWidget {
                       fontWeight: FontWeight.w800)),
             ),
             const Spacer(),
-            Icon(Icons.more_vert_rounded, size: 18, color: Colors.grey.shade400),
+            Icon(Icons.more_vert_rounded,
+                size: 18, color: Colors.grey.shade400),
           ]),
           const SizedBox(height: 10),
           Text(cls.name,
@@ -321,7 +322,8 @@ class _ClassCard extends StatelessWidget {
                   fontSize: 15, color: _kNavy, fontWeight: FontWeight.w700)),
           Text(cls.subject,
               style: GoogleFonts.nunito(
-                  fontSize: 12, color: Colors.grey.shade500,
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
                   fontStyle: FontStyle.italic)),
           const SizedBox(height: 12),
           Row(children: [
@@ -329,7 +331,8 @@ class _ClassCard extends StatelessWidget {
                 size: 14, color: Color(0xFF9CA3AF)),
             const SizedBox(width: 4),
             Text('${cls.students} Estudiantes',
-                style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade600)),
+                style: GoogleFonts.nunito(
+                    fontSize: 11, color: Colors.grey.shade600)),
             const SizedBox(width: 12),
             Text('Engagement: ',
                 style: GoogleFonts.nunito(
@@ -347,8 +350,7 @@ class _ClassCard extends StatelessWidget {
               value: cls.engagement,
               minHeight: 6,
               backgroundColor: const Color(0xFFE8E8F0),
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(cls.engagementColor),
+              valueColor: AlwaysStoppedAnimation<Color>(cls.engagementColor),
             ),
           ),
           const Spacer(),
@@ -358,22 +360,28 @@ class _ClassCard extends StatelessWidget {
               width: 48,
               height: 24,
               child: Stack(
-                children: List.generate(3, (i) => Positioned(
-                  left: i * 14.0,
-                  child: CircleAvatar(
-                    radius: 11,
-                    backgroundColor:
-                        [const Color(0xFFDBEAFE), const Color(0xFFFCE7F3),
-                         const Color(0xFFD1FAE5)][i],
-                    child: Text(['S', 'L', 'M'][i],
-                        style: GoogleFonts.nunito(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: [const Color(0xFF3B82F6),
-                                const Color(0xFFEC4899),
-                                const Color(0xFF10B981)][i])),
-                  ),
-                )),
+                children: List.generate(
+                    3,
+                    (i) => Positioned(
+                          left: i * 14.0,
+                          child: CircleAvatar(
+                            radius: 11,
+                            backgroundColor: [
+                              const Color(0xFFDBEAFE),
+                              const Color(0xFFFCE7F3),
+                              const Color(0xFFD1FAE5)
+                            ][i],
+                            child: Text(['S', 'L', 'M'][i],
+                                style: GoogleFonts.nunito(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    color: [
+                                      const Color(0xFF3B82F6),
+                                      const Color(0xFFEC4899),
+                                      const Color(0xFF10B981)
+                                    ][i])),
+                          ),
+                        )),
               ),
             ),
             Text('+${cls.students - 3}',
@@ -405,7 +413,8 @@ class _AddClassCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: const Color(0xFFE0DEFF), width: 2,
+              color: const Color(0xFFE0DEFF),
+              width: 2,
               style: BorderStyle.solid),
         ),
         child: Column(
@@ -414,8 +423,8 @@ class _AddClassCard extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEEEDF8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFEEEDF8),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.add_rounded,
@@ -456,8 +465,7 @@ class _EngagementChart extends StatelessWidget {
                     fontSize: 15, color: _kNavy, fontWeight: FontWeight.w700)),
             const Spacer(),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFFEEEDF8),
                 borderRadius: BorderRadius.circular(20),
@@ -486,12 +494,11 @@ class _EngagementChart extends StatelessWidget {
                           child: FractionallySizedBox(
                             heightFactor: _kEngagement[i],
                             child: Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
                               decoration: BoxDecoration(
                                 color: isToday
                                     ? _kNavy
-                                    : _kNavy.withOpacity(0.35),
+                                    : _kNavy.withValues(alpha: 0.35),
                                 borderRadius: const BorderRadius.vertical(
                                     top: Radius.circular(6)),
                               ),
@@ -503,12 +510,9 @@ class _EngagementChart extends StatelessWidget {
                       Text(_kDays[i],
                           style: GoogleFonts.nunito(
                               fontSize: 10,
-                              color: isToday
-                                  ? _kNavy
-                                  : Colors.grey.shade400,
-                              fontWeight: isToday
-                                  ? FontWeight.w800
-                                  : FontWeight.w500)),
+                              color: isToday ? _kNavy : Colors.grey.shade400,
+                              fontWeight:
+                                  isToday ? FontWeight.w800 : FontWeight.w500)),
                     ],
                   ),
                 );
@@ -536,15 +540,18 @@ class _RetosEnCurso extends StatelessWidget {
               style: GoogleFonts.fredoka(
                   fontSize: 15, color: _kNavy, fontWeight: FontWeight.w700)),
           const SizedBox(height: 14),
-          ..._kRetos.map((r) => _RetoRow(emoji: r.$1, name: r.$2, cls: r.$3, status: r.$4)),
+          ..._kRetos.map((r) =>
+              _RetoRow(emoji: r.$1, name: r.$2, cls: r.$3, status: r.$4)),
           const Divider(height: 20),
           GestureDetector(
             onTap: () {},
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                 decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE0DEFF), width: 1.5),
+                  border:
+                      Border.all(color: const Color(0xFFE0DEFF), width: 1.5),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text('Ver Todos los Retos',
@@ -585,8 +592,8 @@ class _RetoRow extends StatelessWidget {
             color: const Color(0xFFEEEDF8),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 18))),
+          child:
+              Center(child: Text(emoji, style: const TextStyle(fontSize: 18))),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -616,7 +623,7 @@ BoxDecoration _cardDecoration() => BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-            color: _kNavy.withOpacity(0.06),
+            color: _kNavy.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3))
       ],

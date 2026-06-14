@@ -105,8 +105,7 @@ class _ChallengeRow extends StatelessWidget {
               style: GoogleFonts.nunito(
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textColor,
-                decoration:
-                    isCompleted ? TextDecoration.lineThrough : null,
+                decoration: isCompleted ? TextDecoration.lineThrough : null,
                 decorationColor: Colors.grey,
               ),
             ),

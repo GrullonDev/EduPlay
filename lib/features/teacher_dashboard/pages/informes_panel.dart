@@ -49,8 +49,8 @@ class InformesPanel extends StatelessWidget {
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-              horizontal: wide ? 32 : 16, vertical: 24),
+          padding:
+              EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -131,29 +131,25 @@ class _HeaderRow extends StatelessWidget {
           children: [
             Text('Centro de Informes',
                 style: GoogleFonts.fredoka(
-                    fontSize: 22,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700)),
+                    fontSize: 22, color: _kNavy, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
             Text(
               'Analiza el progreso y genera reportes detallados\npara padres y administración.',
-              style: GoogleFonts.nunito(
-                  fontSize: 13, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade500),
             ),
           ],
         ),
         const Spacer(),
         OutlinedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.upload_rounded,
-              size: 14, color: _kNavy),
+          icon: const Icon(Icons.upload_rounded, size: 14, color: _kNavy),
           label: Text('Exportar Todo',
               style: GoogleFonts.nunito(
                   color: _kNavy, fontWeight: FontWeight.w700, fontSize: 13)),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: _kNavy, width: 1.5),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -188,8 +184,8 @@ class _SemanalesCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(20),
@@ -224,8 +220,7 @@ class _SemanalesCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       fontSize: 13)),
               const SizedBox(width: 4),
-              const Icon(Icons.arrow_forward_rounded,
-                  size: 14, color: _kNavy),
+              const Icon(Icons.arrow_forward_rounded, size: 14, color: _kNavy),
             ]),
           ),
         ],
@@ -248,13 +243,12 @@ class _ReportBuilderCard extends StatelessWidget {
       child: Stack(
         children: [
           // Background decoration
-          Positioned(
+          const Positioned(
             right: -10,
             top: -10,
             child: Opacity(
               opacity: 0.08,
-              child: Icon(Icons.build_rounded,
-                  size: 100, color: Colors.white),
+              child: Icon(Icons.build_rounded, size: 100, color: Colors.white),
             ),
           ),
           Column(
@@ -275,23 +269,24 @@ class _ReportBuilderCard extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: ['Filtros Avanzados', 'Gráficos Dinámicos', 'PDF / Excel']
-                    .map((t) => Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: Colors.white.withOpacity(0.2)),
-                          ),
-                          child: Text(t,
-                              style: GoogleFonts.nunito(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
-                        ))
-                    .toList(),
+                children:
+                    ['Filtros Avanzados', 'Gráficos Dinámicos', 'PDF / Excel']
+                        .map((t) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2)),
+                              ),
+                              child: Text(t,
+                                  style: GoogleFonts.nunito(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600)),
+                            ))
+                        .toList(),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -300,8 +295,8 @@ class _ReportBuilderCard extends StatelessWidget {
                   backgroundColor: _kCoral,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 13),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 13),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -327,11 +322,11 @@ class _ProgresoIndividualCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: const Border(
-            top: BorderSide(color: Color(0xFFE11D48), width: 3)),
+        border:
+            const Border(top: BorderSide(color: Color(0xFFE11D48), width: 3)),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.06),
+              color: _kNavy.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3))
         ],
@@ -366,21 +361,21 @@ class _ProgresoIndividualCard extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 16),
-          _StudentRow(
+          const _StudentRow(
               initials: 'SM',
               name: 'Sofía Martínez',
               metric: '+15% este mes',
-              metricColor: const Color(0xFF16A34A),
-              avatarBg: const Color(0xFFDBEAFE),
-              avatarColor: const Color(0xFF3B82F6)),
+              metricColor: Color(0xFF16A34A),
+              avatarBg: Color(0xFFDBEAFE),
+              avatarColor: Color(0xFF3B82F6)),
           const SizedBox(height: 8),
-          _StudentRow(
+          const _StudentRow(
               initials: 'LG',
               name: 'Lucas García',
               metric: 'Requiere apoyo',
-              metricColor: const Color(0xFFE11D48),
-              avatarBg: const Color(0xFFFCE7F3),
-              avatarColor: const Color(0xFFEC4899)),
+              metricColor: Color(0xFFE11D48),
+              avatarBg: Color(0xFFFCE7F3),
+              avatarColor: Color(0xFFEC4899)),
           const Divider(height: 24),
           GestureDetector(
             onTap: () {},
@@ -428,7 +423,9 @@ class _StudentRow extends StatelessWidget {
           backgroundColor: avatarBg,
           child: Text(initials,
               style: GoogleFonts.nunito(
-                  color: avatarColor, fontWeight: FontWeight.w800, fontSize: 11)),
+                  color: avatarColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11)),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -438,9 +435,7 @@ class _StudentRow extends StatelessWidget {
         ),
         Text(metric,
             style: GoogleFonts.nunito(
-                fontSize: 12,
-                color: metricColor,
-                fontWeight: FontWeight.w800)),
+                fontSize: 12, color: metricColor, fontWeight: FontWeight.w800)),
       ]),
     );
   }
@@ -456,11 +451,11 @@ class _VisionClaseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: const Border(
-            top: BorderSide(color: Color(0xFF3B82F6), width: 3)),
+        border:
+            const Border(top: BorderSide(color: Color(0xFF3B82F6), width: 3)),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.06),
+              color: _kNavy.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3))
         ],
@@ -495,15 +490,13 @@ class _VisionClaseCard extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 16),
-          _MetricBar(
+          const _MetricBar(
               label: 'Objetivo Mensual: Comprensión Lectora',
               fraction: 0.78,
-              color: const Color(0xFFD97706)),
+              color: Color(0xFFD97706)),
           const SizedBox(height: 10),
-          _MetricBar(
-              label: 'Participación en Retos',
-              fraction: 0.92,
-              color: _kNavy),
+          const _MetricBar(
+              label: 'Participación en Retos', fraction: 0.92, color: _kNavy),
           const Divider(height: 24),
           GestureDetector(
             onTap: () {},
@@ -540,15 +533,11 @@ class _MetricBar extends StatelessWidget {
           Expanded(
             child: Text(label,
                 style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _kNavy)),
+                    fontSize: 12, fontWeight: FontWeight.w600, color: _kNavy)),
           ),
           Text('${(fraction * 100).round()}%',
               style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: color)),
+                  fontSize: 12, fontWeight: FontWeight.w800, color: color)),
         ]),
         const SizedBox(height: 6),
         ClipRRect(
@@ -630,18 +619,16 @@ class _ReportRow extends StatelessWidget {
       children: [
         const Divider(height: 1),
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           child: Row(children: [
             Container(
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: data.iconColor.withOpacity(0.1),
+                color: data.iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child:
-                  Icon(data.icon, color: data.iconColor, size: 20),
+              child: Icon(data.icon, color: data.iconColor, size: 20),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -670,10 +657,9 @@ class _ReportRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                         fontSize: 12)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: Color(0xFF6366F1), width: 1),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
+                  side: const BorderSide(color: Color(0xFF6366F1), width: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                 ),
@@ -690,10 +676,9 @@ class _ReportRow extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           fontSize: 12)),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                        color: Color(0xFFE0DEFF), width: 1),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    side: const BorderSide(color: Color(0xFFE0DEFF), width: 1),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
@@ -711,19 +696,18 @@ class _ReportRow extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _kNavy,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
             ] else
-              Row(children: [
+              const Row(children: [
                 Icon(Icons.download_rounded,
-                    size: 18, color: const Color(0xFF6366F1)),
-                const SizedBox(width: 12),
-                Icon(Icons.share_rounded,
-                    size: 18, color: _kNavy),
+                    size: 18, color: Color(0xFF6366F1)),
+                SizedBox(width: 12),
+                Icon(Icons.share_rounded, size: 18, color: _kNavy),
               ]),
           ]),
         ),
@@ -737,7 +721,7 @@ BoxDecoration _cardDecoration() => BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-            color: _kNavy.withOpacity(0.06),
+            color: _kNavy.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3))
       ],

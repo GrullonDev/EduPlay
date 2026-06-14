@@ -183,7 +183,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
             child: Column(
               children: [
                 // Top bar
-                _ExplorerNavBar(),
+                const _ExplorerNavBar(),
 
                 // Step dots
                 const SizedBox(height: 24),
@@ -196,9 +196,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                       height: 10,
                       margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
-                        color: active
-                            ? _kNavy
-                            : _kNavy.withValues(alpha: 0.2),
+                        color: active ? _kNavy : _kNavy.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                     );
@@ -222,8 +220,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black
-                                      .withValues(alpha: 0.06),
+                                  color: Colors.black.withValues(alpha: 0.06),
                                   blurRadius: 30,
                                   offset: const Offset(0, 8),
                                 ),
@@ -287,8 +284,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                   const SizedBox(height: 28),
 
                                   // Avatar picker
-                                  _SectionLabel(
-                                      label: 'Pick an Avatar'),
+                                  const _SectionLabel(label: 'Pick an Avatar'),
                                   const SizedBox(height: 12),
                                   Wrap(
                                     spacing: 10,
@@ -299,8 +295,8 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                       (i) => _AvatarOption(
                                         icon: _kAvatarIcons[i],
                                         selected: _selectedAvatar == i,
-                                        onTap: () => setState(
-                                            () => _selectedAvatar = i),
+                                        onTap: () =>
+                                            setState(() => _selectedAvatar = i),
                                       ),
                                     ),
                                   ),
@@ -308,7 +304,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                   const SizedBox(height: 28),
 
                                   // Interests
-                                  _SectionLabel(label: 'Interests'),
+                                  const _SectionLabel(label: 'Interests'),
                                   const SizedBox(height: 12),
                                   GridView.builder(
                                     shrinkWrap: true,
@@ -362,8 +358,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                           ? const SizedBox(
                                               width: 20,
                                               height: 20,
-                                              child:
-                                                  CircularProgressIndicator(
+                                              child: CircularProgressIndicator(
                                                 color: Colors.white,
                                                 strokeWidth: 2,
                                               ),
@@ -390,8 +385,8 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
 
                 // Footer
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   child: Row(
                     children: [
                       Text(
@@ -465,8 +460,7 @@ class _ExplorerNavBar extends StatelessWidget {
               ),
             ),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
           ),
         ],
@@ -520,8 +514,7 @@ class _NameField extends StatelessWidget {
         TextFormField(
           controller: ctrl,
           style: GoogleFonts.nunito(fontSize: 14),
-          validator: (v) =>
-              (v == null || v.trim().isEmpty) ? 'Required' : null,
+          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
           decoration: _inputDec('e.g. Charlie'),
         ),
       ],
@@ -549,14 +542,13 @@ class _GradeDropdown extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: value,
+          initialValue: value,
           hint: Text(
             'Select level...',
-            style: GoogleFonts.nunito(
-                fontSize: 14, color: Colors.grey[400]),
+            style: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
           ),
-          style: GoogleFonts.nunito(
-              fontSize: 14, color: const Color(0xFF111827)),
+          style:
+              GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF111827)),
           decoration: _inputDec(''),
           items: _kGradeLevels
               .map((g) => DropdownMenuItem(value: g, child: Text(g)))
@@ -571,8 +563,7 @@ class _GradeDropdown extends StatelessWidget {
 
 InputDecoration _inputDec(String hint) => InputDecoration(
       hintText: hint,
-      hintStyle:
-          GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+      hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
       filled: true,
       fillColor: const Color(0xFFF3F4F6),
       border: OutlineInputBorder(
@@ -587,8 +578,7 @@ InputDecoration _inputDec(String hint) => InputDecoration(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: _kNavy, width: 1.5),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );
 
 // ── Avatar tile ───────────────────────────────────────────────────────────────
@@ -612,9 +602,7 @@ class _AvatarOption extends StatelessWidget {
         width: 52,
         height: 52,
         decoration: BoxDecoration(
-          color: selected
-              ? _kNavy
-              : _kLavender,
+          color: selected ? _kNavy : _kLavender,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected ? _kNavy : Colors.transparent,
@@ -665,9 +653,8 @@ class _InterestTile extends StatelessWidget {
           color: selected ? _kLavender : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected
-                ? _kNavy.withValues(alpha: 0.4)
-                : Colors.grey.shade200,
+            color:
+                selected ? _kNavy.withValues(alpha: 0.4) : Colors.grey.shade200,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -677,9 +664,7 @@ class _InterestTile extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: selected
-                  ? _kNavy
-                  : _kNavy.withValues(alpha: 0.45),
+              color: selected ? _kNavy : _kNavy.withValues(alpha: 0.45),
             ),
             const SizedBox(height: 4),
             Text(
@@ -688,9 +673,7 @@ class _InterestTile extends StatelessWidget {
               style: GoogleFonts.nunito(
                 fontSize: 11,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-                color: selected
-                    ? _kNavy
-                    : _kNavy.withValues(alpha: 0.55),
+                color: selected ? _kNavy : _kNavy.withValues(alpha: 0.55),
               ),
             ),
           ],
@@ -737,7 +720,7 @@ class _PinRevealDialog extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                "¡${profile.name} está listo!",
+                '¡${profile.name} está listo!',
                 style: GoogleFonts.fredoka(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,

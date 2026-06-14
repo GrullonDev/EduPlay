@@ -180,7 +180,8 @@ class AssignedChallengesCard extends StatelessWidget {
               ),
             )
           else
-            for (final challenge in challenges) _ChallengeRow(challenge: challenge),
+            for (final challenge in challenges)
+              _ChallengeRow(challenge: challenge),
         ],
       ),
     );
@@ -233,8 +234,8 @@ class _ChallengeRow extends StatelessWidget {
                 if (subject != null)
                   Text(
                     subject.label,
-                    style:
-                        GoogleFonts.nunito(fontSize: 12, color: Colors.grey[600]),
+                    style: GoogleFonts.nunito(
+                        fontSize: 12, color: Colors.grey[600]),
                   ),
               ],
             ),

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -82,8 +81,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     final wide = MediaQuery.of(context).size.width >= 900;
     return Scaffold(
       backgroundColor: _kBg,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(64),
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(64),
         child: EduPlayNavBar.parent(
           activeParentTab: ParentTab.inicio,
           parentName: '',
@@ -143,8 +142,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 style: GoogleFonts.nunito(color: Colors.grey.shade600)),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, RouterPaths.parentsDashboard),
+              onPressed: () => Navigator.pushReplacementNamed(
+                  context, RouterPaths.parentsDashboard),
               style: ElevatedButton.styleFrom(backgroundColor: _kCoral),
               child: Text('Go to Dashboard',
                   style: GoogleFonts.nunito(
@@ -167,7 +166,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           Text(
             'Pick a child and select the games you want them to practice. '
             'A shareable link and PIN will be generated.',
-            style: GoogleFonts.nunito(fontSize: 15, color: Colors.grey.shade700),
+            style:
+                GoogleFonts.nunito(fontSize: 15, color: Colors.grey.shade700),
           ),
         ],
       );
@@ -203,7 +203,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-                color: _kNavy.withOpacity(0.07),
+                color: _kNavy.withValues(alpha: 0.07),
                 blurRadius: 12,
                 offset: const Offset(0, 4)),
           ],
@@ -258,14 +258,17 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Widget _createButton() => SizedBox(
         width: double.infinity,
         child: ElevatedButton(
-          onPressed: (_selectedProfile != null && _selectedGameIds.isNotEmpty && !_loading)
+          onPressed: (_selectedProfile != null &&
+                  _selectedGameIds.isNotEmpty &&
+                  !_loading)
               ? _createSession
               : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: _kCoral,
             disabledBackgroundColor: Colors.grey.shade300,
             padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           child: _loading
               ? const SizedBox(
@@ -288,7 +291,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
         style: GoogleFonts.nunito(
           fontSize: 11,
           fontWeight: FontWeight.w800,
-          color: _kNavy.withOpacity(0.5),
+          color: _kNavy.withValues(alpha: 0.5),
           letterSpacing: 1.2,
         ),
       );
@@ -323,7 +326,7 @@ class _ProfileTile extends StatelessWidget {
           border: Border.all(
               color: selected ? _kNavy : const Color(0xFFE0DEFF), width: 2),
           boxShadow: selected
-              ? [BoxShadow(color: _kNavy.withOpacity(0.2), blurRadius: 8)]
+              ? [BoxShadow(color: _kNavy.withValues(alpha: 0.2), blurRadius: 8)]
               : [],
         ),
         child: Row(children: [
@@ -351,9 +354,8 @@ class _ProfileTile extends StatelessWidget {
                 Text('Grade ${profile.level}',
                     style: GoogleFonts.nunito(
                         fontSize: 11,
-                        color: selected
-                            ? Colors.white70
-                            : Colors.grey.shade500)),
+                        color:
+                            selected ? Colors.white70 : Colors.grey.shade500)),
               ],
             ),
           ),
@@ -399,7 +401,7 @@ class _SummaryCard extends StatelessWidget {
 
   Widget _row(IconData icon, String label, String value) => Row(
         children: [
-          Icon(icon, size: 16, color: _kNavy.withOpacity(0.6)),
+          Icon(icon, size: 16, color: _kNavy.withValues(alpha: 0.6)),
           const SizedBox(width: 8),
           Text(label,
               style: GoogleFonts.nunito(
@@ -435,7 +437,7 @@ class _GameTile extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? game.color.withOpacity(0.12) : Colors.white,
+          color: selected ? game.color.withValues(alpha: 0.12) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? game.color : const Color(0xFFE8E8F0),
@@ -491,9 +493,10 @@ class _SessionCreatedDialog extends StatelessWidget {
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF27AE60).withOpacity(0.12),
+                  color: const Color(0xFF27AE60).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -520,7 +523,8 @@ class _SessionCreatedDialog extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 '${session.totalCount} game${session.totalCount == 1 ? '' : 's'} assigned',
-                style: GoogleFonts.nunito(color: Colors.grey.shade600, fontSize: 14),
+                style: GoogleFonts.nunito(
+                    color: Colors.grey.shade600, fontSize: 14),
               ),
 
               const SizedBox(height: 24),
@@ -530,7 +534,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: _kNavy.withOpacity(0.5),
+                      color: _kNavy.withValues(alpha: 0.5),
                       letterSpacing: 1.2)),
               const SizedBox(height: 8),
               Row(
@@ -562,7 +566,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: _kNavy.withOpacity(0.5),
+                      color: _kNavy.withValues(alpha: 0.5),
                       letterSpacing: 1.2)),
               const SizedBox(height: 8),
               Container(
@@ -587,7 +591,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: _kNavy.withOpacity(0.5),
+                      color: _kNavy.withValues(alpha: 0.5),
                       letterSpacing: 1.2)),
               const SizedBox(height: 8),
               Container(
@@ -598,7 +602,8 @@ class _SessionCreatedDialog extends StatelessWidget {
                 child: Row(children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
+                      padding:
+                          const EdgeInsets.only(left: 12, top: 10, bottom: 10),
                       child: Text(
                         url,
                         style: GoogleFonts.nunito(
@@ -617,8 +622,8 @@ class _SessionCreatedDialog extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: url));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Link copied!',
-                              style: GoogleFonts.nunito()),
+                          content:
+                              Text('Link copied!', style: GoogleFonts.nunito()),
                           backgroundColor: _kNavy,
                           behavior: SnackBarBehavior.floating,
                           duration: const Duration(seconds: 2),

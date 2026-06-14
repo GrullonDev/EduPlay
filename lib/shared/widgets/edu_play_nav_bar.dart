@@ -20,6 +20,7 @@ const _kNavy = Color(0xFF1E1B6A);
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum ParentTab { inicio, progreso, recursos, configuracion }
+
 enum StudentTab { learn, games, classroom, reports }
 
 class EduPlayNavBar extends StatelessWidget {
@@ -45,17 +46,37 @@ class EduPlayNavBar extends StatelessWidget {
   final String? parentName;
 
   static const _parentTabs = [
-    (label: 'Inicio', tab: ParentTab.inicio, route: RouterPaths.parentsDashboard),
-    (label: 'Progreso', tab: ParentTab.progreso, route: RouterPaths.progressReports),
-    (label: 'Recursos', tab: ParentTab.recursos, route: RouterPaths.parentGuide),
-    (label: 'Configuración', tab: ParentTab.configuracion, route: RouterPaths.settings),
+    (
+      label: 'Inicio',
+      tab: ParentTab.inicio,
+      route: RouterPaths.parentsDashboard
+    ),
+    (
+      label: 'Progreso',
+      tab: ParentTab.progreso,
+      route: RouterPaths.progressReports
+    ),
+    (
+      label: 'Recursos',
+      tab: ParentTab.recursos,
+      route: RouterPaths.parentGuide
+    ),
+    (
+      label: 'Configuración',
+      tab: ParentTab.configuracion,
+      route: RouterPaths.settings
+    ),
   ];
 
   static const _studentTabs = [
     (label: 'Learn', tab: StudentTab.learn, route: ''),
     (label: 'Games', tab: StudentTab.games, route: RouterPaths.gamesCatalog),
     (label: 'Classroom', tab: StudentTab.classroom, route: ''),
-    (label: 'Reports', tab: StudentTab.reports, route: RouterPaths.progressReports),
+    (
+      label: 'Reports',
+      tab: StudentTab.reports,
+      route: RouterPaths.progressReports
+    ),
   ];
 
   @override
@@ -77,11 +98,10 @@ class EduPlayNavBar extends StatelessWidget {
             children: [
               // Logo — always navigates to home
               GestureDetector(
-                onTap: () =>
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      RouterPaths.root,
-                      (r) => false,
-                    ),
+                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
+                  RouterPaths.root,
+                  (r) => false,
+                ),
                 child: Text(
                   'EduPlay',
                   style: GoogleFonts.fredoka(
@@ -136,8 +156,7 @@ class EduPlayNavBar extends StatelessWidget {
                       radius: 16,
                       backgroundColor: _kNavy.withValues(alpha: 0.1),
                       child: Icon(Icons.person_rounded,
-                          size: 17,
-                          color: _kNavy.withValues(alpha: 0.6)),
+                          size: 17, color: _kNavy.withValues(alpha: 0.6)),
                     ),
                     if (_mode == _Mode.parent &&
                         parentName != null &&
@@ -164,8 +183,7 @@ class EduPlayNavBar extends StatelessWidget {
 
   void _navigate(BuildContext context, String route) {
     if (route.isEmpty) return;
-    final current =
-        ModalRoute.of(context)?.settings.name ?? '';
+    final current = ModalRoute.of(context)?.settings.name ?? '';
     if (current == route) return; // already here
     Navigator.of(context).pushNamed(route);
   }
@@ -199,8 +217,7 @@ class _TabItem extends StatelessWidget {
               label,
               style: GoogleFonts.nunito(
                 fontSize: 14,
-                fontWeight:
-                    selected ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
                 color: selected ? _kNavy : Colors.grey[500],
               ),
             ),

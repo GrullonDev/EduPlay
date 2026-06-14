@@ -2,6 +2,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class ChildProfile {
+  factory ChildProfile.fromJson(Map<String, dynamic> j) => ChildProfile(
+        id: j['id'] as String,
+        name: j['name'] as String,
+        age: j['age'] as int,
+        level: j['level'] as int,
+        pin: j['pin'] as String,
+        focusSubject: j['focusSubject'] as String,
+        levelProgress: (j['levelProgress'] as num).toDouble(),
+        avatarColorHex: j['avatarColorHex'] as String,
+        isOnline: j['isOnline'] as bool? ?? false,
+        lastSeen: j['lastSeen'] as String? ?? 'Hace un momento',
+      );
   const ChildProfile({
     required this.id,
     required this.name,
@@ -42,19 +54,6 @@ class ChildProfile {
         'isOnline': isOnline,
         'lastSeen': lastSeen,
       };
-
-  factory ChildProfile.fromJson(Map<String, dynamic> j) => ChildProfile(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        age: j['age'] as int,
-        level: j['level'] as int,
-        pin: j['pin'] as String,
-        focusSubject: j['focusSubject'] as String,
-        levelProgress: (j['levelProgress'] as num).toDouble(),
-        avatarColorHex: j['avatarColorHex'] as String,
-        isOnline: j['isOnline'] as bool? ?? false,
-        lastSeen: j['lastSeen'] as String? ?? 'Hace un momento',
-      );
 
   ChildProfile copyWith({
     String? name,

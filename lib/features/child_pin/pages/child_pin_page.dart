@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -203,15 +202,14 @@ class _ChildPinPageState extends State<ChildPinPage>
                             final filled = i < _digits.length;
                             return AnimatedContainer(
                               duration: const Duration(milliseconds: 180),
-                              margin: const EdgeInsets.symmetric(horizontal: 10),
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 10),
                               width: 20,
                               height: 20,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: filled
-                                    ? (_hasError
-                                        ? _kRed
-                                        : Colors.white)
+                                    ? (_hasError ? _kRed : Colors.white)
                                     : Colors.transparent,
                                 border: Border.all(
                                   color: _hasError

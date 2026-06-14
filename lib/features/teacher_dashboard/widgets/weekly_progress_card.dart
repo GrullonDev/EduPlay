@@ -16,7 +16,9 @@ class WeeklyProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final maxValue = weeklyTotals.isEmpty
         ? 1.0
-        : weeklyTotals.reduce((a, b) => a > b ? a : b).clamp(1, double.infinity);
+        : weeklyTotals
+            .reduce((a, b) => a > b ? a : b)
+            .clamp(1, double.infinity);
 
     final bars = [
       for (var i = 0; i < weeklyTotals.length; i++)

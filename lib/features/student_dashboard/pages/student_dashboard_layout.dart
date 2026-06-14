@@ -19,8 +19,7 @@ import 'package:edu_play/utils/app_theme.dart';
 
 const _navItems = [
   DashboardNavItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
-  DashboardNavItem(
-      icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
+  DashboardNavItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
   DashboardNavItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
   DashboardNavItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
   DashboardNavItem(icon: Icons.storefront_rounded, label: 'Tienda'),
@@ -30,8 +29,7 @@ class StudentDashboardLayout extends StatefulWidget {
   const StudentDashboardLayout({super.key});
 
   @override
-  State<StudentDashboardLayout> createState() =>
-      _StudentDashboardLayoutState();
+  State<StudentDashboardLayout> createState() => _StudentDashboardLayoutState();
 }
 
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
@@ -61,16 +59,14 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           body = const PlaceholderSection(
             icon: Icons.people_alt_rounded,
             title: 'Amigos',
-            message:
-                'Pronto podrás ver a tus amigos en línea y jugar juntos.',
+            message: 'Pronto podrás ver a tus amigos en línea y jugar juntos.',
           );
           break;
         case 4:
           body = const PlaceholderSection(
             icon: Icons.storefront_rounded,
             title: 'Tienda',
-            message:
-                'Pronto podrás canjear tus puntos por premios increíbles.',
+            message: 'Pronto podrás canjear tus puntos por premios increíbles.',
           );
           break;
         default:
@@ -325,7 +321,10 @@ class _MyGamesView extends StatelessWidget {
       padding: EdgeInsets.zero,
       children: [
         // ── Personalised banner ────────────────────────────────────────
-        _GamesBanner(name: bloc.displayName, level: bloc.level, onOpenCatalog: openCatalog),
+        _GamesBanner(
+            name: bloc.displayName,
+            level: bloc.level,
+            onOpenCatalog: openCatalog),
 
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -333,7 +332,7 @@ class _MyGamesView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Continue playing ───────────────────────────────────
-              _HubSectionHeader(
+              const _HubSectionHeader(
                 title: 'Continuar jugando',
                 subtitle: 'Retoma donde lo dejaste',
               ),
@@ -373,7 +372,7 @@ class _MyGamesView extends StatelessWidget {
               const SizedBox(height: 28),
 
               // ── New arrivals ───────────────────────────────────────
-              _HubSectionHeader(
+              const _HubSectionHeader(
                 title: 'Nuevas aventuras',
                 subtitle: '¡Acaban de llegar al universo EduPlay!',
               ),
@@ -423,17 +422,17 @@ class _GamesBanner extends StatelessWidget {
       child: Stack(
         children: [
           // Decorative circles
-          Positioned(
+          const Positioned(
             right: -30,
             top: -30,
             child: _DecorCircle(size: 160, opacity: 0.06),
           ),
-          Positioned(
+          const Positioned(
             right: 60,
             bottom: -20,
             child: _DecorCircle(size: 100, opacity: 0.08),
           ),
-          Positioned(
+          const Positioned(
             left: -20,
             bottom: -10,
             child: _DecorCircle(size: 80, opacity: 0.05),
@@ -554,8 +553,8 @@ class _HubSectionHeader extends StatelessWidget {
               ),
               Text(
                 subtitle,
-                style: GoogleFonts.nunito(
-                    fontSize: 12, color: Colors.grey[500]),
+                style:
+                    GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
               ),
             ],
           ),
@@ -627,8 +626,8 @@ class _RecentGameChip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
@@ -720,8 +719,7 @@ class _HubGameCard extends StatelessWidget {
                   // Central icon
                   Center(
                     child: Icon(game.icon,
-                        size: 52,
-                        color: Colors.white.withValues(alpha: 0.6)),
+                        size: 52, color: Colors.white.withValues(alpha: 0.6)),
                   ),
                   // Subject badge
                   Positioned(
@@ -828,8 +826,7 @@ class _HubGameCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, game.route),
+                    onPressed: () => Navigator.pushNamed(context, game.route),
                     icon: const Icon(Icons.play_arrow_rounded, size: 16),
                     label: Text(
                       'Jugar',
@@ -895,12 +892,10 @@ class _HubListTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  CustomPaint(
-                      painter: _GameArtPainter(game.gradientColors)),
+                  CustomPaint(painter: _GameArtPainter(game.gradientColors)),
                   Center(
                     child: Icon(game.icon,
-                        size: 28,
-                        color: Colors.white.withValues(alpha: 0.7)),
+                        size: 28, color: Colors.white.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
@@ -946,8 +941,8 @@ class _HubListTile extends StatelessWidget {
                   game.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
-                      fontSize: 12, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -956,8 +951,7 @@ class _HubListTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 7, vertical: 3),
                       decoration: BoxDecoration(
-                        color:
-                            game.subjectColor.withValues(alpha: 0.12),
+                        color: game.subjectColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -985,22 +979,20 @@ class _HubListTile extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           ElevatedButton(
-            onPressed: () =>
-                Navigator.pushNamed(context, game.route),
+            onPressed: () => Navigator.pushNamed(context, game.route),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1E1B6A),
               foregroundColor: Colors.white,
               elevation: 0,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
             child: Text(
               'Jugar',
-              style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700, fontSize: 12),
+              style:
+                  GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 12),
             ),
           ),
         ],
@@ -1033,8 +1025,7 @@ class _CatalogCTABanner extends StatelessWidget {
               right: -10,
               top: -10,
               child: Icon(Icons.grid_view_rounded,
-                  size: 100,
-                  color: Colors.white.withValues(alpha: 0.08)),
+                  size: 100, color: Colors.white.withValues(alpha: 0.08)),
             ),
             Row(
               children: [
@@ -1063,8 +1054,8 @@ class _CatalogCTABanner extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),

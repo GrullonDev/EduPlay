@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -31,7 +30,8 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
 
   List<CatalogGame> get _filtered {
     return allCatalogGames.where((g) {
-      if (_selectedSubject != GameSubject.all && g.subject != _selectedSubject) {
+      if (_selectedSubject != GameSubject.all &&
+          g.subject != _selectedSubject) {
         return false;
       }
       if (_selectedAges.isNotEmpty && !_selectedAges.contains(g.ageRange)) {
@@ -97,8 +97,7 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                 : _MainContent(
                     filtered: _filtered,
                     gridView: _gridView,
-                    onToggleView: () =>
-                        setState(() => _gridView = !_gridView),
+                    onToggleView: () => setState(() => _gridView = !_gridView),
                     filterDrawer: _FilterPanel(
                       selectedSubject: _selectedSubject,
                       selectedAges: _selectedAges,
@@ -195,8 +194,7 @@ class _TopBar extends StatelessWidget {
               Icon(Icons.notifications_outlined,
                   color: Colors.grey[500], size: 22),
               const SizedBox(width: 14),
-              Icon(Icons.settings_outlined,
-                  color: Colors.grey[500], size: 22),
+              Icon(Icons.settings_outlined, color: Colors.grey[500], size: 22),
               const SizedBox(width: 14),
               CircleAvatar(
                 radius: 17,
@@ -332,7 +330,7 @@ class _FilterPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              _FilterSection(label: 'SUBJECT'),
+              const _FilterSection(label: 'SUBJECT'),
               const SizedBox(height: 10),
               for (final (subject, label, icon) in _subjects)
                 _SubjectTile(
@@ -342,7 +340,7 @@ class _FilterPanel extends StatelessWidget {
                   onTap: () => onSubjectChanged(subject),
                 ),
               const SizedBox(height: 20),
-              _FilterSection(label: 'AGE RANGE'),
+              const _FilterSection(label: 'AGE RANGE'),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -366,7 +364,7 @@ class _FilterPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              _FilterSection(label: 'DIFFICULTY'),
+              const _FilterSection(label: 'DIFFICULTY'),
               const SizedBox(height: 10),
               for (final (d, label) in [
                 (Difficulty.beginner, 'Beginner'),
@@ -601,14 +599,12 @@ class _MainContent extends StatelessWidget {
             const Spacer(),
             Text(
               'Sort by:',
-              style: GoogleFonts.nunito(
-                  fontSize: 13, color: Colors.grey[500]),
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
             ),
             const SizedBox(width: 6),
             _SortDropdown(),
             const SizedBox(width: 12),
-            _ViewToggle(
-                gridView: gridView, onToggle: onToggleView),
+            _ViewToggle(gridView: gridView, onToggle: onToggleView),
           ],
         ),
         const SizedBox(height: 20),
@@ -631,8 +627,7 @@ class _MainContent extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: _kNavy,
               side: BorderSide(color: Colors.grey.shade300),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 28, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30),
               ),
@@ -786,9 +781,11 @@ class _HeroCard extends StatelessWidget {
                 // Stats row
                 Row(
                   children: [
-                    _HeroStat(icon: Icons.star_rounded, label: 'Nivel ${game.level}'),
+                    _HeroStat(
+                        icon: Icons.star_rounded, label: 'Nivel ${game.level}'),
                     const SizedBox(width: 16),
-                    _HeroStat(icon: Icons.people_alt_rounded, label: game.ageLabel),
+                    _HeroStat(
+                        icon: Icons.people_alt_rounded, label: game.ageLabel),
                     const SizedBox(width: 16),
                     _HeroStat(
                       icon: Icons.local_fire_department_rounded,
@@ -800,13 +797,11 @@ class _HeroCard extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton.icon(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, game.route),
+                      onPressed: () => Navigator.pushNamed(context, game.route),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
                       label: Text(
                         'Jugar ahora',
-                        style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.w700),
+                        style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _kRed,
@@ -824,8 +819,8 @@ class _HeroCard extends StatelessWidget {
                       onPressed: () {},
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        side: const BorderSide(
-                            color: Colors.white54, width: 1.5),
+                        side:
+                            const BorderSide(color: Colors.white54, width: 1.5),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 13),
                         shape: RoundedRectangleBorder(
@@ -834,8 +829,7 @@ class _HeroCard extends StatelessWidget {
                       ),
                       child: Text(
                         'Detalles',
-                        style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.w700),
+                        style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -929,9 +923,7 @@ class _SideFeaturedCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _FeaturedBadge(
-                    tag: game.featuredTag ?? '',
-                    yellow: _isYellow),
+                _FeaturedBadge(tag: game.featuredTag ?? '', yellow: _isYellow),
                 const Spacer(),
                 Text(
                   game.title,
@@ -960,9 +952,7 @@ class _SideFeaturedCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: (_isYellow
-                                ? const Color(0xFF8B6914)
-                                : _kNavy)
+                        color: (_isYellow ? const Color(0xFF8B6914) : _kNavy)
                             .withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -971,9 +961,7 @@ class _SideFeaturedCard extends StatelessWidget {
                         style: GoogleFonts.nunito(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: _isYellow
-                              ? const Color(0xFF8B6914)
-                              : _kNavy,
+                          color: _isYellow ? const Color(0xFF8B6914) : _kNavy,
                         ),
                       ),
                     ),
@@ -1172,8 +1160,8 @@ class _GameCard extends StatelessWidget {
           // Image area with gradient + geometric art
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -1186,8 +1174,7 @@ class _GameCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  CustomPaint(
-                      painter: _CatalogArtPainter(game.gradientColors)),
+                  CustomPaint(painter: _CatalogArtPainter(game.gradientColors)),
                   Center(
                     child: Icon(
                       game.icon,
@@ -1311,11 +1298,9 @@ class _GameCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, game.route),
-                    icon: const Icon(
-                        Icons.play_circle_outline_rounded,
-                        size: 16),
+                    onPressed: () => Navigator.pushNamed(context, game.route),
+                    icon:
+                        const Icon(Icons.play_circle_outline_rounded, size: 16),
                     label: Text(
                       'Play',
                       style: GoogleFonts.nunito(
@@ -1418,8 +1403,8 @@ class _GameListTile extends StatelessWidget {
                   game.description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(
-                      fontSize: 12, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -1456,8 +1441,7 @@ class _GameListTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           OutlinedButton.icon(
-            onPressed: () =>
-                Navigator.pushNamed(context, game.route),
+            onPressed: () => Navigator.pushNamed(context, game.route),
             icon: const Icon(Icons.play_circle_outline_rounded, size: 16),
             label: Text(
               'Play',
@@ -1468,8 +1452,7 @@ class _GameListTile extends StatelessWidget {
               foregroundColor: _kNavy,
               side: BorderSide(color: Colors.grey.shade200),
               backgroundColor: const Color(0xFFF3F4F6),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -1495,14 +1478,12 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No se encontraron juegos',
-              style: GoogleFonts.fredoka(
-                  fontSize: 18, color: Colors.grey[400]),
+              style: GoogleFonts.fredoka(fontSize: 18, color: Colors.grey[400]),
             ),
             const SizedBox(height: 8),
             Text(
               'Prueba con otros filtros',
-              style: GoogleFonts.nunito(
-                  fontSize: 13, color: Colors.grey[400]),
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[400]),
             ),
           ],
         ),
@@ -1529,13 +1510,13 @@ class _CatalogFooter extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _FooterBrand()),
-                Expanded(
+                const Expanded(
                     child: _FooterLinks('Quick Links', [
                   'Teacher Resources',
                   'Parent Guide',
                   'Support Center',
                 ])),
-                Expanded(
+                const Expanded(
                     child: _FooterLinks('Legal', [
                   'Privacy Policy',
                   'Terms of Service',
@@ -1558,10 +1539,10 @@ class _CatalogFooter extends StatelessWidget {
               children: [
                 _FooterBrand(),
                 const SizedBox(height: 20),
-                _FooterLinks('Quick Links',
+                const _FooterLinks('Quick Links',
                     ['Teacher Resources', 'Parent Guide', 'Support Center']),
                 const SizedBox(height: 16),
-                _FooterLinks(
+                const _FooterLinks(
                     'Legal', ['Privacy Policy', 'Terms of Service']),
               ],
             ),

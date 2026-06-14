@@ -30,7 +30,7 @@ class TeacherDashboardLayout extends StatefulWidget {
 
 class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   int _selectedIndex = 0;
-  bool _sidebarOpen = false; // for mobile drawer
+  final bool _sidebarOpen = false; // for mobile drawer
 
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
@@ -79,9 +79,8 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
             child: Column(
               children: [
                 _TopBar(
-                  onMenuTap: wide
-                      ? null
-                      : () => Scaffold.of(context).openDrawer(),
+                  onMenuTap:
+                      wide ? null : () => Scaffold.of(context).openDrawer(),
                   searchHint: const [
                     'Buscar alumnos, retos...',
                     'Buscar clase...',
@@ -201,9 +200,8 @@ class _Sidebar extends StatelessWidget {
                           navItems[i].label,
                           style: GoogleFonts.nunito(
                             fontSize: 14,
-                            fontWeight: active
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            fontWeight:
+                                active ? FontWeight.w700 : FontWeight.w500,
                             color: active ? Colors.white : Colors.grey.shade700,
                           ),
                         ),
@@ -359,9 +357,9 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           // Icons
-          _TopIcon(Icons.notifications_none_rounded),
+          const _TopIcon(Icons.notifications_none_rounded),
           const SizedBox(width: 4),
-          _TopIcon(Icons.settings_outlined),
+          const _TopIcon(Icons.settings_outlined),
           const SizedBox(width: 12),
           // Avatar
           CircleAvatar(
@@ -431,8 +429,7 @@ class _OverviewPanel extends StatelessWidget {
                       const SizedBox(width: 20),
                       Expanded(
                           flex: 4,
-                          child: _InsightsPanel(
-                              students: bloc.students)),
+                          child: _InsightsPanel(students: bloc.students)),
                     ],
                   ),
                 )
@@ -450,12 +447,11 @@ class _OverviewPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                        child:
-                            _ChallengesCard(challenges: bloc.challenges)),
+                        child: _ChallengesCard(challenges: bloc.challenges)),
                     const SizedBox(width: 20),
                     Expanded(
-                        child: _SubjectCard(
-                            performance: bloc.subjectPerformance)),
+                        child:
+                            _SubjectCard(performance: bloc.subjectPerformance)),
                   ],
                 )
               : Column(
@@ -479,8 +475,19 @@ class _GreetingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final months = [
-      '', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      '',
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre'
     ];
     final dateLabel = '${months[now.month]} ${now.year}';
 
@@ -501,27 +508,24 @@ class _GreetingRow extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               'Aquí tienes el resumen de tus clases para hoy.',
-              style: GoogleFonts.nunito(
-                  fontSize: 14, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade500),
             ),
           ],
         ),
         const Spacer(),
         OutlinedButton.icon(
           onPressed: () {},
-          icon: const Icon(Icons.calendar_today_rounded,
-              size: 15, color: _kNavy),
+          icon:
+              const Icon(Icons.calendar_today_rounded, size: 15, color: _kNavy),
           label: Text(
             dateLabel,
             style: GoogleFonts.nunito(
-                color: _kNavy,
-                fontWeight: FontWeight.w700,
-                fontSize: 13),
+                color: _kNavy, fontWeight: FontWeight.w700, fontSize: 13),
           ),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: _kNavy, width: 1.5),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
@@ -557,16 +561,16 @@ class _StatCardsRow extends StatelessWidget {
           iconColor: const Color(0xFF3B82F6),
           valueColor: _kNavy,
         ),
-        _StatCardData(
+        const _StatCardData(
           label: 'Tiempo Promedio',
           value: '45 min',
           badge: 'En meta',
-          badgeColor: const Color(0xFFD97706),
-          badgeBg: const Color(0xFFFEF3C7),
-          iconBg: const Color(0xFFFEF3C7),
+          badgeColor: Color(0xFFD97706),
+          badgeBg: Color(0xFFFEF3C7),
+          iconBg: Color(0xFFFEF3C7),
           icon: Icons.timer_outlined,
-          iconColor: const Color(0xFFF59E0B),
-          valueColor: const Color(0xFFD97706),
+          iconColor: Color(0xFFF59E0B),
+          valueColor: Color(0xFFD97706),
         ),
         _StatCardData(
           label: 'Tasa de Completado',
@@ -646,7 +650,7 @@ class _StatCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.06),
+              color: _kNavy.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3)),
         ],
@@ -666,8 +670,7 @@ class _StatCard extends StatelessWidget {
             ),
             const Spacer(),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: data.badgeBg,
                 borderRadius: BorderRadius.circular(20),
@@ -737,9 +740,9 @@ class _WeeklyProgressCard extends StatelessWidget {
               ),
             ),
             // Legend
-            _LegendDot(color: const Color(0xFF3B82F6), label: 'Media'),
+            const _LegendDot(color: Color(0xFF3B82F6), label: 'Media'),
             const SizedBox(width: 14),
-            _LegendDot(color: const Color(0xFFEF4444), label: 'Retos'),
+            const _LegendDot(color: Color(0xFFEF4444), label: 'Retos'),
           ]),
           const SizedBox(height: 20),
           SizedBox(
@@ -765,12 +768,14 @@ class _LegendDot extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         children: [
           Container(
-              width: 10, height: 10,
+              width: 10,
+              height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 5),
           Text(label,
               style: GoogleFonts.nunito(
-                  fontSize: 12, color: Colors.grey.shade600,
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
                   fontWeight: FontWeight.w600)),
         ],
       );
@@ -789,8 +794,8 @@ class _BarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxVal = [...mediaValues, ...retosValues]
-        .fold<double>(0, (m, v) => max(m, v));
+    final maxVal =
+        [...mediaValues, ...retosValues].fold<double>(0, (m, v) => max(m, v));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -814,10 +819,10 @@ class _BarChart extends StatelessWidget {
                         child: Container(
                           width: 16,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3B82F6),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF3B82F6),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(4)),
                           ),
                         ),
                       ),
@@ -830,10 +835,10 @@ class _BarChart extends StatelessWidget {
                         child: Container(
                           width: 16,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEF4444),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFEF4444),
+                            borderRadius:
+                                BorderRadius.vertical(top: Radius.circular(4)),
                           ),
                         ),
                       ),
@@ -873,15 +878,14 @@ class _InsightsPanel extends StatelessWidget {
         name: 'Sofía Pérez', sub: 'Consistencia semanal', xp: '+95 xp'),
   ];
   static const _refuerzo = [
-    _StudentInsight(
-        name: 'Mateo Rivas', sub: '3 retos pendientes', xp: null),
+    _StudentInsight(name: 'Mateo Rivas', sub: '3 retos pendientes', xp: null),
     _StudentInsight(
         name: 'Valeria Luna', sub: 'Baja actividad (3 días)', xp: null),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       children: [
         _InsightsSection(
           title: 'Mayor Progreso',
@@ -891,12 +895,12 @@ class _InsightsPanel extends StatelessWidget {
           students: _topStudents,
           isProgress: true,
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: 14),
         _InsightsSection(
           title: 'Necesitan Refuerzo',
           titleIcon: Icons.warning_amber_rounded,
-          titleColor: const Color(0xFFE11D48),
-          borderColor: const Color(0xFFE11D48),
+          titleColor: Color(0xFFE11D48),
+          borderColor: Color(0xFFE11D48),
           students: _refuerzo,
           isProgress: false,
         ),
@@ -939,7 +943,7 @@ class _InsightsSection extends StatelessWidget {
         border: Border(left: BorderSide(color: borderColor, width: 4)),
         boxShadow: [
           BoxShadow(
-              color: _kNavy.withOpacity(0.06),
+              color: _kNavy.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, 3)),
         ],
@@ -1015,8 +1019,8 @@ class _InsightRow extends StatelessWidget {
                   fontSize: 13,
                   fontWeight: FontWeight.w700))
         else
-          Icon(Icons.mail_outline_rounded,
-              size: 18, color: const Color(0xFFE11D48)),
+          const Icon(Icons.mail_outline_rounded,
+              size: 18, color: Color(0xFFE11D48)),
       ]),
     );
   }
@@ -1039,19 +1043,16 @@ class _ChallengesCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            const Icon(Icons.emoji_events_rounded,
-                size: 18, color: _kNavy),
+            const Icon(Icons.emoji_events_rounded, size: 18, color: _kNavy),
             const SizedBox(width: 8),
             Text('Retos Asignados',
                 style: GoogleFonts.fredoka(
-                    fontSize: 16,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700)),
+                    fontSize: 16, color: _kNavy, fontWeight: FontWeight.w700)),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: _kNavy.withOpacity(0.08),
+                color: _kNavy.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text('${active.length} activos',
@@ -1097,9 +1098,7 @@ class _ChallengeTile extends StatelessWidget {
           Expanded(
             child: Text(c['title'] ?? '—',
                 style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: _kNavy)),
+                    fontSize: 13, fontWeight: FontWeight.w600, color: _kNavy)),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1135,11 +1134,14 @@ class _SubjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = performance.isEmpty
         ? _demo
-        : performance.take(4).map((p) => (
-              p.subject.label,
-              (p.averageScore / 100.0).clamp(0.0, 1.0),
-              p.subject.color,
-            )).toList();
+        : performance
+            .take(4)
+            .map((p) => (
+                  p.subject.label,
+                  (p.averageScore / 100.0).clamp(0.0, 1.0),
+                  p.subject.color,
+                ))
+            .toList();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1152,9 +1154,7 @@ class _SubjectCard extends StatelessWidget {
             const SizedBox(width: 8),
             Text('Rendimiento por Materia',
                 style: GoogleFonts.fredoka(
-                    fontSize: 16,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700)),
+                    fontSize: 16, color: _kNavy, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 16),
           ...data.map((d) => _SubjectBar(
@@ -1193,9 +1193,7 @@ class _SubjectBar extends StatelessWidget {
                           color: _kNavy))),
               Text('${(fraction * 100).round()}%',
                   style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: color)),
+                      fontSize: 12, fontWeight: FontWeight.w800, color: color)),
             ]),
             const SizedBox(height: 4),
             ClipRRect(
@@ -1234,9 +1232,7 @@ class _PlaceholderPanel extends StatelessWidget {
             const SizedBox(height: 16),
             Text(title,
                 style: GoogleFonts.fredoka(
-                    fontSize: 22,
-                    color: _kNavy,
-                    fontWeight: FontWeight.w600)),
+                    fontSize: 22, color: _kNavy, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             Text(message,
                 style: GoogleFonts.nunito(
@@ -1254,7 +1250,7 @@ BoxDecoration _cardDecoration() => BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-            color: _kNavy.withOpacity(0.06),
+            color: _kNavy.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, 3)),
       ],

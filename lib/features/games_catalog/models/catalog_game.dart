@@ -4,7 +4,17 @@ enum AgeRange { age6to8, age9to11, age12plus }
 
 enum Difficulty { beginner, intermediate, advanced }
 
-enum GameSubject { all, math, science, history, languages, logic, art, music, sports }
+enum GameSubject {
+  all,
+  math,
+  science,
+  history,
+  languages,
+  logic,
+  art,
+  music,
+  sports
+}
 
 /// Rich game model used by the catalog page.
 class CatalogGame {
@@ -70,7 +80,7 @@ const _red = Color(0xFFC0392B);
 
 /// Full catalog of EduPlay games, enriched for the catalog UI.
 final List<CatalogGame> allCatalogGames = [
-  CatalogGame(
+  const CatalogGame(
     id: 'math_adventure',
     title: 'Aventura Matemática',
     description:
@@ -80,13 +90,13 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.beginner,
     level: 5,
     route: '/math-adventure',
-    gradientColors: [const Color(0xFF1B4332), const Color(0xFF40916C)],
+    gradientColors: [Color(0xFF1B4332), Color(0xFF40916C)],
     subjectLabel: 'MATH',
-    subjectColor: const Color(0xFF2ECC71),
+    subjectColor: Color(0xFF2ECC71),
     icon: Icons.calculate_rounded,
     xpProgress: 0.45,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'cell_explorer',
     title: 'Cell Explorer 3D',
     description:
@@ -96,13 +106,13 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.intermediate,
     level: 8,
     route: '/nature-explorers',
-    gradientColors: [const Color(0xFF0D1B2A), const Color(0xFF1B4F72)],
+    gradientColors: [Color(0xFF0D1B2A), Color(0xFF1B4F72)],
     subjectLabel: 'SCIENCE',
-    subjectColor: const Color(0xFF3498DB),
+    subjectColor: Color(0xFF3498DB),
     icon: Icons.biotech_rounded,
     xpProgress: 0.30,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'empire_builder',
     title: 'Empire Builder',
     description:
@@ -112,15 +122,15 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.advanced,
     level: 12,
     route: '/time-travel',
-    gradientColors: [const Color(0xFF3D2B1F), const Color(0xFF7B4F2E)],
+    gradientColors: [Color(0xFF3D2B1F), Color(0xFF7B4F2E)],
     subjectLabel: 'HISTORY',
-    subjectColor: const Color(0xFFE67E22),
+    subjectColor: Color(0xFFE67E22),
     icon: Icons.account_balance_rounded,
     isFeatured: true,
     featuredTag: 'GAME OF THE WEEK',
     xpProgress: 0.70,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'polyglot_island',
     title: 'Polyglot Island',
     description:
@@ -130,13 +140,13 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.beginner,
     level: 4,
     route: '/fun-english',
-    gradientColors: [const Color(0xFF0B3D2E), const Color(0xFF1A6B50)],
+    gradientColors: [Color(0xFF0B3D2E), Color(0xFF1A6B50)],
     subjectLabel: 'LANGUAGES',
-    subjectColor: const Color(0xFF1ABC9C),
+    subjectColor: Color(0xFF1ABC9C),
     icon: Icons.translate_rounded,
     xpProgress: 0.20,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'logic_maze',
     title: 'Logic Maze',
     description:
@@ -146,15 +156,15 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.intermediate,
     level: 7,
     route: '/treasure-map',
-    gradientColors: [const Color(0xFF1A1A2E), const Color(0xFF16213E)],
+    gradientColors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
     subjectLabel: 'LOGIC',
-    subjectColor: const Color(0xFF9B59B6),
+    subjectColor: Color(0xFF9B59B6),
     icon: Icons.extension_rounded,
     isFeatured: true,
     featuredTag: 'NEW ARRIVAL',
     xpProgress: 0.55,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'history_hunters',
     title: 'History Hunters',
     description:
@@ -164,15 +174,15 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.intermediate,
     level: 9,
     route: '/time-travel',
-    gradientColors: [const Color(0xFF4A3000), const Color(0xFF8B6914)],
+    gradientColors: [Color(0xFF4A3000), Color(0xFF8B6914)],
     subjectLabel: 'HISTORY',
-    subjectColor: const Color(0xFFE67E22),
+    subjectColor: Color(0xFFE67E22),
     icon: Icons.explore_rounded,
     isFeatured: true,
     featuredTag: 'TRENDING',
     xpProgress: 0.60,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'color_concert',
     title: 'Concierto de Colores',
     description:
@@ -182,13 +192,13 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.beginner,
     level: 3,
     route: '/color-concert',
-    gradientColors: [const Color(0xFF1A0033), const Color(0xFF6C0096)],
+    gradientColors: [Color(0xFF1A0033), Color(0xFF6C0096)],
     subjectLabel: 'MUSIC',
-    subjectColor: const Color(0xFFE91E63),
+    subjectColor: Color(0xFFE91E63),
     icon: Icons.music_note_rounded,
     xpProgress: 0.15,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'sports_challenge',
     title: 'Desafío Deportivo',
     description:
@@ -198,13 +208,13 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.intermediate,
     level: 6,
     route: '/sports-challenge',
-    gradientColors: [const Color(0xFF1B0000), const Color(0xFF7B0000)],
+    gradientColors: [Color(0xFF1B0000), Color(0xFF7B0000)],
     subjectLabel: 'SPORTS',
-    subjectColor: const Color(0xFFE53935),
+    subjectColor: Color(0xFFE53935),
     icon: Icons.sports_soccer_rounded,
     xpProgress: 0.40,
   ),
-  CatalogGame(
+  const CatalogGame(
     id: 'magic_words',
     title: 'Palabras Mágicas',
     description:
@@ -214,9 +224,9 @@ final List<CatalogGame> allCatalogGames = [
     difficulty: Difficulty.beginner,
     level: 2,
     route: '/magic-words',
-    gradientColors: [const Color(0xFF0D0D2B), const Color(0xFF1A1A5E)],
+    gradientColors: [Color(0xFF0D0D2B), Color(0xFF1A1A5E)],
     subjectLabel: 'LANGUAGES',
-    subjectColor: const Color(0xFF1ABC9C),
+    subjectColor: Color(0xFF1ABC9C),
     icon: Icons.auto_stories_rounded,
     xpProgress: 0.85,
   ),
