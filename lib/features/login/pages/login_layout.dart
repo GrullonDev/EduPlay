@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -244,36 +245,7 @@ class _RightPanel extends StatelessWidget {
                     const SizedBox(height: 20),
                     _SocialButtons(),
                     const SizedBox(height: 28),
-                    Center(
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          style: GoogleFonts.nunito(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                          children: [
-                            const TextSpan(text: '¿No tienes una cuenta? '),
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () => Navigator.pushNamed(
-                                    context, RouterPaths.registerParents),
-                                child: Text(
-                                  'Contáctanos para tu escuela',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 13,
-                                    color: _kNavy,
-                                    fontWeight: FontWeight.w700,
-                                    decoration: TextDecoration.underline,
-                                    decorationColor: _kNavy,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    _RegisterLink(userType: userType),
                   ],
                 ),
               ),
@@ -283,6 +255,140 @@ class _RightPanel extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Password reset dialog ─────────────────────────────────────────────────────
+
+Future<void> _showPasswordReset(BuildContext context) async {
+  final emailCtrl = TextEditingController();
+  String? error;
+  bool sent = false;
+  bool loading = false;
+
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Restablecer contraseña',
+            style: GoogleFonts.fredoka(
+                fontSize: 20, fontWeight: FontWeight.w700, color: _kNavy)),
+        content: sent
+            ? Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.mark_email_read_rounded,
+                    size: 48, color: Color(0xFF27AE60)),
+                const SizedBox(height: 16),
+                Text(
+                  'Revisa tu correo. Te enviamos un enlace para restablecer tu contraseña.',
+                  style: GoogleFonts.nunito(fontSize: 14, height: 1.5),
+                  textAlign: TextAlign.center,
+                ),
+              ])
+            : Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  'Ingresa el correo asociado a tu cuenta y te enviaremos un enlace.',
+                  style: GoogleFonts.nunito(
+                      fontSize: 13, color: Colors.grey[600], height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  autofocus: true,
+                  style: GoogleFonts.nunito(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'correo@ejemplo.com',
+                    hintStyle: GoogleFonts.nunito(
+                        fontSize: 14, color: Colors.grey[400]),
+                    filled: true,
+                    fillColor: const Color(0xFFF8F7FF),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: _kNavy, width: 1.5)),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(error!,
+                      style: GoogleFonts.nunito(
+                          fontSize: 12, color: _kRed)),
+                ],
+              ]),
+        actions: sent
+            ? [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cerrar',
+                      style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.w700, color: _kNavy)),
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cancelar',
+                      style: GoogleFonts.nunito(color: Colors.grey[600])),
+                ),
+                ElevatedButton(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          final email = emailCtrl.text.trim();
+                          if (email.isEmpty || !email.contains('@')) {
+                            setState(() => error = 'Ingresa un correo válido.');
+                            return;
+                          }
+                          setState(() {
+                            loading = true;
+                            error = null;
+                          });
+                          try {
+                            await FirebaseAuth.instance
+                                .sendPasswordResetEmail(email: email);
+                            setState(() {
+                              sent = true;
+                              loading = false;
+                            });
+                          } on FirebaseAuthException catch (e) {
+                            setState(() {
+                              loading = false;
+                              error = e.code == 'user-not-found'
+                                  ? 'No encontramos una cuenta con ese correo.'
+                                  : 'Error: ${e.message}';
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kNavy,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: loading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : Text('Enviar enlace',
+                          style: GoogleFonts.nunito(
+                              fontWeight: FontWeight.w700)),
+                ),
+              ],
+      ),
+    ),
+  );
 }
 
 // ── Login form ────────────────────────────────────────────────────────────────
@@ -308,7 +414,7 @@ class _LoginForm extends StatelessWidget {
             children: [
               Expanded(child: _FieldLabel('Contraseña')),
               GestureDetector(
-                onTap: () {}, // TODO: forgot password
+                onTap: () => _showPasswordReset(context),
                 child: Text(
                   '¿Olvidaste tu contraseña?',
                   style: GoogleFonts.nunito(
@@ -496,6 +602,49 @@ class _Divider extends StatelessWidget {
         ),
         Expanded(child: Divider(color: Colors.grey[300])),
       ],
+    );
+  }
+}
+
+// ── Register link (conditional on userType) ───────────────────────────────────
+
+class _RegisterLink extends StatelessWidget {
+  const _RegisterLink({this.userType});
+  final String? userType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTeacher = userType == 'teacher';
+    final label = isTeacher ? 'Regístrate como docente' : 'Crear cuenta de padre/madre';
+    final route = isTeacher
+        ? RouterPaths.registerTeacher
+        : RouterPaths.registerParents;
+
+    return Center(
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600]),
+          children: [
+            const TextSpan(text: '¿No tienes una cuenta? '),
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(context, route),
+                child: Text(
+                  label,
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: _kNavy,
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _kNavy,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
