@@ -431,15 +431,14 @@ class _PracticeGameWrapper extends StatefulWidget {
 
 class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
   bool _finishing = false;
+  int _currentScore = 0;
 
   Future<void> _finishGame() async {
     setState(() => _finishing = true);
-    // Record completion with a placeholder score of 100 for now.
-    // (Games don't yet expose a completion/score callback.)
     await PracticeSessionsService.recordGameCompletion(
       widget.session.id,
       widget.game.id,
-      score: 100,
+      score: _currentScore > 0 ? _currentScore : 0,
     );
     if (mounted) Navigator.pop(context);
   }
@@ -447,7 +446,10 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
   Widget _buildGameWidget() {
     switch (widget.game.id) {
       case 'math-adventure':
-        return const MathAdventurePage(userName: null);
+        return MathAdventurePage(
+          userName: null,
+          onScoreUpdate: (s) => setState(() => _currentScore = s),
+        );
       case 'magic-words':
         return const MagicWordsPage();
       case 'fun-english':

@@ -11,6 +11,7 @@ class MathAdventureProvider with ChangeNotifier {
     required this.context,
     required this.age,
     required this.userName,
+    this.onScoreUpdate,
   }) {
     _generateQuestion();
   }
@@ -18,6 +19,10 @@ class MathAdventureProvider with ChangeNotifier {
   final BuildContext context;
   final int age;
   final String? userName;
+
+  /// Called every time the score changes. Used by the kiosk wrapper to
+  /// track the real score without needing to access internals.
+  final void Function(int score)? onScoreUpdate;
 
   int _score = 0;
   int _lives = 3;
@@ -103,6 +108,7 @@ class MathAdventureProvider with ChangeNotifier {
 
   void _increaseScore() {
     _score += 10;
+    onScoreUpdate?.call(_score);
     if (_score % 50 == 0) {
       _showReward();
     }

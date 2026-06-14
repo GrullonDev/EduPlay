@@ -10,9 +10,15 @@ class MathAdventurePage extends StatelessWidget {
   const MathAdventurePage({
     super.key,
     required this.userName,
+    this.onScoreUpdate,
   });
 
   final String? userName;
+
+  /// Optional callback invoked each time the player earns points.
+  /// The kiosk wrapper uses this to capture the real score before
+  /// recording game completion.
+  final void Function(int score)? onScoreUpdate;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,7 @@ class MathAdventurePage extends StatelessWidget {
         context: context,
         age: age,
         userName: userName,
+        onScoreUpdate: onScoreUpdate,
       ),
       builder: (_, __) => Scaffold(
         body: Container(

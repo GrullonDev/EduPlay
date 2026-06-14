@@ -1,4 +1,5 @@
 import 'dart:math' show sin, pi;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -70,6 +71,19 @@ class _SessionEntryPageState extends State<SessionEntryPage>
       _checking = true;
       _error = false;
     });
+
+    // Children have no Firebase account. Sign in anonymously so Firestore
+    // Security Rules allow reading active sessions and writing game scores.
+    // If the parent happens to be on the same device we keep their session.
+    final auth = FirebaseAuth.instance;
+    if (auth.currentUser == null) {
+      try {
+        await auth.signInAnonymously();
+      } catch (_) {
+        // Proceed anyway — the query may still work if rules allow public reads.
+      }
+    }
+
     final session = await PracticeSessionsService.findByPin(pin);
     if (!mounted) return;
     if (session != null) {
