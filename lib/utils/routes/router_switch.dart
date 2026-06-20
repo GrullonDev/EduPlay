@@ -1,6 +1,9 @@
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
+import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
 import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
 import 'package:edu_play/features/settings/pages/settings_page.dart';
 import 'package:edu_play/features/progress_reports/pages/progress_reports_page.dart';
@@ -157,6 +160,20 @@ class AppRouter {
         final session = settings.arguments as PracticeSession;
         return MaterialPageRoute(
           builder: (_) => PracticeKioskPage(session: session),
+        );
+      case RouterPaths.childPortal:
+        final pin = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (_) => ChildPortalPage(pinFromArgs: pin),
+        );
+      case RouterPaths.joinClass:
+        final code = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (_) => JoinClassPage(codeFromArgs: code),
+        );
+      case RouterPaths.adminDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const AdminDashboardPage(),
         );
       default:
         page = const Scaffold(

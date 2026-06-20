@@ -67,16 +67,15 @@ class _UpgradePromptDialog extends StatelessWidget {
               // ── Header band ───────────────────────────────────────────────
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 28),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
                     colors: [Color(0xFF1E1B6A), Color(0xFF3A36A0)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Column(
                   children: [
@@ -137,8 +136,7 @@ class _UpgradePromptDialog extends StatelessWidget {
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _kCoral,
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(14)),
                           elevation: 0,
@@ -209,10 +207,10 @@ class _PlanCard extends StatelessWidget {
         badgeColor: Color(0xFF888888),
       );
 
-  factory _PlanCard.pro() => _PlanCard(
+  factory _PlanCard.pro() => const _PlanCard(
         name: 'Pro',
         price: '\$9.99/mes',
-        features: const [
+        features: [
           'Niños ilimitados',
           'Sesiones ilimitadas',
           '9 juegos educativos',

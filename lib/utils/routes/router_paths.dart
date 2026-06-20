@@ -30,4 +30,7 @@ class RouterPaths {
   static const createSession = '/create-session';
   static const practiceSession = '/practice-session';
   static const practiceKiosk = '/practice';
+  static const childPortal = '/child-portal';
+  static const joinClass = '/join-class';
+  static const adminDashboard = '/admin';
 }

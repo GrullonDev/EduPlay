@@ -67,6 +67,11 @@ class MainLayout extends StatelessWidget {
                                 _teachersCard(context),
                               ],
                             ),
+                      SizedBox(height: desktop ? 60 : 48),
+
+                      // ── Pricing section ───────────────────────────────────
+                      const _PricingSection(),
+
                       SizedBox(height: desktop ? 44 : 32),
                       const _HelpLink(),
                     ],
@@ -380,6 +385,346 @@ class _PillButton extends StatelessWidget {
           ),
         );
     }
+  }
+}
+
+// ── Pricing section ───────────────────────────────────────────────────────────
+
+class _PricingSection extends StatelessWidget {
+  const _PricingSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final desktop = isLandingDesktop(context);
+    return Column(
+      children: [
+        Text(
+          'Planes y Precios',
+          style: GoogleFonts.fredoka(
+            fontSize: desktop ? 34 : 26,
+            fontWeight: FontWeight.w700,
+            color: _kNavy,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Empieza gratis. Mejora cuando estés listo.',
+          style: GoogleFonts.nunito(
+              fontSize: 15, color: const Color(0xFF888888)),
+        ),
+        const SizedBox(height: 32),
+
+        // Plan cards
+        desktop
+            ? IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: _PlanCard.free(context)),
+                    const SizedBox(width: 20),
+                    Expanded(child: _PlanCard.pro(context)),
+                  ],
+                ),
+              )
+            : Column(
+                children: [
+                  _PlanCard.free(context),
+                  const SizedBox(height: 16),
+                  _PlanCard.pro(context),
+                ],
+              ),
+
+        const SizedBox(height: 40),
+
+        // Features table
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: _kNavy.withValues(alpha: 0.06),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Comparativa de características',
+                style: GoogleFonts.fredoka(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: _kNavy,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _FeatureRow('Perfiles de niño', '1', 'Ilimitados'),
+              _FeatureRow('Sesiones de práctica / mes', '5', 'Ilimitadas'),
+              _FeatureRow('Juegos educativos', '9', '9+'),
+              _FeatureRow('Informes de progreso', 'Básicos', 'Avanzados'),
+              _FeatureRow('Portal de niño personalizado', '✓', '✓'),
+              _FeatureRow('Soporte', 'Comunidad', 'Prioritario'),
+              _FeatureRow('Exportar informes PDF', '—', '✓'),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
+    required this.name,
+    required this.price,
+    required this.period,
+    required this.description,
+    required this.features,
+    required this.cta,
+    required this.highlighted,
+    required this.onTap,
+  });
+
+  factory _PlanCard.free(BuildContext context) => _PlanCard(
+        name: 'Gratuito',
+        price: '\$0',
+        period: 'Para siempre',
+        description: 'Perfecto para empezar a explorar EduPlay en familia.',
+        features: const [
+          '1 perfil de niño',
+          '5 sesiones por mes',
+          '9 juegos educativos',
+          'Portal de niño',
+          'Informes básicos',
+        ],
+        cta: 'Registrarse gratis',
+        highlighted: false,
+        onTap: () => Navigator.pushNamed(context, RouterPaths.registerParents),
+      );
+
+  factory _PlanCard.pro(BuildContext context) => _PlanCard(
+        name: 'Pro',
+        price: '\$9.99',
+        period: 'por mes',
+        description:
+            'Para familias que quieren sacar el máximo provecho de EduPlay.',
+        features: const [
+          'Niños ilimitados',
+          'Sesiones ilimitadas',
+          '9+ juegos educativos',
+          'Informes avanzados',
+          'Exportar PDF',
+          'Soporte prioritario',
+        ],
+        cta: '¡Empezar con Pro!',
+        highlighted: true,
+        onTap: () => Navigator.pushNamed(context, RouterPaths.registerParents),
+      );
+
+  final String name;
+  final String price;
+  final String period;
+  final String description;
+  final List<String> features;
+  final String cta;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: highlighted ? _kNavy : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: highlighted
+            ? null
+            : Border.all(color: const Color(0xFFE0DEFF), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: highlighted
+                ? _kNavy.withValues(alpha: 0.2)
+                : Colors.black.withValues(alpha: 0.04),
+            blurRadius: highlighted ? 24 : 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Badge
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: highlighted
+                  ? _kCoral.withValues(alpha: 0.15)
+                  : const Color(0xFFEEEDF8),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              highlighted ? '⭐ MÁS POPULAR' : name.toUpperCase(),
+              style: GoogleFonts.fredoka(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: highlighted ? _kCoral : _kNavy,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Price
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                price,
+                style: GoogleFonts.fredoka(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w700,
+                  color: highlighted ? Colors.white : _kNavy,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  period,
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: highlighted
+                        ? Colors.white.withValues(alpha: 0.65)
+                        : Colors.grey[500],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            description,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              color: highlighted
+                  ? Colors.white.withValues(alpha: 0.75)
+                  : Colors.grey[600],
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Features
+          for (final f in features)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_rounded,
+                    size: 16,
+                    color: highlighted ? _kCoral : const Color(0xFF27AE60),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      f,
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        color: highlighted
+                            ? Colors.white.withValues(alpha: 0.85)
+                            : Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          const Spacer(),
+          const SizedBox(height: 20),
+
+          // CTA
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    highlighted ? _kCoral : _kNavy,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(
+                cta,
+                style: GoogleFonts.fredoka(
+                    fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow(this.feature, this.free, this.pro);
+  final String feature;
+  final String free;
+  final String pro;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              feature,
+              style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  color: _kNavy,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                free,
+                style: GoogleFonts.nunito(
+                    fontSize: 13, color: Colors.grey[500]),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                pro,
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: _kNavy,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

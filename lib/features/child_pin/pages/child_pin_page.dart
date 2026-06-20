@@ -250,6 +250,27 @@ class _ChildPinPageState extends State<ChildPinPage>
                               onDigit: _onDigit,
                               onDelete: _onDelete,
                             ),
+
+                      const SizedBox(height: 36),
+
+                      // Guest mode link
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          RouterPaths.childPortal,
+                        ),
+                        child: Text(
+                          '¿No tienes código? Explora EduPlay →',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.45),
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                            decorationColor:
+                                Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

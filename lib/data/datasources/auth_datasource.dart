@@ -57,6 +57,13 @@ class ImplAuthDatasource implements AuthDatasource {
           'age': age,
           'children': children,
           'role': 'parent', // used by AuthGate to route back after reload
+          'onboardingComplete': false, // triggers wizard on first dashboard visit
+          'notificationPrefs': {
+            'emailSessionComplete': true,
+            'emailWeeklyDigest': true,
+            'emailTips': false,
+            'emailNewFeatures': true,
+          },
         });
         // Seed subscription document (free tier).
         await SubscriptionService.initSubscription(user.uid);

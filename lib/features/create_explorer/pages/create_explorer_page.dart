@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
@@ -116,8 +118,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
     }
 
     // ── Free-tier child limit check ──────────────────────────────────────────
-    final allowed =
-        await SubscriptionService.canAddChild(_existingCount);
+    final allowed = await SubscriptionService.canAddChild(_existingCount);
     if (!allowed) {
       if (!mounted) return;
       await showUpgradePrompt(context, UpgradeReason.childLimit);
@@ -697,42 +698,63 @@ class _InterestTile extends StatelessWidget {
 
 // ── PIN reveal dialog (reused here) ──────────────────────────────────────────
 
-class _PinRevealDialog extends StatelessWidget {
+class _PinRevealDialog extends StatefulWidget {
   const _PinRevealDialog({required this.profile});
   final ChildProfile profile;
+
+  @override
+  State<_PinRevealDialog> createState() => _PinRevealDialogState();
+}
+
+class _PinRevealDialogState extends State<_PinRevealDialog> {
+  bool _copied = false;
+
+  String get _portalUrl {
+    if (!kIsWeb) return 'http://localhost:3000/#/child-portal?pin=${widget.profile.pin}';
+    final origin = Uri.base.origin;
+    return '$origin/#/child-portal?pin=${widget.profile.pin}';
+  }
+
+  Future<void> _copyUrl() async {
+    await Clipboard.setData(ClipboardData(text: _portalUrl));
+    setState(() => _copied = true);
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) setState(() => _copied = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 380),
+        constraints: const BoxConstraints(maxWidth: 420),
         child: Padding(
           padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Avatar
               Container(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: profile.avatarColor.withValues(alpha: 0.15),
+                  color: widget.profile.avatarColor.withValues(alpha: 0.15),
                 ),
                 child: Center(
                   child: Text(
-                    profile.name[0].toUpperCase(),
+                    widget.profile.name[0].toUpperCase(),
                     style: GoogleFonts.fredoka(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: profile.avatarColor,
+                      color: widget.profile.avatarColor,
                     ),
                   ),
                 ),
               ),
               const SizedBox(height: 14),
               Text(
-                '¡${profile.name} está listo!',
+                '¡${widget.profile.name} está listo!',
                 style: GoogleFonts.fredoka(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -741,15 +763,18 @@ class _PinRevealDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Comparte este PIN para que ${profile.name}\npueda acceder a su perfil desde la pantalla de inicio.',
+                'Comparte el PIN o el enlace para que ${widget.profile.name} acceda a su portal personal.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(
                     fontSize: 13, color: Colors.grey[500], height: 1.4),
               ),
+
               const SizedBox(height: 24),
+
+              // PIN digits
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: profile.pin.split('').map((digit) {
+                children: widget.profile.pin.split('').map((digit) {
                   return Container(
                     width: 52,
                     height: 56,
@@ -778,7 +803,73 @@ class _PinRevealDialog extends StatelessWidget {
                   );
                 }).toList(),
               ),
+
+              const SizedBox(height: 20),
+
+              // Divider
+              Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey.shade200)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'o comparte el enlace',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade200)),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+
+              // URL row
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: _kLavender,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.link_rounded, size: 16, color: _kNavy),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _portalUrl,
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          color: _kNavy,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _copyUrl,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: _copied
+                            ? const Icon(Icons.check_rounded,
+                                key: ValueKey('check'),
+                                size: 18,
+                                color: Color(0xFF27AE60))
+                            : const Icon(Icons.copy_rounded,
+                                key: ValueKey('copy'),
+                                size: 18,
+                                color: _kNavy),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

@@ -31,8 +31,7 @@ class EmailVerificationGatePage extends StatefulWidget {
       _EmailVerificationGatePageState();
 }
 
-class _EmailVerificationGatePageState
-    extends State<EmailVerificationGatePage> {
+class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
   Timer? _pollTimer;
   Timer? _cooldownTimer;
 
@@ -95,8 +94,7 @@ class _EmailVerificationGatePageState
       });
       // Tick the cooldown counter every second
       _cooldownTimer?.cancel();
-      _cooldownTimer =
-          Timer.periodic(const Duration(seconds: 1), (t) {
+      _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (t) {
         if (!mounted) {
           t.cancel();
           return;
@@ -180,8 +178,7 @@ class _EmailVerificationGatePageState
                         height: 1.6),
                     children: [
                       const TextSpan(
-                          text:
-                              'Te enviamos un enlace de verificación a\n'),
+                          text: 'Te enviamos un enlace de verificación a\n'),
                       TextSpan(
                         text: email,
                         style: const TextStyle(
@@ -291,21 +288,19 @@ class _EmailVerificationGatePageState
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed:
-                                    _resendCooldown || _resending
-                                        ? null
-                                        : _resend,
+                                onPressed: _resendCooldown || _resending
+                                    ? null
+                                    : _resend,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _kNavy,
                                   foregroundColor: Colors.white,
                                   disabledBackgroundColor:
                                       _kNavy.withValues(alpha: 0.4),
                                   disabledForegroundColor: Colors.white70,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 14),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
                                   shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12)),
                                   elevation: 0,
                                 ),
                                 child: _resending

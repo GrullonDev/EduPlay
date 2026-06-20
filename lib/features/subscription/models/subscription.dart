@@ -1,5 +1,10 @@
 /// Represents a parent's subscription tier and usage for the current month.
 class Subscription {
+  factory Subscription.fromMap(Map<String, dynamic> map) => Subscription(
+        tier: (map['tier'] as String?) ?? 'free',
+        sessionsThisMonth: (map['sessionsThisMonth'] as int?) ?? 0,
+        monthYear: (map['monthYear'] as String?) ?? '',
+      );
   const Subscription({
     required this.tier,
     required this.sessionsThisMonth,
@@ -25,15 +30,10 @@ class Subscription {
   /// Maximum practice sessions per month on the free plan.
   static const int freeSessionLimit = 5;
 
-  bool get childLimitReached => !isPro; // checked separately against Firestore count
+  bool get childLimitReached =>
+      !isPro; // checked separately against Firestore count
   bool get sessionLimitReached =>
       !isPro && sessionsThisMonth >= freeSessionLimit;
-
-  factory Subscription.fromMap(Map<String, dynamic> map) => Subscription(
-        tier: (map['tier'] as String?) ?? 'free',
-        sessionsThisMonth: (map['sessionsThisMonth'] as int?) ?? 0,
-        monthYear: (map['monthYear'] as String?) ?? '',
-      );
 
   static Subscription freeTier() => Subscription(
         tier: 'free',

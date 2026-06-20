@@ -40,8 +40,9 @@ class SubscriptionService {
   static Stream<Subscription> watchSubscription() {
     final ref = _doc;
     if (ref == null) return Stream.value(Subscription.freeTier());
-    return ref.snapshots().map((snap) =>
-        snap.exists ? Subscription.fromMap(snap.data()!) : Subscription.freeTier());
+    return ref.snapshots().map((snap) => snap.exists
+        ? Subscription.fromMap(snap.data()!)
+        : Subscription.freeTier());
   }
 
   // ── Write ─────────────────────────────────────────────────────────────────
@@ -49,8 +50,7 @@ class SubscriptionService {
   /// Called once at parent registration to seed the subscription document.
   static Future<void> initSubscription(String uid) async {
     final now = DateTime.now();
-    final monthYear =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final monthYear = '${now.year}-${now.month.toString().padLeft(2, '0')}';
     await _db.collection('subscriptions').doc(uid).set({
       'tier': 'free',
       'sessionsThisMonth': 0,
@@ -66,8 +66,7 @@ class SubscriptionService {
     if (ref == null) return;
 
     final now = DateTime.now();
-    final currentMonth =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final currentMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
 
     final snap = await ref.get();
     if (!snap.exists) return;
@@ -103,8 +102,7 @@ class SubscriptionService {
     if (sub.isPro) return true;
 
     final now = DateTime.now();
-    final currentMonth =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    final currentMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
 
     // Reset check: if month changed, count is effectively 0.
     if (sub.monthYear != currentMonth) return true;
