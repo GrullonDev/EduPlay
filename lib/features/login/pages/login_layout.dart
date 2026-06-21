@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/login/bloc/login_bloc.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -18,9 +19,9 @@ class LoginLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    final s = ScreenSize.of(context);
 
-    if (isDesktop) {
+    if (s.isDesktop) {
       return Row(
         children: [
           // Left navy panel
@@ -37,7 +38,7 @@ class LoginLayout extends StatelessWidget {
       );
     }
 
-    // Mobile: just the form with a compact header
+    // Mobile / tablet: compact header + form
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -191,7 +192,7 @@ class _RightPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    final s = ScreenSize.of(context);
 
     return Container(
       color: const Color(0xFFF8F7FF),
@@ -199,7 +200,7 @@ class _RightPanel extends StatelessWidget {
         child: Center(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
-              horizontal: isDesktop ? 64 : 24,
+              horizontal: s.when(mobile: 16, tablet: 40, desktop: 64),
               vertical: 48,
             ),
             child: ConstrainedBox(

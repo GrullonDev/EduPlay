@@ -12,6 +12,7 @@ import 'package:edu_play/features/subscription/services/subscription_service.dar
 import 'package:edu_play/features/onboarding/widgets/onboarding_wizard.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -143,7 +144,8 @@ class _OverviewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final s = ScreenSize.of(context);
+    final isDesktop = s.isDesktop;
     final firstName = parentName.split(' ').first;
 
     Widget mainCol = Column(
@@ -331,7 +333,7 @@ class _ChildProfilesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cols = MediaQuery.of(context).size.width >= 700 ? 2 : 1;
+    final cols = ScreenSize.of(context).isTablet || ScreenSize.of(context).isDesktop ? 2 : 1;
 
     return GridView.builder(
       shrinkWrap: true,

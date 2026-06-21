@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -303,47 +304,62 @@ class _NumPad extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: _rows
-          .map(
-            (row) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: row.map((key) {
-                  if (key.isEmpty) return const SizedBox(width: 70 + 24);
-                  if (key == 'DEL') {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: _NumKey(
-                        label: '',
-                        icon: Icons.backspace_outlined,
-                        onTap: onDelete,
-                      ),
-                    );
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: _NumKey(
-                      label: key,
-                      onTap: () => onDigit(key),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          )
-          .toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // On very narrow screens scale key size down so numpad never overflows
+        final keySize =
+            constraints.maxWidth < 300 ? 58.0 : (constraints.maxWidth < 360 ? 64.0 : 70.0);
+        final hPad = constraints.maxWidth < 360 ? 10.0 : 12.0;
+
+        return Column(
+          children: _rows
+              .map(
+                (row) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: row.map((key) {
+                      if (key.isEmpty) {
+                        return SizedBox(width: keySize + hPad * 2);
+                      }
+                      if (key == 'DEL') {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(horizontal: hPad),
+                          child: _NumKey(
+                            label: '',
+                            icon: Icons.backspace_outlined,
+                            onTap: onDelete,
+                            size: keySize,
+                          ),
+                        );
+                      }
+                      return Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: _NumKey(
+                          label: key,
+                          onTap: () => onDigit(key),
+                          size: keySize,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
 
 class _NumKey extends StatefulWidget {
-  const _NumKey({required this.label, this.icon, required this.onTap});
+  const _NumKey(
+      {required this.label, this.icon, required this.onTap, this.size = 70});
 
   final String label;
   final IconData? icon;
   final VoidCallback onTap;
+  final double size;
 
   @override
   State<_NumKey> createState() => _NumKeyState();
@@ -363,8 +379,8 @@ class _NumKeyState extends State<_NumKey> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 80),
-        width: 70,
-        height: 70,
+        width: widget.size,
+        height: widget.size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: _pressed

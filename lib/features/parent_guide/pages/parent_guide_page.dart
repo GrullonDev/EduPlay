@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -77,7 +78,7 @@ class _HeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Container(
       margin: const EdgeInsets.all(0),
@@ -310,7 +311,7 @@ class _LibrarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
     final hPad = isDesktop ? 56.0 : 24.0;
 
     return Padding(
@@ -674,7 +675,7 @@ class _TwoColSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
     final hPad = isDesktop ? 56.0 : 24.0;
 
     final screenTimeItems = [
@@ -924,7 +925,7 @@ class _WorksheetsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
     final hPad = isDesktop ? 56.0 : 24.0;
 
     return Container(
@@ -1080,7 +1081,7 @@ class _NewsletterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Container(
       color: _kLavender,
@@ -1180,7 +1181,7 @@ class _GuideFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
     final hPad = isDesktop ? 56.0 : 24.0;
 
     return Container(

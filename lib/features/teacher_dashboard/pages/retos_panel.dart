@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -102,7 +103,7 @@ class _RetosPanelState extends State<RetosPanel>
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),

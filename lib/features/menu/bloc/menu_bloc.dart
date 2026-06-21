@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:edu_play/features/menu/models/game.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -23,19 +24,13 @@ class MenuProvider with ChangeNotifier {
   }
 
   double getFontSize(BuildContext context) {
-    return MediaQuery.of(context).size.width > 900
-        ? 24
-        : MediaQuery.of(context).size.width > 600
-            ? 22
-            : 20;
+    final s = ScreenSize.of(context);
+    return s.when(mobile: 20, tablet: 22, desktop: 24);
   }
 
   int getCrossAxisCount(BuildContext context) {
-    return MediaQuery.of(context).size.width > 900
-        ? 4
-        : MediaQuery.of(context).size.width > 600
-            ? 3
-            : 2;
+    final s = ScreenSize.of(context);
+    return s.when(mobile: 2, tablet: 3, desktop: 4);
   }
 
   List<Game> get games {

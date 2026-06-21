@@ -416,15 +416,13 @@ class _PricingSection extends StatelessWidget {
 
         // Plan cards
         desktop
-            ? IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(child: _PlanCard.free(context)),
-                    const SizedBox(width: 20),
-                    Expanded(child: _PlanCard.pro(context)),
-                  ],
-                ),
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _PlanCard.free(context)),
+                  const SizedBox(width: 20),
+                  Expanded(child: _PlanCard.pro(context)),
+                ],
               )
             : Column(
                 children: [
@@ -494,11 +492,11 @@ class _PlanCard extends StatelessWidget {
         period: 'Para siempre',
         description: 'Perfecto para empezar a explorar EduPlay en familia.',
         features: const [
-          '1 perfil de niño',
-          '5 sesiones por mes',
-          '9 juegos educativos',
+          '2 perfiles de niño',
+          '6 sesiones por mes',
+          '10 juegos educativos',
           'Portal de niño',
-          'Informes básicos',
+          'Consulta de puntuaciones (padres e hijos)',
         ],
         cta: 'Registrarse gratis',
         highlighted: false,
@@ -507,17 +505,17 @@ class _PlanCard extends StatelessWidget {
 
   factory _PlanCard.pro(BuildContext context) => _PlanCard(
         name: 'Pro',
-        price: '\$9.99',
+        price: '\$8.99',
         period: 'por mes',
         description:
             'Para familias que quieren sacar el máximo provecho de EduPlay.',
         features: const [
           'Niños ilimitados',
           'Sesiones ilimitadas',
-          '9+ juegos educativos',
-          'Informes avanzados',
-          'Exportar PDF',
+          'Juegos educativos ilimitados',
+          'Descarga de informes en PDF',
           'Soporte prioritario',
+          'Asistencia con inteligencia artificial',
         ],
         cta: '¡Empezar con Pro!',
         highlighted: true,
@@ -555,6 +553,7 @@ class _PlanCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Badge
           Container(
@@ -647,7 +646,6 @@ class _PlanCard extends StatelessWidget {
               ),
             ),
 
-          const Spacer(),
           const SizedBox(height: 20),
 
           // CTA

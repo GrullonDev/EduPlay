@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -52,7 +53,7 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -137,7 +138,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Material(
       color: Colors.white,
@@ -649,7 +650,7 @@ class _FeaturedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     if (featured.isEmpty) return const SizedBox.shrink();
 
@@ -1094,11 +1095,8 @@ class _GameGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cols = MediaQuery.of(context).size.width >= 1100
-        ? 3
-        : MediaQuery.of(context).size.width >= 700
-            ? 2
-            : 1;
+    final s = ScreenSize.of(context);
+    final cols = s.isWide ? 3 : (s.isTablet || s.isDesktop ? 2 : 1);
 
     return GridView.builder(
       shrinkWrap: true,
@@ -1497,7 +1495,7 @@ class _EmptyState extends StatelessWidget {
 class _CatalogFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Container(
       color: const Color(0xFFEEEDF8),

@@ -1,6 +1,7 @@
 import 'package:edu_play/features/fun_english/bloc/fun_english_bloc.dart';
 
 import 'package:edu_play/utils/app_theme.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -51,76 +52,93 @@ class _FunEnglishLayout extends StatelessWidget {
           child: Column(
             children: [
               // Header (Score & Lives)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatPill(
-                        Icons.star_rounded, '${bloc.score}', Colors.amber),
-                    Text(
-                      'Inglés Divertido 🇬🇧',
-                      style: GoogleFonts.nunito(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final s = ScreenSize.fromConstraints(constraints);
+                  return Padding(
+                    padding: EdgeInsets.all(s.isMobile ? 12.0 : 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildStatPill(Icons.star_rounded, '${bloc.score}',
+                            Colors.amber, s),
+                        Flexible(
+                          child: Text(
+                            'Inglés Divertido 🇬🇧',
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.nunito(
+                              fontSize: s.isMobile ? 18 : 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        _buildStatPill(Icons.favorite_rounded, '${bloc.lives}',
+                            Colors.red, s),
+                      ],
                     ),
-                    _buildStatPill(
-                        Icons.favorite_rounded, '${bloc.lives}', Colors.red),
-                  ],
-                ),
+                  );
+                },
               ),
 
               const SizedBox(height: 20),
 
               // Question Card
               Expanded(
-                child: Center(
-                  child: Container(
-                    margin: const EdgeInsets.all(24),
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          bloc.currentQuestion,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.nunito(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryColor,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final s = ScreenSize.fromConstraints(constraints);
+                    return Center(
+                      child: SingleChildScrollView(
+                        child: Container(
+                          margin: EdgeInsets.all(s.isMobile ? 16 : 24),
+                          padding: EdgeInsets.all(s.isMobile ? 20 : 32),
+                          constraints: const BoxConstraints(maxWidth: 600),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                bloc.currentQuestion,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.nunito(
+                                  fontSize: s.isMobile ? 22 : 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                              SizedBox(height: s.isMobile ? 24 : 40),
+
+                              // Options Grid
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 12,
+                                alignment: WrapAlignment.center,
+                                children: List.generate(
+                                    bloc.currentOptions.length, (index) {
+                                  return _OptionButton(
+                                    text: bloc.currentOptions[index],
+                                    onTap: () => bloc.checkAnswer(index),
+                                    s: s,
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 40),
-
-                        // Options Grid
-                        Wrap(
-                          spacing: 16,
-                          runSpacing: 16,
-                          alignment: WrapAlignment.center,
-                          children: List.generate(bloc.currentOptions.length,
-                              (index) {
-                            return _OptionButton(
-                              text: bloc.currentOptions[index],
-                              onTap: () => bloc.checkAnswer(index),
-                            );
-                          }),
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -140,20 +158,23 @@ class _FunEnglishLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildStatPill(IconData icon, String text, Color color) {
+  Widget _buildStatPill(
+      IconData icon, String text, Color color, ScreenSize s) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(
+          horizontal: s.isMobile ? 10 : 16, vertical: s.isMobile ? 6 : 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(width: 8),
+          Icon(icon, color: color, size: s.isMobile ? 20 : 28),
+          SizedBox(width: s.isMobile ? 4 : 8),
           Text(text,
               style: GoogleFonts.nunito(
-                  fontSize: 20,
+                  fontSize: s.isMobile ? 15 : 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
         ],
@@ -163,15 +184,21 @@ class _FunEnglishLayout extends StatelessWidget {
 }
 
 class _OptionButton extends StatelessWidget {
-  const _OptionButton({required this.text, required this.onTap});
+  const _OptionButton(
+      {required this.text, required this.onTap, required this.s});
   final String text;
   final VoidCallback onTap;
+  final ScreenSize s;
 
   @override
   Widget build(BuildContext context) {
+    final btnWidth = s.isDesktop ? 160.0 : (s.isTablet ? 148.0 : 130.0);
+    final btnHeight = s.isMobile ? 64.0 : 80.0;
+    final fontSize = s.isMobile ? 15.0 : 18.0;
+
     return SizedBox(
-      width: 140, // Fixed width for clean grid
-      height: 80,
+      width: btnWidth,
+      height: btnHeight,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.accentColor,
@@ -184,7 +211,8 @@ class _OptionButton extends StatelessWidget {
         child: Text(
           text,
           textAlign: TextAlign.center,
-          style: GoogleFonts.nunito(fontSize: 18, fontWeight: FontWeight.bold),
+          style: GoogleFonts.nunito(
+              fontSize: fontSize, fontWeight: FontWeight.bold),
         ),
       ),
     );

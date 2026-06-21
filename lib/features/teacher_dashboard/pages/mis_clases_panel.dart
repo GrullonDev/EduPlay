@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -20,7 +21,7 @@ class MisClasesPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
 
     return Padding(
       padding: EdgeInsets.all(wide ? 32 : 16),

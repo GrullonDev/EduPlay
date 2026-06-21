@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -29,7 +30,7 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0EFF8),
@@ -107,7 +108,7 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
 class _Navbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Material(
       color: Colors.white,
@@ -585,7 +586,8 @@ class _FieldRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 600;
+    final s = ScreenSize.of(context);
+    final isDesktop = !s.isMobile; // tablet + desktop get side-by-side layout
     if (isDesktop) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -695,7 +697,7 @@ class _Input extends StatelessWidget {
 class _Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Container(
       color: const Color(0xFFF0EFF8),

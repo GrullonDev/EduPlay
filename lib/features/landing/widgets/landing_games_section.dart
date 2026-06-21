@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -13,12 +14,8 @@ class LandingGamesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
-    final width = MediaQuery.of(context).size.width;
-    final crossAxisCount = width > 900
-        ? 3
-        : width > 600
-            ? 2
-            : 1;
+    final s = ScreenSize.of(context);
+    final crossAxisCount = gridCols(s, mobile: 1, tablet: 2, desktop: 3);
 
     return LandingSection(
       child: Column(

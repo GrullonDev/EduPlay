@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -155,7 +156,7 @@ class _StatsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 800;
+    final wide = ScreenSize.of(context).isDesktop;
     return SingleChildScrollView(
       padding: EdgeInsets.all(wide ? 32 : 16),
       child: Column(

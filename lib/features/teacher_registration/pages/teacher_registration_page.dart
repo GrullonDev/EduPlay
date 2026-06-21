@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -122,7 +123,7 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
     return Scaffold(
       backgroundColor: _kBg,
       body: isDesktop ? _desktop() : _mobile(),

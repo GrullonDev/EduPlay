@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 /// Breakpoint above which the landing page switches to its desktop layout.
-const double kLandingDesktopBreakpoint = 900;
+/// Kept for backward compatibility — prefer [AppBreakpoints.md].
+const double kLandingDesktopBreakpoint = AppBreakpoints.md;
 
 /// Maximum width of the centered content inside each landing section.
 const double kLandingMaxContentWidth = 1180;
 
 /// Whether the current layout should use the desktop (wide) variant.
 bool isLandingDesktop(BuildContext context) =>
-    MediaQuery.of(context).size.width >= kLandingDesktopBreakpoint;
+    ScreenSize.of(context).isDesktop;
 
 /// Centers [child] within a max-width column and applies consistent
 /// horizontal/vertical padding that adapts to screen size.

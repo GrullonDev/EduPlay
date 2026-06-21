@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -45,7 +46,7 @@ class _RendimientoPanelState extends State<RendimientoPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
@@ -111,7 +112,7 @@ class _HeaderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 700;
+    final wide = !ScreenSize.of(context).isMobile;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,

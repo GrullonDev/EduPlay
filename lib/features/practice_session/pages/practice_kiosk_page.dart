@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -80,7 +81,7 @@ class _PracticeKioskPageState extends State<PracticeKioskPage> {
       return _CompletionScreen(session: _session);
     }
 
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
     final games = _session.assignedGameIds
         .map((id) => gameById(id))
         .whereType<GameInfo>()

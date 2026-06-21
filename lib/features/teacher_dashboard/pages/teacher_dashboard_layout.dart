@@ -9,6 +9,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart'
 import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
     final bloc = context.watch<TeacherDashboardBloc>();
 
     return Scaffold(
@@ -398,7 +399,7 @@ class _OverviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.of(context).size.width >= 900;
+    final wide = ScreenSize.of(context).isDesktop;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(

@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -437,7 +438,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
   }
 
   bool _isDesktop(BuildContext context) =>
-      MediaQuery.of(context).size.width >= 700;
+      !ScreenSize.of(context).isMobile;
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────

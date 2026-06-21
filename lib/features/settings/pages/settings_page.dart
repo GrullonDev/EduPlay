@@ -9,6 +9,7 @@ import 'package:edu_play/features/subscription/services/subscription_service.dar
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
 import 'package:edu_play/features/subscription/services/stripe_service.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -37,7 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Scaffold(
       backgroundColor: _kBg,
@@ -446,7 +447,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
       );
     }
 
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = ScreenSize.of(context).isDesktop;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -114,9 +115,14 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 32),
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final s = ScreenSize.fromConstraints(constraints);
+                      final hPad =
+                          s.when(mobile: 16.0, tablet: 24.0, desktop: 40.0);
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: hPad, vertical: 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -202,6 +208,8 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                         const SizedBox(height: 40),
                       ],
                     ),
+                  );
+                    },
                   ),
           ),
         ],

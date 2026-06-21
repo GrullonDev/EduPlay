@@ -1,3 +1,4 @@
+import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_play/features/nature_explorers/bloc/nature_explorers_bloc.dart';
@@ -8,13 +9,33 @@ class NatureExplorersLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NatureExplorersProvider>();
-    final isLargeScreen = MediaQuery.of(context).size.width > 600;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final s = ScreenSize.fromConstraints(constraints);
+        return _NatureExplorersContent(provider: provider, s: s);
+      },
+    );
+  }
+}
+
+class _NatureExplorersContent extends StatelessWidget {
+  const _NatureExplorersContent({required this.provider, required this.s});
+  final NatureExplorersProvider provider;
+  final ScreenSize s;
+
+  @override
+  Widget build(BuildContext context) {
+    final cols = s.when(mobile: 2, tablet: 3, desktop: 4);
+    final iconSize = s.when(mobile: 44.0, tablet: 56.0, desktop: 64.0);
+    final scoreFontSize = s.isMobile ? 14.0 : 18.0;
+    final targetFontSize = s.isMobile ? 26.0 : 32.0;
 
     return Column(
       children: [
         // Header / Score
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(s.isMobile ? 12.0 : 16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -23,19 +44,23 @@ class NatureExplorersLayout extends StatelessWidget {
                 icon: const Icon(Icons.arrow_back_ios_new_rounded,
                     color: Colors.white),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Nivel: ${provider.level}  |  Puntos: ${provider.score}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF9800),
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: s.isMobile ? 14 : 20,
+                      vertical: s.isMobile ? 8 : 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Nivel: ${provider.level}  |  Puntos: ${provider.score}',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: scoreFontSize,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFFF9800),
+                    ),
                   ),
                 ),
               ),
@@ -45,8 +70,10 @@ class NatureExplorersLayout extends StatelessWidget {
 
         // Instruction
         Container(
-          margin: const EdgeInsets.symmetric(vertical: 20),
-          padding: const EdgeInsets.all(20),
+          margin: EdgeInsets.symmetric(
+              vertical: s.isMobile ? 12 : 20,
+              horizontal: s.isMobile ? 12 : 0),
+          padding: EdgeInsets.all(s.isMobile ? 14 : 20),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
@@ -60,17 +87,19 @@ class NatureExplorersLayout extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const Text(
+              Text(
                 'Encuentra:',
-                style: TextStyle(fontSize: 20, color: Colors.grey),
+                style: TextStyle(
+                    fontSize: s.isMobile ? 16 : 20, color: Colors.grey),
               ),
               const SizedBox(height: 10),
               Text(
                 provider.targetName,
-                style: const TextStyle(
-                  fontSize: 32,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: targetFontSize,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF2D3142),
+                  color: const Color(0xFF2D3142),
                 ),
               ),
             ],
@@ -80,19 +109,21 @@ class NatureExplorersLayout extends StatelessWidget {
         // Feedback Message
         if (provider.feedbackMessage.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.only(bottom: 16),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                  horizontal: s.isMobile ? 16 : 24,
+                  vertical: s.isMobile ? 8 : 12),
               decoration: BoxDecoration(
                 color: provider.feedbackColor,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Text(
                 provider.feedbackMessage,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: s.isMobile ? 15 : 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -102,12 +133,12 @@ class NatureExplorersLayout extends StatelessWidget {
         // Game Grid
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(s.isMobile ? 12.0 : 16.0),
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isLargeScreen ? 4 : 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+                crossAxisCount: cols,
+                crossAxisSpacing: s.isMobile ? 12 : 16,
+                mainAxisSpacing: s.isMobile ? 12 : 16,
                 childAspectRatio: 1.0,
               ),
               itemCount: provider.currentItems.length,
@@ -119,10 +150,7 @@ class NatureExplorersLayout extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 4,
-                      ),
+                      border: Border.all(color: Colors.white, width: 4),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.1),
@@ -134,11 +162,7 @@ class NatureExplorersLayout extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          item.icon,
-                          size: isLargeScreen ? 64 : 48,
-                          color: item.color,
-                        ),
+                        Icon(item.icon, size: iconSize, color: item.color),
                       ],
                     ),
                   ),
