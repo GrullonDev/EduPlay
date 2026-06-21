@@ -6,20 +6,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
-const _kNavy    = Color(0xFF1E1B6A);
-const _kCoral   = Color(0xFFFF6E6C);
-const _kBg      = Color(0xFFF8F7FF);
-const _kLav     = Color(0xFFEEEDF8);
+const _kNavy = Color(0xFF1E1B6A);
+const _kCoral = Color(0xFFFF6E6C);
+const _kBg = Color(0xFFF8F7FF);
+const _kLav = Color(0xFFEEEDF8);
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 
 class _PlatformStats {
-  final int totalParents;
-  final int totalSessions;
-  final int totalClasses;
-  final int proSubscribers;
-  final int totalChildren;
-
   const _PlatformStats({
     required this.totalParents,
     required this.totalSessions,
@@ -27,6 +21,11 @@ class _PlatformStats {
     required this.proSubscribers,
     required this.totalChildren,
   });
+  final int totalParents;
+  final int totalSessions;
+  final int totalClasses;
+  final int proSubscribers;
+  final int totalChildren;
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -61,7 +60,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       db.collection('parents').count().get(),
       db.collection('practice_sessions').count().get(),
       db.collection('classes').count().get(),
-      db.collection('subscriptions')
+      db
+          .collection('subscriptions')
           .where('tier', isEqualTo: 'pro')
           .count()
           .get(),
@@ -71,16 +71,17 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final parentsSnap = await db.collection('parents').get();
     int childCount = 0;
     for (final doc in parentsSnap.docs) {
-      final cSnap = await doc.reference.collection('child_profiles').count().get();
+      final cSnap =
+          await doc.reference.collection('child_profiles').count().get();
       childCount += cSnap.count ?? 0;
     }
 
     return _PlatformStats(
-      totalParents:    results[0].count ?? 0,
-      totalSessions:   results[1].count ?? 0,
-      totalClasses:    results[2].count ?? 0,
-      proSubscribers:  results[3].count ?? 0,
-      totalChildren:   childCount,
+      totalParents: results[0].count ?? 0,
+      totalSessions: results[1].count ?? 0,
+      totalClasses: results[2].count ?? 0,
+      proSubscribers: results[3].count ?? 0,
+      totalChildren: childCount,
     );
   }
 
@@ -93,15 +94,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         foregroundColor: Colors.white,
         title: Text(
           'Panel de administración',
-          style: GoogleFonts.fredoka(
-              fontSize: 20, fontWeight: FontWeight.w700),
+          style: GoogleFonts.fredoka(fontSize: 20, fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Actualizar',
-            onPressed: () =>
-                setState(() => _statsFuture = _load()),
+            onPressed: () => setState(() => _statsFuture = _load()),
           ),
         ],
       ),
@@ -165,9 +164,7 @@ class _StatsView extends StatelessWidget {
           Text(
             'Métricas de la plataforma',
             style: GoogleFonts.fredoka(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: _kNavy),
+                fontSize: 22, fontWeight: FontWeight.w700, color: _kNavy),
           ),
           const SizedBox(height: 20),
 
@@ -215,9 +212,7 @@ class _StatsView extends StatelessWidget {
           Text(
             'Tasa de conversión',
             style: GoogleFonts.fredoka(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: _kNavy),
+                fontSize: 18, fontWeight: FontWeight.w700, color: _kNavy),
           ),
           const SizedBox(height: 12),
           _ConversionCard(
@@ -231,9 +226,7 @@ class _StatsView extends StatelessWidget {
           Text(
             'Acciones rápidas',
             style: GoogleFonts.fredoka(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: _kNavy),
+                fontSize: 18, fontWeight: FontWeight.w700, color: _kNavy),
           ),
           const SizedBox(height: 12),
           _ActionTile(
@@ -261,11 +254,10 @@ class _StatsView extends StatelessWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSt) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           title: Text('Gestionar rol admin',
-              style: GoogleFonts.fredoka(
-                  color: _kNavy, fontSize: 20)),
+              style: GoogleFonts.fredoka(color: _kNavy, fontSize: 20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,8 +275,8 @@ class _StatsView extends StatelessWidget {
                 decoration: const InputDecoration(
                   hintText: 'usuario@email.com',
                   border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 ),
                 style: GoogleFonts.nunito(fontSize: 14),
               ),
@@ -293,8 +285,7 @@ class _StatsView extends StatelessWidget {
                 children: [
                   Text('Acción:',
                       style: GoogleFonts.nunito(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700)),
+                          fontSize: 13, fontWeight: FontWeight.w700)),
                   const SizedBox(width: 12),
                   ChoiceChip(
                     label: const Text('Conceder admin'),
@@ -335,8 +326,7 @@ class _StatsView extends StatelessWidget {
                 if (snap.docs.isEmpty) {
                   if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(
-                          content: Text('Usuario no encontrado.')),
+                      const SnackBar(content: Text('Usuario no encontrado.')),
                     );
                   }
                   return;
@@ -358,8 +348,7 @@ class _StatsView extends StatelessWidget {
                 }
               },
               child: Text('Aplicar',
-                  style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w700)),
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -424,8 +413,7 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: GoogleFonts.nunito(
-                fontSize: 12, color: Colors.grey[500]),
+            style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
           ),
         ],
       ),

@@ -19,10 +19,10 @@ const _kLavender = Color(0xFFEEEDF8);
 /// Can be opened by parents or students. Shows class details; tapping Join
 /// calls TeacherClassesService.joinClass().
 class JoinClassPage extends StatefulWidget {
+  const JoinClassPage({super.key, this.codeFromArgs});
+
   /// Pre-filled code from route args or URL fragment.
   final String? codeFromArgs;
-
-  const JoinClassPage({super.key, this.codeFromArgs});
 
   @override
   State<JoinClassPage> createState() => _JoinClassPageState();
@@ -94,8 +94,9 @@ class _JoinClassPageState extends State<JoinClassPage> {
 
   Future<void> _join() async {
     final user = FirebaseAuth.instance.currentUser;
-    final displayName =
-        _nameCtrl.text.trim().isEmpty ? (user?.displayName ?? 'Alumno') : _nameCtrl.text.trim();
+    final displayName = _nameCtrl.text.trim().isEmpty
+        ? (user?.displayName ?? 'Alumno')
+        : _nameCtrl.text.trim();
     final email = user?.email ?? '';
 
     setState(() {
@@ -113,7 +114,8 @@ class _JoinClassPageState extends State<JoinClassPage> {
       if (!mounted) return;
       setState(() => _joined = true);
     } catch (e) {
-      setState(() => _error = 'No se pudo unir. ¿Ya eres miembro de esta clase?');
+      setState(
+          () => _error = 'No se pudo unir. ¿Ya eres miembro de esta clase?');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -341,14 +343,12 @@ class _ClassPreview extends StatelessWidget {
                 Text(
                   tc.name,
                   style: GoogleFonts.fredoka(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: _kNavy),
+                      fontSize: 17, fontWeight: FontWeight.w700, color: _kNavy),
                 ),
                 Text(
                   '${tc.subject} · ${tc.gradeLevel}',
-                  style: GoogleFonts.nunito(
-                      fontSize: 12, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -367,8 +367,7 @@ class _ClassPreview extends StatelessWidget {
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: const Color(0xFFD5F5E3),
               borderRadius: BorderRadius.circular(20),
@@ -407,8 +406,8 @@ class _SuccessView extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Center(
-            child: Icon(Icons.check_rounded,
-                size: 40, color: Color(0xFF27AE60)),
+            child:
+                Icon(Icons.check_rounded, size: 40, color: Color(0xFF27AE60)),
           ),
         ),
         const SizedBox(height: 20),
@@ -427,9 +426,8 @@ class _SuccessView extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () =>
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    RouterPaths.root, (_) => false),
+            onPressed: () => Navigator.of(context)
+                .pushNamedAndRemoveUntil(RouterPaths.root, (_) => false),
             style: ElevatedButton.styleFrom(
               backgroundColor: _kNavy,
               foregroundColor: Colors.white,
@@ -454,8 +452,7 @@ class _SuccessView extends StatelessWidget {
 
 InputDecoration _inputDec(String hint) => InputDecoration(
       hintText: hint,
-      hintStyle:
-          GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+      hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       border: OutlineInputBorder(
@@ -470,6 +467,5 @@ InputDecoration _inputDec(String hint) => InputDecoration(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: _kNavy, width: 1.5),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
     );

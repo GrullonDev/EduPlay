@@ -16,8 +16,10 @@ class MathAdventureGameArea extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final s = ScreenSize.fromConstraints(constraints);
-        final questionFontSize = s.when(mobile: 34.0, tablet: 42.0, desktop: 48.0);
-        final answerFontSize = s.when(mobile: 26.0, tablet: 34.0, desktop: 40.0);
+        final questionFontSize =
+            s.when(mobile: 34.0, tablet: 42.0, desktop: 48.0);
+        final answerFontSize =
+            s.when(mobile: 26.0, tablet: 34.0, desktop: 40.0);
         final cardPadding = s.isMobile ? 16.0 : 24.0;
         final gridSpacing = s.isMobile ? 14.0 : 20.0;
 

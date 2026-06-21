@@ -7,7 +7,6 @@ import 'package:edu_play/features/parents_dashboard/services/child_profiles_serv
 import 'package:edu_play/features/subscription/models/subscription.dart';
 import 'package:edu_play/features/subscription/services/subscription_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
-import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
 import 'package:edu_play/features/subscription/services/stripe_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 
@@ -341,10 +340,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
       return;
     }
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('parents')
-          .doc(uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
       final data = doc.data() ?? {};
       _firstNameCtrl.text = (data['firstName'] as String?) ?? '';
       _lastNameCtrl.text = (data['lastName'] as String?) ?? '';
@@ -357,8 +354,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
   }
 
   bool get _isProfileIncomplete =>
-      _firstNameCtrl.text.trim().isEmpty ||
-      _lastNameCtrl.text.trim().isEmpty;
+      _firstNameCtrl.text.trim().isEmpty || _lastNameCtrl.text.trim().isEmpty;
 
   Future<void> _saveProfile() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -374,9 +370,14 @@ class _ProfileSectionState extends State<_ProfileSection> {
         'lastName': _lastNameCtrl.text.trim(),
         'age': _ageCtrl.text.trim(),
       });
-      if (mounted) setState(() => _profileSuccess = 'Perfil actualizado correctamente.');
+      if (mounted) {
+        setState(() => _profileSuccess = 'Perfil actualizado correctamente.');
+      }
     } catch (e) {
-      if (mounted) setState(() => _profileError = 'No se pudo guardar. Inténtalo de nuevo.');
+      if (mounted) {
+        setState(
+            () => _profileError = 'No se pudo guardar. Inténtalo de nuevo.');
+      }
     } finally {
       if (mounted) setState(() => _savingProfile = false);
     }
@@ -392,7 +393,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
     final current = _currentPwCtrl.text;
 
     if (newPw.length < 8) {
-      setState(() => _pwError = 'La nueva contraseña debe tener al menos 8 caracteres.');
+      setState(() =>
+          _pwError = 'La nueva contraseña debe tener al menos 8 caracteres.');
       return;
     }
     if (newPw != confirm) {
@@ -413,11 +415,17 @@ class _ProfileSectionState extends State<_ProfileSection> {
       _currentPwCtrl.clear();
       _newPwCtrl.clear();
       _confirmPwCtrl.clear();
-      if (mounted) setState(() => _pwSuccess = 'Contraseña cambiada correctamente.');
+      if (mounted) {
+        setState(() => _pwSuccess = 'Contraseña cambiada correctamente.');
+      }
     } on FirebaseAuthException catch (e) {
       String msg = 'No se pudo cambiar la contraseña.';
-      if (e.code == 'wrong-password') msg = 'La contraseña actual es incorrecta.';
-      if (e.code == 'weak-password') msg = 'La nueva contraseña es demasiado débil.';
+      if (e.code == 'wrong-password') {
+        msg = 'La contraseña actual es incorrecta.';
+      }
+      if (e.code == 'weak-password') {
+        msg = 'La nueva contraseña es demasiado débil.';
+      }
       if (mounted) setState(() => _pwError = msg);
     } finally {
       if (mounted) setState(() => _savingPassword = false);
@@ -522,7 +530,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
                         Text(
                           _firstNameCtrl.text.isNotEmpty ||
                                   _lastNameCtrl.text.isNotEmpty
-                              ? '${_firstNameCtrl.text} ${_lastNameCtrl.text}'.trim()
+                              ? '${_firstNameCtrl.text} ${_lastNameCtrl.text}'
+                                  .trim()
                               : 'Sin nombre',
                           style: GoogleFonts.fredoka(
                             fontSize: 20,
@@ -550,8 +559,8 @@ class _ProfileSectionState extends State<_ProfileSection> {
                 Row(
                   children: [
                     Expanded(
-                        child: _FieldGroup(
-                            label: 'Nombre', ctrl: _firstNameCtrl)),
+                        child:
+                            _FieldGroup(label: 'Nombre', ctrl: _firstNameCtrl)),
                     const SizedBox(width: 16),
                     Expanded(
                         child: _FieldGroup(
@@ -583,8 +592,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
                             decoration: _sharedInputDec('').copyWith(
                               fillColor: Colors.grey.shade50,
                               suffixIcon: const Tooltip(
-                                message:
-                                    'El correo no puede cambiarse aquí',
+                                message: 'El correo no puede cambiarse aquí',
                                 child: Icon(Icons.lock_outline_rounded,
                                     size: 16, color: Colors.grey),
                               ),
@@ -594,8 +602,7 @@ class _ProfileSectionState extends State<_ProfileSection> {
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                        child: _FieldGroup(label: 'Edad', ctrl: _ageCtrl)),
+                    Expanded(child: _FieldGroup(label: 'Edad', ctrl: _ageCtrl)),
                   ],
                 )
               else ...[
@@ -730,16 +737,13 @@ class _ProfileSectionState extends State<_ProfileSection> {
                     ),
                   ],
                 ),
-
               const SizedBox(height: 20),
-
               if (_pwError != null)
                 _FeedbackBanner(message: _pwError!, isError: true),
               if (_pwSuccess != null)
                 _FeedbackBanner(message: _pwSuccess!, isError: false),
               if (_pwError != null || _pwSuccess != null)
                 const SizedBox(height: 12),
-
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
@@ -791,8 +795,9 @@ class _FeedbackBanner extends StatelessWidget {
     final color = isError ? const Color(0xFFFDE8E8) : const Color(0xFFD1FAE5);
     final textColor =
         isError ? const Color(0xFF9B1C1C) : const Color(0xFF065F46);
-    final icon =
-        isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded;
+    final icon = isError
+        ? Icons.error_outline_rounded
+        : Icons.check_circle_outline_rounded;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -808,9 +813,7 @@ class _FeedbackBanner extends StatelessWidget {
             child: Text(
               message,
               style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  color: textColor,
-                  fontWeight: FontWeight.w600),
+                  fontSize: 13, color: textColor, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1372,13 +1375,13 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
       return;
     }
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('parents')
-          .doc(uid)
-          .get();
-      final prefs = (doc.data()?['notificationPrefs'] as Map<String, dynamic>?) ?? {};
+      final doc =
+          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
+      final prefs =
+          (doc.data()?['notificationPrefs'] as Map<String, dynamic>?) ?? {};
       setState(() {
-        _emailSessionComplete = (prefs['emailSessionComplete'] as bool?) ?? true;
+        _emailSessionComplete =
+            (prefs['emailSessionComplete'] as bool?) ?? true;
         _emailWeeklyDigest = (prefs['emailWeeklyDigest'] as bool?) ?? true;
         _emailTips = (prefs['emailTips'] as bool?) ?? false;
         _emailNewFeatures = (prefs['emailNewFeatures'] as bool?) ?? true;
@@ -1446,7 +1449,8 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
                     icon: Icons.check_circle_outline_rounded,
                     iconColor: const Color(0xFF27AE60),
                     title: 'Sesión completada',
-                    subtitle: 'Recibe un email cuando tu hijo/a termine una sesión de práctica.',
+                    subtitle:
+                        'Recibe un email cuando tu hijo/a termine una sesión de práctica.',
                     value: _emailSessionComplete,
                     onChanged: (v) => _toggle('emailSessionComplete', v),
                   ),
@@ -1454,7 +1458,8 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
                     icon: Icons.calendar_today_rounded,
                     iconColor: const Color(0xFF3498DB),
                     title: 'Resumen semanal',
-                    subtitle: 'Un resumen del progreso de tus hijos cada lunes.',
+                    subtitle:
+                        'Un resumen del progreso de tus hijos cada lunes.',
                     value: _emailWeeklyDigest,
                     onChanged: (v) => _toggle('emailWeeklyDigest', v),
                   ),
@@ -1462,7 +1467,8 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
                     icon: Icons.lightbulb_outline_rounded,
                     iconColor: const Color(0xFFF39C12),
                     title: 'Consejos de aprendizaje',
-                    subtitle: 'Artículos y sugerencias para mejorar el aprendizaje en casa.',
+                    subtitle:
+                        'Artículos y sugerencias para mejorar el aprendizaje en casa.',
                     value: _emailTips,
                     onChanged: (v) => _toggle('emailTips', v),
                   ),
@@ -1470,7 +1476,8 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
                     icon: Icons.new_releases_outlined,
                     iconColor: _kNavy,
                     title: 'Novedades de EduPlay',
-                    subtitle: 'Nuevos juegos, funciones y actualizaciones de la plataforma.',
+                    subtitle:
+                        'Nuevos juegos, funciones y actualizaciones de la plataforma.',
                     value: _emailNewFeatures,
                     onChanged: (v) => _toggle('emailNewFeatures', v),
                   ),
@@ -1595,7 +1602,7 @@ class _NotifItem extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: _kNavy,
+            activeThumbColor: _kNavy,
           ),
         ],
       ),
@@ -1623,7 +1630,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
   }
 
   String get _providerLabel {
-    final providers = _user?.providerData.map((p) => p.providerId).toList() ?? [];
+    final providers =
+        _user?.providerData.map((p) => p.providerId).toList() ?? [];
     if (providers.contains('google.com')) return 'Google';
     if (providers.contains('microsoft.com')) return 'Microsoft';
     return 'Correo electrónico';
@@ -1650,8 +1658,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
             const SizedBox(height: 16),
             Text(
               'Introduce tu contraseña para confirmar:',
-              style: GoogleFonts.nunito(
-                  fontSize: 13, fontWeight: FontWeight.w700),
+              style:
+                  GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -1668,8 +1676,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: Colors.grey.shade200),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 14),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               ),
             ),
           ],
@@ -1869,8 +1877,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD5F5E3),
                       borderRadius: BorderRadius.circular(20),
@@ -1896,8 +1904,7 @@ class _SecuritySectionState extends State<_SecuritySection> {
                   icon: const Icon(Icons.logout_rounded, size: 16),
                   label: Text(
                     'Cerrar todas las sesiones',
-                    style:
-                        GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: _kNavy,
@@ -1927,7 +1934,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, size: 20, color: _kRed),
+                  const Icon(Icons.warning_amber_rounded,
+                      size: 20, color: _kRed),
                   const SizedBox(width: 10),
                   Text(
                     'Zona de peligro',
@@ -1949,9 +1957,8 @@ class _SecuritySectionState extends State<_SecuritySection> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _deleting
-                      ? null
-                      : () => _confirmDeleteAccount(context),
+                  onPressed:
+                      _deleting ? null : () => _confirmDeleteAccount(context),
                   icon: _deleting
                       ? const SizedBox(
                           width: 16,

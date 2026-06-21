@@ -90,8 +90,7 @@ class _StickerAlbumGridState extends State<StickerAlbumGrid> {
         final labelFontSize = s.isMobile ? 10.0 : 12.0;
 
         return GridView.builder(
-          padding: widget.padding ??
-              EdgeInsets.all(s.isMobile ? 12 : 16),
+          padding: widget.padding ?? EdgeInsets.all(s.isMobile ? 12 : 16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: cols,
             crossAxisSpacing: s.isMobile ? 8 : 10,

@@ -9,8 +9,7 @@ const double kLandingDesktopBreakpoint = AppBreakpoints.md;
 const double kLandingMaxContentWidth = 1180;
 
 /// Whether the current layout should use the desktop (wide) variant.
-bool isLandingDesktop(BuildContext context) =>
-    ScreenSize.of(context).isDesktop;
+bool isLandingDesktop(BuildContext context) => ScreenSize.of(context).isDesktop;
 
 /// Centers [child] within a max-width column and applies consistent
 /// horizontal/vertical padding that adapts to screen size.

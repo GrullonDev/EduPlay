@@ -1,4 +1,3 @@
-import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -307,8 +306,9 @@ class _NumPad extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         // On very narrow screens scale key size down so numpad never overflows
-        final keySize =
-            constraints.maxWidth < 300 ? 58.0 : (constraints.maxWidth < 360 ? 64.0 : 70.0);
+        final keySize = constraints.maxWidth < 300
+            ? 58.0
+            : (constraints.maxWidth < 360 ? 64.0 : 70.0);
         final hPad = constraints.maxWidth < 360 ? 10.0 : 12.0;
 
         return Column(

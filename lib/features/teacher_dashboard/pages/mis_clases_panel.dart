@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -51,8 +50,8 @@ class MisClasesPanel extends StatelessWidget {
                   backgroundColor: _kCoral,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 13),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
@@ -236,8 +235,7 @@ class _ClassCardState extends State<_ClassCard> {
                                 backgroundColor: _kCoral),
                             onPressed: () => Navigator.pop(context, true),
                             child: Text('Eliminar',
-                                style: GoogleFonts.nunito(
-                                    color: Colors.white)),
+                                style: GoogleFonts.nunito(color: Colors.white)),
                           ),
                         ],
                       ),
@@ -301,8 +299,7 @@ class _ClassCardState extends State<_ClassCard> {
 
           // Join code + copy link
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: _kLavender,
               borderRadius: BorderRadius.circular(10),
@@ -311,8 +308,8 @@ class _ClassCardState extends State<_ClassCard> {
               children: [
                 Text(
                   'Código: ',
-                  style: GoogleFonts.nunito(
-                      fontSize: 12, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
                 ),
                 Text(
                   tc.joinCode,
@@ -334,9 +331,7 @@ class _ClassCardState extends State<_ClassCard> {
                             size: 18,
                             color: Color(0xFF27AE60))
                         : const Icon(Icons.copy_rounded,
-                            key: ValueKey('copy'),
-                            size: 18,
-                            color: _kNavy),
+                            key: ValueKey('copy'), size: 18, color: _kNavy),
                   ),
                 ),
               ],
@@ -385,8 +380,7 @@ class _EmptyClasses extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: _kNavy,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               elevation: 0,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14)),
@@ -469,8 +463,7 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
         builder: (_) => _JoinCodeDialog(tc: tc),
       );
     } catch (e) {
-      setState(
-          () => _error = 'No se pudo crear la clase. Inténtalo de nuevo.');
+      setState(() => _error = 'No se pudo crear la clase. Inténtalo de nuevo.');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -491,19 +484,19 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
               Text(
                 'Nueva clase',
                 style: GoogleFonts.fredoka(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: _kNavy),
+                    fontSize: 22, fontWeight: FontWeight.w700, color: _kNavy),
               ),
               const SizedBox(height: 20),
-
-              _Field(label: 'Nombre de la clase *', ctrl: _nameCtrl,
+              _Field(
+                  label: 'Nombre de la clase *',
+                  ctrl: _nameCtrl,
                   hint: 'Ej: 3° A – Primaria'),
               const SizedBox(height: 14),
-              _Field(label: 'Asignatura', ctrl: _subjectCtrl,
+              _Field(
+                  label: 'Asignatura',
+                  ctrl: _subjectCtrl,
                   hint: 'Ej: Matemáticas, Lengua…'),
               const SizedBox(height: 14),
-
               Text('Nivel *',
                   style: GoogleFonts.nunito(
                       fontSize: 13,
@@ -511,7 +504,7 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                       color: const Color(0xFF374151))),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: _gradeLevel,
+                initialValue: _gradeLevel,
                 hint: Text('Selecciona el nivel',
                     style: GoogleFonts.nunito(
                         fontSize: 14, color: Colors.grey[400])),
@@ -523,16 +516,12 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                 decoration: _inputDec(''),
                 onChanged: (v) => setState(() => _gradeLevel = v),
               ),
-
               if (_error != null) ...[
                 const SizedBox(height: 12),
                 Text(_error!,
-                    style: GoogleFonts.nunito(
-                        fontSize: 12, color: _kCoral)),
+                    style: GoogleFonts.nunito(fontSize: 12, color: _kCoral)),
               ],
-
               const SizedBox(height: 24),
-
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -625,9 +614,7 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
               Text(
                 '¡Clase creada!',
                 style: GoogleFonts.fredoka(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: _kNavy),
+                    fontSize: 22, fontWeight: FontWeight.w700, color: _kNavy),
               ),
               const SizedBox(height: 8),
               Text(
@@ -640,8 +627,8 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
 
               // Code display
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 decoration: BoxDecoration(
                   color: _kLavender,
                   borderRadius: BorderRadius.circular(14),
@@ -661,18 +648,16 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
 
               // URL copy row
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(10),
-                  border:
-                      Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: Colors.grey.shade200),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.link_rounded,
-                        size: 14, color: _kNavy),
+                    const Icon(Icons.link_rounded, size: 14, color: _kNavy),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -696,9 +681,7 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
                                 size: 16,
                                 color: Color(0xFF27AE60))
                             : const Icon(Icons.copy_rounded,
-                                key: ValueKey('u'),
-                                size: 16,
-                                color: _kNavy),
+                                key: ValueKey('u'), size: 16, color: _kNavy),
                       ),
                     ),
                   ],
@@ -714,15 +697,13 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
                     backgroundColor: _kNavy,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: Text('¡Entendido!',
                       style: GoogleFonts.nunito(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15)),
+                          fontWeight: FontWeight.w700, fontSize: 15)),
                 ),
               ),
             ],
@@ -764,8 +745,7 @@ class _Field extends StatelessWidget {
 
 InputDecoration _inputDec(String hint) => InputDecoration(
       hintText: hint,
-      hintStyle:
-          GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
+      hintStyle: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
       filled: true,
       fillColor: const Color(0xFFF9FAFB),
       border: OutlineInputBorder(
@@ -780,6 +760,5 @@ InputDecoration _inputDec(String hint) => InputDecoration(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: _kNavy, width: 1.5),
       ),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
     );

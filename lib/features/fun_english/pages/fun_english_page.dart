@@ -158,8 +158,7 @@ class _FunEnglishLayout extends StatelessWidget {
     );
   }
 
-  Widget _buildStatPill(
-      IconData icon, String text, Color color, ScreenSize s) {
+  Widget _buildStatPill(IconData icon, String text, Color color, ScreenSize s) {
     return Container(
       padding: EdgeInsets.symmetric(
           horizontal: s.isMobile ? 10 : 16, vertical: s.isMobile ? 6 : 8),

@@ -28,10 +28,8 @@ class OnboardingWizard extends StatefulWidget {
     if (uid == null) return;
 
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('parents')
-          .doc(uid)
-          .get();
+      final doc =
+          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
       final complete = doc.data()?['onboardingComplete'] as bool? ?? false;
       if (complete) return;
     } catch (_) {
@@ -294,8 +292,7 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
                       children: [
                         if (_step > 0)
                           TextButton(
-                            onPressed: () =>
-                                setState(() => _step = _step - 1),
+                            onPressed: () => setState(() => _step = _step - 1),
                             child: Text(
                               '← Atrás',
                               style: GoogleFonts.nunito(

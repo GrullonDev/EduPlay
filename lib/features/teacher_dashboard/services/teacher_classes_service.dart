@@ -6,6 +6,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 // ── Model ─────────────────────────────────────────────────────────────────────
 
 class TeacherClass {
+  factory TeacherClass.fromMap(Map<String, dynamic> m, String id) =>
+      TeacherClass(
+        id: id,
+        teacherUid: (m['teacherUid'] as String?) ?? '',
+        name: (m['name'] as String?) ?? '',
+        subject: (m['subject'] as String?) ?? '',
+        gradeLevel: (m['gradeLevel'] as String?) ?? '',
+        joinCode: (m['joinCode'] as String?) ?? '',
+        studentCount: (m['studentCount'] as int?) ?? 0,
+        createdAt: m['createdAt'] is Timestamp
+            ? (m['createdAt'] as Timestamp).toDate()
+            : DateTime.now(),
+      );
   const TeacherClass({
     required this.id,
     required this.teacherUid,
@@ -26,20 +39,6 @@ class TeacherClass {
   final int studentCount;
   final DateTime createdAt;
 
-  factory TeacherClass.fromMap(Map<String, dynamic> m, String id) =>
-      TeacherClass(
-        id: id,
-        teacherUid: (m['teacherUid'] as String?) ?? '',
-        name: (m['name'] as String?) ?? '',
-        subject: (m['subject'] as String?) ?? '',
-        gradeLevel: (m['gradeLevel'] as String?) ?? '',
-        joinCode: (m['joinCode'] as String?) ?? '',
-        studentCount: (m['studentCount'] as int?) ?? 0,
-        createdAt: m['createdAt'] is Timestamp
-            ? (m['createdAt'] as Timestamp).toDate()
-            : DateTime.now(),
-      );
-
   Map<String, dynamic> toMap() => {
         'teacherUid': teacherUid,
         'name': name,
@@ -54,6 +53,16 @@ class TeacherClass {
 // ── Class member (student / parent in a class) ────────────────────────────────
 
 class ClassMember {
+  factory ClassMember.fromMap(Map<String, dynamic> m, String id) => ClassMember(
+        id: id,
+        classId: (m['classId'] as String?) ?? '',
+        displayName: (m['displayName'] as String?) ?? '',
+        email: (m['email'] as String?) ?? '',
+        role: (m['role'] as String?) ?? 'student',
+        joinedAt: m['joinedAt'] is Timestamp
+            ? (m['joinedAt'] as Timestamp).toDate()
+            : DateTime.now(),
+      );
   const ClassMember({
     required this.id,
     required this.classId,
@@ -69,18 +78,6 @@ class ClassMember {
   final String email;
   final String role; // 'student' | 'parent'
   final DateTime joinedAt;
-
-  factory ClassMember.fromMap(Map<String, dynamic> m, String id) =>
-      ClassMember(
-        id: id,
-        classId: (m['classId'] as String?) ?? '',
-        displayName: (m['displayName'] as String?) ?? '',
-        email: (m['email'] as String?) ?? '',
-        role: (m['role'] as String?) ?? 'student',
-        joinedAt: m['joinedAt'] is Timestamp
-            ? (m['joinedAt'] as Timestamp).toDate()
-            : DateTime.now(),
-      );
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -98,12 +95,10 @@ class TeacherClassesService {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final rng = Random();
     while (true) {
-      final code = List.generate(6, (_) => chars[rng.nextInt(chars.length)])
-          .join();
-      final existing = await _classes
-          .where('joinCode', isEqualTo: code)
-          .limit(1)
-          .get();
+      final code =
+          List.generate(6, (_) => chars[rng.nextInt(chars.length)]).join();
+      final existing =
+          await _classes.where('joinCode', isEqualTo: code).limit(1).get();
       if (existing.docs.isEmpty) return code;
     }
   }
@@ -141,9 +136,7 @@ class TeacherClassesService {
         .collection('members')
         .orderBy('joinedAt')
         .get();
-    return snap.docs
-        .map((d) => ClassMember.fromMap(d.data(), d.id))
-        .toList();
+    return snap.docs.map((d) => ClassMember.fromMap(d.data(), d.id)).toList();
   }
 
   // ── Write ─────────────────────────────────────────────────────────────────
@@ -190,11 +183,8 @@ class TeacherClassesService {
     final uid = _uid;
     if (uid == null) throw StateError('Not authenticated');
 
-    final memberRef = _db
-        .collection('classes')
-        .doc(classId)
-        .collection('members')
-        .doc(uid);
+    final memberRef =
+        _db.collection('classes').doc(classId).collection('members').doc(uid);
 
     await memberRef.set({
       'classId': classId,

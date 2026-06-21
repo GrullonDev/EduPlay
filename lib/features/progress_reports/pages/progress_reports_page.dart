@@ -123,92 +123,99 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                       return SingleChildScrollView(
                         padding: EdgeInsets.symmetric(
                             horizontal: hPad, vertical: 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // ── Header ─────────────────────────────────────────
-                        Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Informes de Progreso',
-                                    style: GoogleFonts.fredoka(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kNavy,
-                                    ),
+                            // ── Header ─────────────────────────────────────────
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Informes de Progreso',
+                                        style: GoogleFonts.fredoka(
+                                          fontSize: 28,
+                                          fontWeight: FontWeight.w700,
+                                          color: _kNavy,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Actividad real registrada en sesiones de práctica.',
+                                        style: GoogleFonts.nunito(
+                                            fontSize: 13,
+                                            color: Colors.grey[500]),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    'Actividad real registrada en sesiones de práctica.',
-                                    style: GoogleFonts.nunito(
-                                        fontSize: 13, color: Colors.grey[500]),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: () {
+                                    _loadProfiles();
+                                    _loadSessions();
+                                  },
+                                  icon: const Icon(Icons.refresh_rounded,
+                                      size: 16),
+                                  label: Text('Actualizar',
+                                      style: GoogleFonts.nunito(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 13)),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: _kNavy,
+                                    side:
+                                        BorderSide(color: Colors.grey.shade300),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10)),
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                _loadProfiles();
-                                _loadSessions();
-                              },
-                              icon: const Icon(Icons.refresh_rounded, size: 16),
-                              label: Text('Actualizar',
-                                  style: GoogleFonts.nunito(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13)),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: _kNavy,
-                                side: BorderSide(color: Colors.grey.shade300),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10)),
+                            const SizedBox(height: 24),
+
+                            // ── Child selector ─────────────────────────────────
+                            if (_profiles.isNotEmpty) ...[
+                              _ChildSelector(
+                                profiles: _profiles,
+                                selectedIndex: _selectedChild,
+                                onSelect: (i) =>
+                                    setState(() => _selectedChild = i),
                               ),
+                              const SizedBox(height: 28),
+                            ],
+
+                            // ── Summary stats ──────────────────────────────────
+                            _StatRow(
+                              sessions: _totalSessions,
+                              completed: _completedSessions,
+                              gamesPlayed: _totalGamesPlayed,
+                              totalScore: _totalScore,
+                              avgScore: _avgScore,
                             ),
+                            const SizedBox(height: 28),
+
+                            // ── Top games breakdown ────────────────────────────
+                            if (_gameScores.isNotEmpty) ...[
+                              const _SectionLabel('Juegos con más puntos'),
+                              const SizedBox(height: 16),
+                              _GameScoreChart(scores: _gameScores),
+                              const SizedBox(height: 28),
+                            ],
+
+                            // ── Session history ────────────────────────────────
+                            _SectionLabel(
+                                'Historial de sesiones — $_selectedName'),
+                            const SizedBox(height: 16),
+                            _filtered.isEmpty
+                                ? _EmptyState()
+                                : _SessionHistoryList(sessions: _filtered),
+
+                            const SizedBox(height: 40),
                           ],
                         ),
-                        const SizedBox(height: 24),
-
-                        // ── Child selector ─────────────────────────────────
-                        if (_profiles.isNotEmpty) ...[
-                          _ChildSelector(
-                            profiles: _profiles,
-                            selectedIndex: _selectedChild,
-                            onSelect: (i) => setState(() => _selectedChild = i),
-                          ),
-                          const SizedBox(height: 28),
-                        ],
-
-                        // ── Summary stats ──────────────────────────────────
-                        _StatRow(
-                          sessions: _totalSessions,
-                          completed: _completedSessions,
-                          gamesPlayed: _totalGamesPlayed,
-                          totalScore: _totalScore,
-                          avgScore: _avgScore,
-                        ),
-                        const SizedBox(height: 28),
-
-                        // ── Top games breakdown ────────────────────────────
-                        if (_gameScores.isNotEmpty) ...[
-                          const _SectionLabel('Juegos con más puntos'),
-                          const SizedBox(height: 16),
-                          _GameScoreChart(scores: _gameScores),
-                          const SizedBox(height: 28),
-                        ],
-
-                        // ── Session history ────────────────────────────────
-                        _SectionLabel('Historial de sesiones — $_selectedName'),
-                        const SizedBox(height: 16),
-                        _filtered.isEmpty
-                            ? _EmptyState()
-                            : _SessionHistoryList(sessions: _filtered),
-
-                        const SizedBox(height: 40),
-                      ],
-                    ),
-                  );
+                      );
                     },
                   ),
           ),

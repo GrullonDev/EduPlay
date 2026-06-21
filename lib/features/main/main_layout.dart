@@ -409,8 +409,8 @@ class _PricingSection extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           'Empieza gratis. Mejora cuando estés listo.',
-          style: GoogleFonts.nunito(
-              fontSize: 15, color: const Color(0xFF888888)),
+          style:
+              GoogleFonts.nunito(fontSize: 15, color: const Color(0xFF888888)),
         ),
         const SizedBox(height: 32),
 
@@ -459,13 +459,15 @@ class _PricingSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              _FeatureRow('Perfiles de niño', '1', 'Ilimitados'),
-              _FeatureRow('Sesiones de práctica / mes', '5', 'Ilimitadas'),
-              _FeatureRow('Juegos educativos', '9', '9+'),
-              _FeatureRow('Informes de progreso', 'Básicos', 'Avanzados'),
-              _FeatureRow('Portal de niño personalizado', '✓', '✓'),
-              _FeatureRow('Soporte', 'Comunidad', 'Prioritario'),
-              _FeatureRow('Exportar informes PDF', '—', '✓'),
+              const _FeatureRow('Perfiles de niño', '2', 'Ilimitados'),
+              const _FeatureRow(
+                  'Sesiones de práctica / mes', '6', 'Ilimitadas'),
+              const _FeatureRow('Juegos educativos', '10', 'Ilimitados'),
+              const _FeatureRow('Consulta de puntuaciones', '✓', '✓'),
+              const _FeatureRow('Descarga de informes PDF', '—', '✓'),
+              const _FeatureRow('Portal de niño', '✓', '✓'),
+              const _FeatureRow('Soporte', 'Comunidad', 'Prioritario'),
+              const _FeatureRow('Asistencia con IA', '—', '✓'),
             ],
           ),
         ),
@@ -557,8 +559,7 @@ class _PlanCard extends StatelessWidget {
         children: [
           // Badge
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: highlighted
                   ? _kCoral.withValues(alpha: 0.15)
@@ -654,8 +655,7 @@ class _PlanCard extends StatelessWidget {
             child: ElevatedButton(
               onPressed: onTap,
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    highlighted ? _kCoral : _kNavy,
+                backgroundColor: highlighted ? _kCoral : _kNavy,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 elevation: 0,
@@ -692,9 +692,7 @@ class _FeatureRow extends StatelessWidget {
             child: Text(
               feature,
               style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  color: _kNavy,
-                  fontWeight: FontWeight.w600),
+                  fontSize: 13, color: _kNavy, fontWeight: FontWeight.w600),
             ),
           ),
           Expanded(
@@ -702,8 +700,8 @@ class _FeatureRow extends StatelessWidget {
             child: Center(
               child: Text(
                 free,
-                style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.grey[500]),
+                style:
+                    GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
               ),
             ),
           ),

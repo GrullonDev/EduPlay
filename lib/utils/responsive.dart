@@ -19,10 +19,10 @@ import 'package:flutter/material.dart';
 class AppBreakpoints {
   AppBreakpoints._();
 
-  static const double xs  = 480;
-  static const double sm  = 600;
-  static const double md  = 900;
-  static const double lg  = 1200;
+  static const double xs = 480;
+  static const double sm = 600;
+  static const double md = 900;
+  static const double lg = 1200;
 
   /// Maximum width of centred content columns.
   static const double maxContentWidth = 1280;
@@ -48,16 +48,17 @@ class ScreenSize {
 
   final double width;
 
-  bool get isXs       => width <  AppBreakpoints.xs;
-  bool get isMobile   => width <  AppBreakpoints.sm;   // < 600
-  bool get isTablet   => width >= AppBreakpoints.sm && width < AppBreakpoints.md; // 600–899
-  bool get isDesktop  => width >= AppBreakpoints.md;   // ≥ 900
-  bool get isWide     => width >= AppBreakpoints.lg;   // ≥ 1200
+  bool get isXs => width < AppBreakpoints.xs;
+  bool get isMobile => width < AppBreakpoints.sm; // < 600
+  bool get isTablet =>
+      width >= AppBreakpoints.sm && width < AppBreakpoints.md; // 600–899
+  bool get isDesktop => width >= AppBreakpoints.md; // ≥ 900
+  bool get isWide => width >= AppBreakpoints.lg; // ≥ 1200
 
   /// Returns [mobile], [tablet], or [desktop] based on current width.
   T when<T>({required T mobile, required T tablet, required T desktop}) {
     if (isDesktop) return desktop;
-    if (isTablet)  return tablet;
+    if (isTablet) return tablet;
     return mobile;
   }
 
@@ -102,18 +103,20 @@ class Responsive extends StatelessWidget {
 // Responsive padding helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-EdgeInsets responsivePadding(ScreenSize s, {
-  double mobile  = 16,
-  double tablet  = 20,
+EdgeInsets responsivePadding(
+  ScreenSize s, {
+  double mobile = 16,
+  double tablet = 20,
   double desktop = 28,
 }) {
   final h = s.when(mobile: mobile, tablet: tablet, desktop: desktop);
   return EdgeInsets.symmetric(horizontal: h, vertical: h);
 }
 
-EdgeInsets responsiveHPadding(ScreenSize s, {
-  double mobile  = 16,
-  double tablet  = 20,
+EdgeInsets responsiveHPadding(
+  ScreenSize s, {
+  double mobile = 16,
+  double tablet = 20,
   double desktop = 28,
 }) {
   final h = s.when(mobile: mobile, tablet: tablet, desktop: desktop);

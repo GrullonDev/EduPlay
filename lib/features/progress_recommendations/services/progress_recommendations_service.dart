@@ -43,13 +43,11 @@ class ProgressRecommendationsService {
   /// that need practice (never played OR average score < 70).
   static Future<List<GameRecommendation>> getRecommendations(
       String childProfileId) async {
-    final allSessions =
-        await PracticeSessionsService.getAllSessions();
+    final allSessions = await PracticeSessionsService.getAllSessions();
 
     // Filter to this child's completed sessions
     final childSessions = allSessions
-        .where((s) =>
-            s.childProfileId == childProfileId && !s.isActive)
+        .where((s) => s.childProfileId == childProfileId && !s.isActive)
         .toList();
 
     // Aggregate scores per game

@@ -16,7 +16,8 @@ class MagicWordsLayout extends StatelessWidget {
         final s = ScreenSize.fromConstraints(constraints);
         final hPad = s.when(mobile: 16.0, tablet: 24.0, desktop: 32.0);
         final iconSize = s.when(mobile: 56.0, tablet: 68.0, desktop: 80.0);
-        final scrambleFontSize = s.when(mobile: 18.0, tablet: 22.0, desktop: 24.0);
+        final scrambleFontSize =
+            s.when(mobile: 18.0, tablet: 22.0, desktop: 24.0);
         final wordFontSize = s.when(mobile: 34.0, tablet: 42.0, desktop: 48.0);
         final answerFontSize = bloc.age > 8
             ? s.when(mobile: 18.0, tablet: 22.0, desktop: 24.0)
@@ -33,12 +34,10 @@ class MagicWordsLayout extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildInfoPill(
-                          context, Icons.star_rounded, Colors.amber,
+                      _buildInfoPill(context, Icons.star_rounded, Colors.amber,
                           '${bloc.score}', s),
-                      _buildInfoPill(
-                          context, Icons.favorite_rounded, Colors.red,
-                          '${bloc.lives}', s),
+                      _buildInfoPill(context, Icons.favorite_rounded,
+                          Colors.red, '${bloc.lives}', s),
                     ],
                   ),
                   SizedBox(height: s.isMobile ? 24 : 40),
@@ -116,9 +115,8 @@ class MagicWordsLayout extends StatelessWidget {
                           ),
                           itemCount: bloc.options.length,
                           itemBuilder: (context, index) {
-                            return _buildOptionButton(
-                                context, bloc, bloc.options[index],
-                                answerFontSize);
+                            return _buildOptionButton(context, bloc,
+                                bloc.options[index], answerFontSize);
                           },
                         ),
                       ],

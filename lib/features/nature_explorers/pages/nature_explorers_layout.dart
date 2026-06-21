@@ -71,8 +71,7 @@ class _NatureExplorersContent extends StatelessWidget {
         // Instruction
         Container(
           margin: EdgeInsets.symmetric(
-              vertical: s.isMobile ? 12 : 20,
-              horizontal: s.isMobile ? 12 : 0),
+              vertical: s.isMobile ? 12 : 20, horizontal: s.isMobile ? 12 : 0),
           padding: EdgeInsets.all(s.isMobile ? 14 : 20),
           decoration: BoxDecoration(
             color: Colors.white,
