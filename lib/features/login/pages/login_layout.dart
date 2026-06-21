@@ -13,9 +13,12 @@ const _kRed = Color(0xFFC0392B);
 const _kRedLight = Color(0xFFE74C3C);
 
 class LoginLayout extends StatelessWidget {
-  const LoginLayout({super.key, this.userType});
+  const LoginLayout({super.key, this.userType, this.onChangeRole});
 
   final String? userType;
+
+  /// When non-null a "← Cambiar rol" back link is shown in the form.
+  final VoidCallback? onChangeRole;
 
   @override
   Widget build(BuildContext context) {
@@ -24,26 +27,23 @@ class LoginLayout extends StatelessWidget {
     if (s.isDesktop) {
       return Row(
         children: [
-          // Left navy panel
           Expanded(
             flex: 5,
             child: _LeftPanel(userType: userType),
           ),
-          // Right form panel
           Expanded(
             flex: 4,
-            child: _RightPanel(userType: userType),
+            child: _RightPanel(userType: userType, onChangeRole: onChangeRole),
           ),
         ],
       );
     }
 
-    // Mobile / tablet: compact header + form
     return SingleChildScrollView(
       child: Column(
         children: [
-          _MobileHeader(),
-          _RightPanel(userType: userType),
+          _MobileHeader(onChangeRole: onChangeRole),
+          _RightPanel(userType: userType, onChangeRole: onChangeRole),
         ],
       ),
     );
@@ -165,19 +165,35 @@ class _FeatureCard extends StatelessWidget {
 }
 
 class _MobileHeader extends StatelessWidget {
+  const _MobileHeader({this.onChangeRole});
+  final VoidCallback? onChangeRole;
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       color: _kNavy,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      child: Text(
-        'EduPlay',
-        style: GoogleFonts.fredoka(
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
+      child: Row(
+        children: [
+          if (onChangeRole != null)
+            GestureDetector(
+              onTap: onChangeRole,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white70, size: 18),
+              ),
+            ),
+          Text(
+            'EduPlay',
+            style: GoogleFonts.fredoka(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -186,13 +202,18 @@ class _MobileHeader extends StatelessWidget {
 // ── Right panel ───────────────────────────────────────────────────────────────
 
 class _RightPanel extends StatelessWidget {
-  const _RightPanel({this.userType});
+  const _RightPanel({this.userType, this.onChangeRole});
 
   final String? userType;
+  final VoidCallback? onChangeRole;
 
   @override
   Widget build(BuildContext context) {
     final s = ScreenSize.of(context);
+    final isTeacher = userType == 'teacher';
+    final roleLabel = isTeacher ? 'Profesor' : 'Padre / Madre';
+    final roleIcon =
+        isTeacher ? Icons.school_rounded : Icons.family_restroom_rounded;
 
     return Container(
       color: const Color(0xFFF8F7FF),
@@ -222,6 +243,49 @@ class _RightPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Role badge + optional back link
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _kNavy.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(roleIcon, size: 14, color: _kNavy),
+                              const SizedBox(width: 6),
+                              Text(
+                                roleLabel,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _kNavy,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (onChangeRole != null) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: onChangeRole,
+                            child: Text(
+                              '← Cambiar',
+                              style: GoogleFonts.nunito(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     Text(
                       'Bienvenido de nuevo',
                       style: GoogleFonts.fredoka(
@@ -613,6 +677,253 @@ class _RegisterLink extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Role selector ─────────────────────────────────────────────────────────────
+
+/// Full-screen role picker shown when the user reaches the login page
+/// without a pre-selected role (i.e. cold start, unauthenticated).
+class RoleSelectorLayout extends StatelessWidget {
+  const RoleSelectorLayout({super.key, required this.onRoleSelected});
+
+  final ValueChanged<String> onRoleSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ScreenSize.of(context);
+    final isDesktop = s.isDesktop;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E1B6A), Color(0xFF2D2A82)],
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Top bar
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: s.when(mobile: 24, tablet: 40, desktop: 64),
+                vertical: 24,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'EduPlay',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Main content
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: s.when(mobile: 24, tablet: 48, desktop: 80),
+                    vertical: 32,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '¿Quién eres?',
+                          style: GoogleFonts.fredoka(
+                            fontSize: isDesktop ? 42 : 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Elige tu perfil para acceder al panel correcto.',
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            color: Colors.white.withValues(alpha: 0.65),
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+
+                        // Role cards
+                        isDesktop
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: _RoleCard(
+                                      icon: Icons.family_restroom_rounded,
+                                      title: 'Padre / Madre',
+                                      subtitle:
+                                          'Sigue el progreso de tus hijos y gestiona su perfil educativo.',
+                                      accentColor: const Color(0xFFF4A82B),
+                                      onTap: () => onRoleSelected('parent'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    child: _RoleCard(
+                                      icon: Icons.school_rounded,
+                                      title: 'Profesor',
+                                      subtitle:
+                                          'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                      accentColor: const Color(0xFF4FC3F7),
+                                      onTap: () => onRoleSelected('teacher'),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  _RoleCard(
+                                    icon: Icons.family_restroom_rounded,
+                                    title: 'Padre / Madre',
+                                    subtitle:
+                                        'Sigue el progreso de tus hijos y gestiona su perfil educativo.',
+                                    accentColor: const Color(0xFFF4A82B),
+                                    onTap: () => onRoleSelected('parent'),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _RoleCard(
+                                    icon: Icons.school_rounded,
+                                    title: 'Profesor',
+                                    subtitle:
+                                        'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                    accentColor: const Color(0xFF4FC3F7),
+                                    onTap: () => onRoleSelected('teacher'),
+                                  ),
+                                ],
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Footer
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                '© 2024 EduPlay Learning.',
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleCard extends StatefulWidget {
+  const _RoleCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  State<_RoleCard> createState() => _RoleCardState();
+}
+
+class _RoleCardState extends State<_RoleCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: _hovered
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _hovered
+                  ? widget.accentColor.withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(widget.icon, color: widget.accentColor, size: 28),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                widget.title,
+                style: GoogleFonts.fredoka(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.subtitle,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.65),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Text(
+                    'Continuar',
+                    style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: widget.accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded,
+                      size: 16, color: widget.accentColor),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

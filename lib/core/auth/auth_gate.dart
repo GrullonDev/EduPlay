@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
-import 'package:edu_play/features/main/main_page.dart';
+import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layout.dart';
 
@@ -42,8 +42,8 @@ class AuthGate extends StatelessWidget {
 
         final user = authSnap.data;
 
-        // Not logged in → landing / main page
-        if (user == null) return const MainPage();
+        // Not logged in → login with role selector
+        if (user == null) return const LoginPage();
 
         // Logged in → resolve role from Firestore
         return FutureBuilder<String?>(
@@ -57,8 +57,10 @@ class AuthGate extends StatelessWidget {
 
             // Unknown role — sign out to avoid an infinite loop.
             if (role == null) {
+              // Anonymous sign-in is used by the child portal — leave it alone.
+              if (user.isAnonymous) return const _SplashLoader();
               Future.microtask(() => FirebaseAuth.instance.signOut());
-              return const MainPage();
+              return const LoginPage();
             }
 
             // Email not yet verified → show the hard gate.
@@ -74,8 +76,10 @@ class AuthGate extends StatelessWidget {
               case 'parent':
                 return const ParentsDashboardPage();
               default:
-                Future.microtask(() => FirebaseAuth.instance.signOut());
-                return const MainPage();
+                if (!user.isAnonymous) {
+                  Future.microtask(() => FirebaseAuth.instance.signOut());
+                }
+                return const LoginPage();
             }
           },
         );

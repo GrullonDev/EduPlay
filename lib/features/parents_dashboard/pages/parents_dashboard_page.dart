@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import 'package:edu_play/utils/child_portal_link.dart';
+
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
@@ -91,7 +93,7 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
       ),
     );
     if (confirmed == true) {
-      await ChildProfilesService.deleteProfile(p.id);
+      await ChildProfilesService.deleteProfile(p.id, pin: p.pin);
       if (mounted) setState(() => _profiles.removeWhere((x) => x.id == p.id));
     }
   }
@@ -333,7 +335,10 @@ class _ChildProfilesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cols = ScreenSize.of(context).isTablet || ScreenSize.of(context).isDesktop ? 2 : 1;
+    final cols =
+        ScreenSize.of(context).isTablet || ScreenSize.of(context).isDesktop
+            ? 2
+            : 1;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -1702,30 +1707,63 @@ class _PinRevealDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Copy button
-              OutlinedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: profile.pin));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('PIN copiado', style: GoogleFonts.nunito()),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: _kNavy,
-                      duration: const Duration(seconds: 2),
+              // Copy PIN / Copy link row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: profile.pin));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('PIN copiado', style: GoogleFonts.nunito()),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: _kNavy,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: Text(
+                      'Copiar PIN',
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                     ),
-                  );
-                },
-                icon: const Icon(Icons.copy_rounded, size: 16),
-                label: Text(
-                  'Copiar PIN',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _kNavy,
-                  side: BorderSide(color: Colors.grey.shade300),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _kNavy,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(
+                          ClipboardData(text: childPortalUrl(profile)));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Enlace copiado',
+                              style: GoogleFonts.nunito()),
+                          behavior: SnackBarBehavior.floating,
+                          backgroundColor: _kNavy,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.link_rounded, size: 16),
+                    label: Text(
+                      'Copiar enlace',
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _kNavy,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               TextButton(
@@ -1920,8 +1958,8 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
   @override
   void initState() {
     super.initState();
-    _future = ProgressRecommendationsService.getRecommendations(
-        widget.profile.id);
+    _future =
+        ProgressRecommendationsService.getRecommendations(widget.profile.id);
   }
 
   @override
@@ -1987,8 +2025,8 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
                 runSpacing: 8,
                 children: recs.map((rec) {
                   return Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 7),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                     decoration: BoxDecoration(
                       color: rec.neverPlayed
                           ? const Color(0xFFEEEDF8)

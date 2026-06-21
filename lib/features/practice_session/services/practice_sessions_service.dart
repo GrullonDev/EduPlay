@@ -83,6 +83,18 @@ class PracticeSessionsService {
         .map((snap) => snap.docs.map(_fromDoc).toList());
   }
 
+  /// Returns all active sessions assigned to a specific child profile.
+  /// Does NOT require parent authentication — any authenticated user (including
+  /// anonymous) can call this, making it safe for the child portal flow.
+  static Future<List<PracticeSession>> getActiveSessionsByChildId(
+      String childProfileId) async {
+    final snap = await _col
+        .where('childProfileId', isEqualTo: childProfileId)
+        .where('isActive', isEqualTo: true)
+        .get();
+    return snap.docs.map(_fromDoc).toList();
+  }
+
   /// Looks up a session by 6-digit PIN — called from the child entry page.
   /// Does NOT require authentication.
   static Future<PracticeSession?> findByPin(String pin) async {

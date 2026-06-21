@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,6 +6,7 @@ import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Color tokens ──────────────────────────────────────────────────────────────
@@ -47,24 +47,39 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
   }
 
   Future<void> _resolve() async {
-    // 1. Determine the PIN to look up.
-    final pin = widget.pinFromArgs ?? _pinFromUrl();
+    // 1. Determine the PIN.
+    final pin = widget.pinFromArgs ?? pinFromUrl();
 
     if (pin == null || pin.isEmpty) {
-      setState(() => _state = const _Guest());
+      if (mounted) setState(() => _state = const _Guest());
       return;
     }
 
-    // 2. Need an authenticated parent to query Firestore.
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.isAnonymous) {
-      // Not logged in as parent — show guest screen with hint.
-      setState(() => _state = const _Guest(hadPin: true));
+    // 2. Fast path: profile data is embedded in the URL as a base64 `d=` param.
+    //    No Firebase auth and no Firestore round-trip required — resolves instantly.
+    final urlProfile = childProfileFromUrl();
+    if (urlProfile != null) {
+      final sessions = await _loadSessions(urlProfile.id);
+      if (!mounted) return;
+      setState(
+          () => _state = _ProfileView(profile: urlProfile, sessions: sessions));
       return;
     }
 
-    // 3. Look up child profile by PIN.
-    final profile = await ChildProfilesService.findByPin(pin);
+    // 3. Fallback for links generated before the `d=` param was introduced:
+    //    anonymous auth + Firestore global PIN index.
+    if (FirebaseAuth.instance.currentUser == null) {
+      try {
+        await FirebaseAuth.instance
+            .signInAnonymously()
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {
+        if (mounted) setState(() => _state = const _Guest(hadPin: true));
+        return;
+      }
+    }
+
+    final profile = await ChildProfilesService.findByPinGlobal(pin);
     if (!mounted) return;
 
     if (profile == null) {
@@ -72,30 +87,19 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
       return;
     }
 
-    // 4. Load active sessions for this child.
     final sessions = await _loadSessions(profile.id);
     if (!mounted) return;
-
     setState(() => _state = _ProfileView(profile: profile, sessions: sessions));
   }
 
+  /// Loads active practice sessions for [childId].
+  /// Fails silently (returns empty list) so a Firestore rules gap never
+  /// prevents the child's profile from showing.
   Future<List<PracticeSession>> _loadSessions(String childId) async {
-    final all = await PracticeSessionsService.getActiveSessions();
-    return all.where((s) => s.childProfileId == childId).toList();
-  }
-
-  /// Parses the PIN from the URL fragment when running on Flutter web.
-  /// Hash routing format: /#/child-portal?pin=XXXX
-  String? _pinFromUrl() {
-    if (!kIsWeb) return null;
     try {
-      final fragment = Uri.base.fragment; // e.g. "/child-portal?pin=1234"
-      final qIdx = fragment.indexOf('?');
-      if (qIdx == -1) return null;
-      final params = Uri.splitQueryString(fragment.substring(qIdx + 1));
-      return params['pin'];
+      return await PracticeSessionsService.getActiveSessionsByChildId(childId);
     } catch (_) {
-      return null;
+      return [];
     }
   }
 
@@ -170,17 +174,17 @@ class _GuestView extends StatelessWidget {
         child: Stack(
           children: [
             // Decorative circles
-            Positioned(
+            const Positioned(
               top: -80,
               right: -80,
               child: _Circle(size: 260, opacity: 0.04),
             ),
-            Positioned(
+            const Positioned(
               bottom: -100,
               left: -50,
               child: _Circle(size: 320, opacity: 0.04),
             ),
-            Positioned(
+            const Positioned(
               top: 80,
               left: -100,
               child: _Circle(size: 200, opacity: 0.03),
@@ -195,7 +199,8 @@ class _GuestView extends StatelessWidget {
                   if (Navigator.canPop(context)) {
                     Navigator.pop(context);
                   } else {
-                    Navigator.pushReplacementNamed(context, RouterPaths.childPin);
+                    Navigator.pushReplacementNamed(
+                        context, RouterPaths.childPin);
                   }
                 },
                 icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -256,7 +261,7 @@ class _GuestView extends StatelessWidget {
                       const SizedBox(height: 40),
 
                       // Fun game previews
-                      _GamePreviewRow(),
+                      const _GamePreviewRow(),
 
                       const SizedBox(height: 40),
 
@@ -314,14 +319,13 @@ class _GuestView extends StatelessWidget {
 }
 
 class _GamePreviewRow extends StatelessWidget {
+  const _GamePreviewRow();
   final _previews = const [
     (icon: '🔢', label: 'Matemáticas', color: Color(0xFF3498DB)),
-    (icon: '📖', label: 'Palabras',    color: Color(0xFF9B59B6)),
-    (icon: '🌍', label: 'Ciencias',    color: Color(0xFF27AE60)),
-    (icon: '🎨', label: 'Arte',        color: Color(0xFFE67E22)),
+    (icon: '📖', label: 'Palabras', color: Color(0xFF9B59B6)),
+    (icon: '🌍', label: 'Ciencias', color: Color(0xFF27AE60)),
+    (icon: '🎨', label: 'Arte', color: Color(0xFFE67E22)),
   ];
-
-  const _GamePreviewRow();
 
   @override
   Widget build(BuildContext context) {
@@ -662,8 +666,8 @@ class _SessionCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: _kCoral,
                     borderRadius: BorderRadius.circular(20),

@@ -6,23 +6,52 @@ import 'package:edu_play/features/login/bloc/login_bloc.dart';
 import 'package:edu_play/features/login/pages/login_layout.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.userType});
 
-  /// Context the user came from: 'parent' or 'teacher'.
+  /// Pre-selected role passed from the landing page: 'parent' or 'teacher'.
+  /// When null the page shows the role-selector step first.
   final String? userType;
 
   @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  // null  → show role picker
+  // set   → show login form for that role
+  late String? _selectedRole = widget.userType;
+
+  void _onRoleSelected(String role) {
+    setState(() => _selectedRole = role);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Step 1: no role chosen yet — show the role selector screen
+    if (_selectedRole == null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: RoleSelectorLayout(onRoleSelected: _onRoleSelected),
+      );
+    }
+
+    // Step 2: role chosen — build the login form
     return ChangeNotifierProvider<LoginBloc>(
+      key: ValueKey(_selectedRole),
       create: (context) => LoginBloc(
         context: context,
         authRepository: sl.get<AuthRepository>(),
-        userType: userType,
+        userType: _selectedRole,
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: LoginLayout(userType: userType),
+        body: LoginLayout(
+          userType: _selectedRole,
+          onChangeRole: widget.userType == null
+              ? () => setState(() => _selectedRole = null)
+              : null,
+        ),
       ),
     );
   }

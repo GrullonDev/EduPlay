@@ -40,7 +40,12 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     Widget page;
-    String name = settings.name ?? '';
+    // Flutter web passes the full hash fragment (e.g. "/child-portal?pin=xxx")
+    // as the route name. Strip the query string so the switch matches correctly.
+    // ChildPortalPage reads the pin/profile data from Uri.base.fragment itself.
+    final rawName = settings.name ?? '';
+    final String name =
+        rawName.contains('?') ? rawName.substring(0, rawName.indexOf('?')) : rawName;
 
     switch (name) {
       case RouterPaths.root:

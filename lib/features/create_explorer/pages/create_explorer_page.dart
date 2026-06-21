@@ -1,7 +1,7 @@
 import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
@@ -437,8 +437,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
     );
   }
 
-  bool _isDesktop(BuildContext context) =>
-      !ScreenSize.of(context).isMobile;
+  bool _isDesktop(BuildContext context) => !ScreenSize.of(context).isMobile;
 }
 
 // ── Navbar ────────────────────────────────────────────────────────────────────
@@ -710,11 +709,7 @@ class _PinRevealDialog extends StatefulWidget {
 class _PinRevealDialogState extends State<_PinRevealDialog> {
   bool _copied = false;
 
-  String get _portalUrl {
-    if (!kIsWeb) return 'http://localhost:3000/#/child-portal?pin=${widget.profile.pin}';
-    final origin = Uri.base.origin;
-    return '$origin/#/child-portal?pin=${widget.profile.pin}';
-  }
+  String get _portalUrl => childPortalUrl(widget.profile);
 
   Future<void> _copyUrl() async {
     await Clipboard.setData(ClipboardData(text: _portalUrl));
@@ -860,9 +855,7 @@ class _PinRevealDialogState extends State<_PinRevealDialog> {
                                 size: 18,
                                 color: Color(0xFF27AE60))
                             : const Icon(Icons.copy_rounded,
-                                key: ValueKey('copy'),
-                                size: 18,
-                                color: _kNavy),
+                                key: ValueKey('copy'), size: 18, color: _kNavy),
                       ),
                     ),
                   ],

@@ -4,7 +4,19 @@ import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
 /// Firestore-backed persistence for child profiles.
 ///
-/// Schema: `parents/{uid}/child_profiles/{profileId}`
+/// Schema:
+///   `parents/{uid}/child_profiles/{profileId}` — parent-scoped profiles.
+///   `child_pins/{pin}`                          — global PIN index so children
+///       can look up their profile without knowing the parent's UID.
+///
+/// The global index mirrors every profile field plus a `parentUid` field.
+///
+/// Required Firestore security rules for child_pins:
+///   match /child_pins/{pin} {
+///     allow read:  if request.auth != null;          // anonymous auth is fine
+///     allow write: if request.auth.uid == request.resource.data.parentUid
+///                  || request.auth.uid == resource.data.parentUid;
+///   }
 ///
 /// Falls back gracefully when the user is not authenticated (returns empty
 /// lists / no-ops), so pages that call these methods before login won't crash.
@@ -15,6 +27,11 @@ class ChildProfilesService {
 
   static CollectionReference<Map<String, dynamic>> _profilesRef(String uid) =>
       _db.collection('parents').doc(uid).collection('child_profiles');
+
+  /// Top-level collection: PIN → profile data + parentUid.
+  /// Allows children to resolve their profile without parent auth.
+  static CollectionReference<Map<String, dynamic>> get _pinsRef =>
+      _db.collection('child_pins');
 
   // ── Read ──────────────────────────────────────────────────────────────────
 
@@ -27,6 +44,9 @@ class ChildProfilesService {
         .toList();
   }
 
+  /// Look up a child profile by PIN using the parent-scoped collection.
+  /// Requires the parent to be authenticated. Used by [ChildPinPage] on the
+  /// parent's own device.
   static Future<ChildProfile?> findByPin(String pin) async {
     final uid = _uid;
     if (uid == null) return null;
@@ -34,6 +54,21 @@ class ChildProfilesService {
         await _profilesRef(uid).where('pin', isEqualTo: pin).limit(1).get();
     if (snapshot.docs.isEmpty) return null;
     return ChildProfile.fromJson(snapshot.docs.first.data());
+  }
+
+  /// Look up a child profile by PIN from the global [child_pins] index.
+  ///
+  /// Does **not** require the caller to be a parent — any authenticated user
+  /// (including anonymous) can read from [child_pins]. Used by [ChildPortalPage]
+  /// when the child opens the shared link on their own device.
+  static Future<ChildProfile?> findByPinGlobal(String pin) async {
+    try {
+      final doc = await _pinsRef.doc(pin).get();
+      if (!doc.exists) return null;
+      return ChildProfile.fromJson(doc.data()!);
+    } catch (_) {
+      return null;
+    }
   }
 
   // ── Write ─────────────────────────────────────────────────────────────────
@@ -68,21 +103,33 @@ class ChildProfilesService {
     );
 
     if (uid != null) {
-      await _profilesRef(uid).doc(docRef.id).set(profile.toJson());
+      final data = profile.toJson();
+      // Write to parent-scoped collection
+      await _profilesRef(uid).doc(docRef.id).set(data);
+      // Mirror to global PIN index so children can resolve without parent auth
+      await _pinsRef.doc(pin).set({...data, 'parentUid': uid});
     }
     return profile;
   }
 
-  static Future<void> deleteProfile(String id) async {
+  /// Deletes a profile by ID and removes its entry from the global PIN index.
+  /// Pass [pin] (from the profile object) so the index document can be cleaned up.
+  static Future<void> deleteProfile(String id, {String? pin}) async {
     final uid = _uid;
     if (uid == null) return;
     await _profilesRef(uid).doc(id).delete();
+    if (pin != null) {
+      await _pinsRef.doc(pin).delete();
+    }
   }
 
   static Future<void> updateProfile(ChildProfile updated) async {
     final uid = _uid;
     if (uid == null) return;
-    await _profilesRef(uid).doc(updated.id).update(updated.toJson());
+    final data = updated.toJson();
+    await _profilesRef(uid).doc(updated.id).update(data);
+    // Keep global index in sync
+    await _pinsRef.doc(updated.pin).update({...data, 'parentUid': uid});
   }
 
   // ── Parent display name ───────────────────────────────────────────────────
