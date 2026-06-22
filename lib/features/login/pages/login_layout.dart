@@ -100,7 +100,7 @@ class _LeftPanel extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '© 2024 EduPlay Learning.',
+            '© ${DateTime.now().year} EduPlay Learning.',
             style: GoogleFonts.nunito(
               fontSize: 12,
               color: Colors.white.withValues(alpha: 0.4),
@@ -818,7 +818,7 @@ class RoleSelectorLayout extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 24),
               child: Text(
-                '© 2024 EduPlay Learning.',
+                '© ${DateTime.now().year} EduPlay Learning.',
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.35),

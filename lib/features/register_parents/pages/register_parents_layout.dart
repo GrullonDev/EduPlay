@@ -758,7 +758,7 @@ class _FooterBrand extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '© 2024 EduPlay. Evidence-based\nlearning for the next generation.',
+          '© ${DateTime.now().year} EduPlay. Aprendizaje basado en\nevidencia para la próxima generación.',
           style: GoogleFonts.nunito(
             fontSize: 12,
             color: Colors.grey[600],

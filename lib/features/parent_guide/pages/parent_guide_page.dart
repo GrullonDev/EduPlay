@@ -1310,7 +1310,7 @@ class _GuideFooter extends StatelessWidget {
           Divider(color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 20),
           Text(
-            '© 2024 EduPlay Learning. All rights reserved.',
+            '© ${DateTime.now().year} EduPlay Learning. Todos los derechos reservados.',
             style: GoogleFonts.nunito(
               fontSize: 12,
               color: Colors.white.withValues(alpha: 0.35),

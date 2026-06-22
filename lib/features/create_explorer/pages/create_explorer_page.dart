@@ -404,7 +404,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                   child: Row(
                     children: [
                       Text(
-                        '© 2024 EduPlay Learning. Secure Setup.',
+                        '© ${DateTime.now().year} EduPlay Learning. Configuración segura.',
                         style: GoogleFonts.nunito(
                             fontSize: 11, color: Colors.grey[400]),
                       ),
