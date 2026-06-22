@@ -126,8 +126,11 @@ class AppRouter {
           builder: (_) => const StickerAlbumPage(),
         );
       case RouterPaths.gamesCatalog:
+        final catalogProfile = settings.arguments is ChildProfile
+            ? settings.arguments as ChildProfile
+            : null;
         return MaterialPageRoute(
-          builder: (_) => const GamesCatalogPage(),
+          builder: (_) => GamesCatalogPage(childProfile: catalogProfile),
         );
       case RouterPaths.parentsDashboard:
         return MaterialPageRoute(

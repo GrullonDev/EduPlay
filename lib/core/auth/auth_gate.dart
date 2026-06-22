@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
+import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
 import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layout.dart';
@@ -12,9 +13,10 @@ import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layo
 /// have a valid (persisted) session.
 ///
 /// Role resolution:
+///   • Unauthenticated              → [ChildPortalPage] (guest, child-first UX)
 ///   • UID exists in `parents/{uid}`  → [ParentsDashboardPage]
 ///   • UID exists in `teachers/{uid}` → [TeacherDashboardLayout]
-///   • Unauthenticated / unknown role → [MainPage]
+///   • Unknown role                 → [ChildPortalPage] (guest)
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -42,8 +44,8 @@ class AuthGate extends StatelessWidget {
 
         final user = authSnap.data;
 
-        // Not logged in → login with role selector
-        if (user == null) return const LoginPage();
+        // Not logged in → child dashboard (guest mode, no PIN)
+        if (user == null) return const ChildPortalPage();
 
         // Logged in → resolve role from Firestore
         return FutureBuilder<String?>(
@@ -60,7 +62,7 @@ class AuthGate extends StatelessWidget {
               // Anonymous sign-in is used by the child portal — leave it alone.
               if (user.isAnonymous) return const _SplashLoader();
               Future.microtask(() => FirebaseAuth.instance.signOut());
-              return const LoginPage();
+              return const ChildPortalPage();
             }
 
             // Email not yet verified → show the hard gate.
@@ -79,7 +81,7 @@ class AuthGate extends StatelessWidget {
                 if (!user.isAnonymous) {
                   Future.microtask(() => FirebaseAuth.instance.signOut());
                 }
-                return const LoginPage();
+                return const ChildPortalPage();
             }
           },
         );
