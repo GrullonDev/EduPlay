@@ -563,7 +563,7 @@ class _ChildCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               OutlinedButton(
-                onPressed: () {},
+                onPressed: () => _showActivityDetail(context),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _kNavy,
                   side: BorderSide(color: Colors.grey.shade200),
@@ -593,6 +593,15 @@ class _ChildCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showActivityDetail(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ChildActivitySheet(profile: profile),
     );
   }
 
@@ -2080,6 +2089,473 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Child activity detail sheet ───────────────────────────────────────────────
+//
+// Shown when the parent taps "Detalle de Actividad" on a child card.
+// Displays real-time session data pulled from Firestore.
+
+class _ChildActivitySheet extends StatelessWidget {
+  const _ChildActivitySheet({required this.profile});
+  final ChildProfile profile;
+
+  static const _kAmber = Color(0xFFD97706);
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.82,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollCtrl) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8F7FF),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: StreamBuilder<List<PracticeSession>>(
+            stream: PracticeSessionsService.watchAllSessionsByChild(profile.id),
+            builder: (context, snap) {
+              final sessions = snap.data ?? [];
+              final activeSessions =
+                  sessions.where((s) => s.isActive).toList();
+              final completedSessions =
+                  sessions.where((s) => s.isCompleted).toList();
+              final allCompletedGames = sessions
+                  .expand((s) => s.completedGameIds)
+                  .toSet()
+                  .length;
+              final allScores = sessions
+                  .expand((s) => s.scoreMap.values)
+                  .toList();
+              final avgScore = allScores.isEmpty
+                  ? 0
+                  : (allScores.reduce((a, b) => a + b) / allScores.length)
+                      .round();
+
+              return ListView(
+                controller: scrollCtrl,
+                padding: EdgeInsets.zero,
+                children: [
+                  // ── Handle + header ─────────────────────────────────
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [_kNavy, Color(0xFF3A36A0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(24)),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+                    child: Column(
+                      children: [
+                        // Drag handle
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor:
+                                  profile.avatarColor.withValues(alpha: 0.25),
+                              child: Text(
+                                profile.name[0].toUpperCase(),
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    profile.name,
+                                    style: GoogleFonts.fredoka(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${profile.focusSubject}  ·  ${profile.levelLabel}',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 13,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close_rounded,
+                                  color: Colors.white70, size: 22),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Level progress bar
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Progreso de Nivel',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  '${(profile.levelProgress * 100).toInt()}%',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: LinearProgressIndicator(
+                                value: profile.levelProgress,
+                                minHeight: 8,
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.15),
+                                color: const Color(0xFFFFD700),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Stats grid ──────────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'RESUMEN',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.3,
+                            color: _kAmber,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _ActivityStat(
+                              icon: Icons.assignment_turned_in_rounded,
+                              value: '${completedSessions.length}',
+                              label: 'Sesiones\ncompletadas',
+                              color: const Color(0xFF10B981),
+                            ),
+                            const SizedBox(width: 12),
+                            _ActivityStat(
+                              icon: Icons.sports_esports_rounded,
+                              value: '$allCompletedGames',
+                              label: 'Juegos\njugados',
+                              color: const Color(0xFF6366F1),
+                            ),
+                            const SizedBox(width: 12),
+                            _ActivityStat(
+                              icon: Icons.star_rounded,
+                              value: allScores.isEmpty ? '—' : '$avgScore',
+                              label: 'Puntuación\npromedio',
+                              color: const Color(0xFFF59E0B),
+                            ),
+                            const SizedBox(width: 12),
+                            _ActivityStat(
+                              icon: Icons.play_circle_rounded,
+                              value: '${activeSessions.length}',
+                              label: 'Sesiones\nactivas',
+                              color: _kCoral,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Active sessions ─────────────────────────────────
+                  if (activeSessions.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: Text(
+                        'SESIONES ACTIVAS',
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.3,
+                          color: _kAmber,
+                        ),
+                      ),
+                    ),
+                    ...activeSessions.map(
+                      (s) => Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        child: _SessionDetailRow(session: s),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // ── All sessions history ────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: Text(
+                      sessions.isEmpty
+                          ? 'HISTORIAL'
+                          : 'HISTORIAL  (${sessions.length})',
+                      style: GoogleFonts.nunito(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.3,
+                        color: _kAmber,
+                      ),
+                    ),
+                  ),
+
+                  if (snap.connectionState == ConnectionState.waiting)
+                    const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(
+                          child: CircularProgressIndicator(color: _kNavy)),
+                    )
+                  else if (sessions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(Icons.inbox_rounded,
+                              size: 48, color: Colors.grey[300]),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Aún no hay sesiones asignadas',
+                            style: GoogleFonts.nunito(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...sessions.map(
+                      (s) => Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        child: _SessionDetailRow(session: s),
+                      ),
+                    ),
+
+                  const SizedBox(height: 32),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── Activity stat chip ────────────────────────────────────────────────────────
+
+class _ActivityStat extends StatelessWidget {
+  const _ActivityStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 22, color: color),
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: GoogleFonts.fredoka(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: _kNavy,
+              ),
+            ),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                fontSize: 10,
+                color: Colors.grey[500],
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Session detail row ────────────────────────────────────────────────────────
+
+class _SessionDetailRow extends StatelessWidget {
+  const _SessionDetailRow({required this.session});
+  final PracticeSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final scores = session.scoreMap.values.toList();
+    final avg = scores.isEmpty
+        ? null
+        : (scores.reduce((a, b) => a + b) / scores.length).round();
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Status dot
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: session.isActive
+                  ? const Color(0xFF2ECC71)
+                  : (session.isCompleted
+                      ? const Color(0xFF6366F1)
+                      : Colors.grey[300]!),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.isActive
+                      ? 'Sesión activa'
+                      : (session.isCompleted
+                          ? 'Completada'
+                          : 'En progreso'),
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _kNavy,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${session.completedCount} / ${session.totalCount} juegos completados',
+                  style: GoogleFonts.nunito(
+                      fontSize: 11, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          ),
+          // Progress + score
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (avg != null)
+                Text(
+                  '⭐ $avg pts',
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFF59E0B),
+                  ),
+                ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: 80,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: session.progressFraction,
+                    minHeight: 5,
+                    backgroundColor: const Color(0xFFF3F4F6),
+                    color: session.isCompleted
+                        ? const Color(0xFF6366F1)
+                        : _kCoral,
+                  ),
+                ),
+              ),
+              Text(
+                '${(session.progressFraction * 100).toInt()}%',
+                style: GoogleFonts.nunito(
+                    fontSize: 10, color: Colors.grey[400]),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

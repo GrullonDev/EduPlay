@@ -95,6 +95,17 @@ class PracticeSessionsService {
     return snap.docs.map(_fromDoc).toList();
   }
 
+  /// Real-time stream of ALL sessions (active + completed) for a specific child.
+  /// Used by the parent dashboard child activity detail panel.
+  static Stream<List<PracticeSession>> watchAllSessionsByChild(
+      String childProfileId) {
+    return _col
+        .where('childProfileId', isEqualTo: childProfileId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(_fromDoc).toList());
+  }
+
   /// Looks up a session by 6-digit PIN — called from the child entry page.
   /// Does NOT require authentication.
   static Future<PracticeSession?> findByPin(String pin) async {
