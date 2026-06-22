@@ -1,4 +1,7 @@
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/utils/points_service.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -7,9 +10,14 @@ import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
 const _kBg = Color(0xFFF8F7FF);
+const _kCoral = Color(0xFFFF6E6C);
+const _kAmber = Color(0xFFD97706);
 
 class GamesCatalogPage extends StatefulWidget {
-  const GamesCatalogPage({super.key});
+  const GamesCatalogPage({super.key, this.childProfile});
+
+  /// The logged-in child profile, or null when browsing as a guest.
+  final ChildProfile? childProfile;
 
   @override
   State<GamesCatalogPage> createState() => _GamesCatalogPageState();
@@ -17,16 +25,49 @@ class GamesCatalogPage extends StatefulWidget {
 
 class _GamesCatalogPageState extends State<GamesCatalogPage> {
   GameSubject _selectedSubject = GameSubject.all;
-  final Set<AgeRange> _selectedAges = {AgeRange.age9to11};
-  final Set<Difficulty> _selectedDifficulties = {Difficulty.intermediate};
+  // All age ranges active by default so no games are hidden on first open.
+  final Set<AgeRange> _selectedAges = {
+    AgeRange.age6to8,
+    AgeRange.age9to11,
+    AgeRange.age12plus,
+  };
+  final Set<Difficulty> _selectedDifficulties = {
+    Difficulty.beginner,
+    Difficulty.intermediate,
+    Difficulty.advanced,
+  };
   bool _gridView = true;
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  int _localPoints = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPoints();
+  }
+
+  Future<void> _loadPoints() async {
+    final pts = await PointsService.getPoints();
+    if (mounted) setState(() => _localPoints = pts);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Count of non-default filter selections (shown as badge on mobile).
+  int get _activeFilterCount {
+    int count = 0;
+    // Subject filter active when not "all"
+    if (_selectedSubject != GameSubject.all) count++;
+    // Age filter active when not all 3 selected
+    if (_selectedAges.length < AgeRange.values.length) count++;
+    // Difficulty active when not all 3 selected
+    if (_selectedDifficulties.length < Difficulty.values.length) count++;
+    return count;
   }
 
   List<CatalogGame> get _filtered {
@@ -62,6 +103,8 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
           _TopBar(
             searchController: _searchController,
             onSearch: (q) => setState(() => _searchQuery = q),
+            childProfile: widget.childProfile,
+            localPoints: _localPoints,
           ),
           Expanded(
             child: isDesktop
@@ -91,6 +134,7 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                           gridView: _gridView,
                           onToggleView: () =>
                               setState(() => _gridView = !_gridView),
+                          activeFilterCount: _activeFilterCount,
                         ),
                       ),
                     ],
@@ -99,6 +143,7 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                     filtered: _filtered,
                     gridView: _gridView,
                     onToggleView: () => setState(() => _gridView = !_gridView),
+                    activeFilterCount: _activeFilterCount,
                     filterDrawer: _FilterPanel(
                       selectedSubject: _selectedSubject,
                       selectedAges: _selectedAges,
@@ -127,18 +172,104 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
 
 // ── Top navigation bar ────────────────────────────────────────────────────────
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends StatefulWidget {
   const _TopBar({
     required this.searchController,
     required this.onSearch,
+    this.childProfile,
+    this.localPoints = 0,
   });
 
   final TextEditingController searchController;
   final ValueChanged<String> onSearch;
+  final ChildProfile? childProfile;
+  final int localPoints;
+
+  @override
+  State<_TopBar> createState() => _TopBarState();
+}
+
+class _TopBarState extends State<_TopBar> {
+  bool _showMobileSearch = false;
+
+  void _toggleSearch() {
+    setState(() {
+      _showMobileSearch = !_showMobileSearch;
+      if (!_showMobileSearch) {
+        widget.searchController.clear();
+        widget.onSearch('');
+      }
+    });
+  }
+
+  void _showSettingsSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const _SettingsSheet(),
+    );
+  }
+
+  void _showProfileSheet() {
+    final profile = widget.childProfile;
+    if (profile != null) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (_) => _ProfileDetailSheet(profile: profile),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const _GuestRegistrationPrompt(),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = ScreenSize.of(context).isDesktop;
+
+    // Mobile full-width search bar (replaces the normal bar)
+    if (!isDesktop && _showMobileSearch) {
+      return Material(
+        color: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black12,
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded, color: _kNavy),
+                  onPressed: _toggleSearch,
+                ),
+                Expanded(
+                  child: _SearchField(
+                    controller: widget.searchController,
+                    onChanged: widget.onSearch,
+                    autofocus: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final profile = widget.childProfile;
+    final avatarLabel = profile != null && profile.name.isNotEmpty
+        ? profile.name[0].toUpperCase()
+        : '?';
+    final pts = profile != null
+        ? widget.localPoints // catalog falls back to local points
+        : widget.localPoints;
 
     return Material(
       color: Colors.white,
@@ -166,15 +297,58 @@ class _TopBar extends StatelessWidget {
               ),
               if (isDesktop) ...[
                 const SizedBox(width: 32),
-                ...[
-                  ('Games', true),
-                  ('Learn', false),
-                  ('Classroom', false),
-                  ('Reports', false),
-                ].map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: _NavTab(label: item.$1, selected: item.$2),
+                // Juegos — already here, no-op
+                Padding(
+                  padding: const EdgeInsets.only(right: 24),
+                  child: _NavTab(label: 'Juegos', selected: true),
+                ),
+                // Aprender → student dashboard (needs a profile)
+                Padding(
+                  padding: const EdgeInsets.only(right: 24),
+                  child: _NavTab(
+                    label: 'Aprender',
+                    selected: false,
+                    onTap: () {
+                      final p = widget.childProfile;
+                      if (p != null) {
+                        Navigator.pushNamed(
+                          context,
+                          RouterPaths.studentDashboard,
+                          arguments: p,
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Inicia sesión con tu PIN para acceder a Aprender.',
+                              style: GoogleFonts.nunito(),
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                // Salón → child portal
+                Padding(
+                  padding: const EdgeInsets.only(right: 24),
+                  child: _NavTab(
+                    label: 'Salón',
+                    selected: false,
+                    onTap: () => Navigator.pushNamed(
+                        context, RouterPaths.childPortal),
+                  ),
+                ),
+                // Reportes → progress reports
+                Padding(
+                  padding: const EdgeInsets.only(right: 24),
+                  child: _NavTab(
+                    label: 'Reportes',
+                    selected: false,
+                    onTap: () => Navigator.pushNamed(
+                        context, RouterPaths.progressReports),
                   ),
                 ),
               ],
@@ -184,26 +358,46 @@ class _TopBar extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 260),
                     child: _SearchField(
-                      controller: searchController,
-                      onChanged: onSearch,
+                      controller: widget.searchController,
+                      onChanged: widget.onSearch,
                     ),
                   ),
                 )
               else
                 const Spacer(),
-              const SizedBox(width: 12),
-              Icon(Icons.notifications_outlined,
-                  color: Colors.grey[500], size: 22),
-              const SizedBox(width: 14),
-              Icon(Icons.settings_outlined, color: Colors.grey[500], size: 22),
-              const SizedBox(width: 14),
-              CircleAvatar(
-                radius: 17,
-                backgroundColor: _kNavy,
-                child: Text(
-                  'M',
-                  style: GoogleFonts.fredoka(
-                      color: Colors.white, fontWeight: FontWeight.bold),
+              // Points badge (always visible)
+              _CatalogPointsBadge(points: pts),
+              const SizedBox(width: 10),
+              // Mobile search toggle
+              if (!isDesktop)
+                IconButton(
+                  icon: Icon(Icons.search_rounded,
+                      color: Colors.grey[500], size: 22),
+                  onPressed: _toggleSearch,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                ),
+              if (isDesktop) const SizedBox(width: 12),
+              // Settings
+              IconButton(
+                icon: Icon(Icons.settings_outlined,
+                    color: Colors.grey[500], size: 22),
+                onPressed: _showSettingsSheet,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+              const SizedBox(width: 6),
+              // Profile avatar
+              GestureDetector(
+                onTap: _showProfileSheet,
+                child: CircleAvatar(
+                  radius: 17,
+                  backgroundColor: profile != null ? _kNavy : Colors.grey[400],
+                  child: Text(
+                    avatarLabel,
+                    style: GoogleFonts.fredoka(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
@@ -214,36 +408,371 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-class _NavTab extends StatelessWidget {
-  const _NavTab({required this.label, required this.selected});
+// ── Catalog points badge ──────────────────────────────────────────────────────
 
-  final String label;
-  final bool selected;
+class _CatalogPointsBadge extends StatelessWidget {
+  const _CatalogPointsBadge({required this.points});
+  final int points;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-            color: selected ? _kNavy : Colors.grey[600],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _kAmber.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kAmber.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('⭐', style: TextStyle(fontSize: 11)),
+          const SizedBox(width: 3),
+          Text(
+            '$points pts',
+            style: GoogleFonts.fredoka(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _kAmber,
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Settings sheet ────────────────────────────────────────────────────────────
+
+class _SettingsSheet extends StatelessWidget {
+  const _SettingsSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'Configuración',
+                style: GoogleFonts.fredoka(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: _kNavy,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _SettingsTile(
+              icon: Icons.language_rounded,
+              title: 'Idioma',
+              subtitle: 'Español',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: Icons.notifications_outlined,
+              title: 'Notificaciones',
+              subtitle: 'Activadas',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: Icons.palette_outlined,
+              title: 'Tema',
+              subtitle: 'Claro',
+              onTap: () {},
+            ),
+            _SettingsTile(
+              icon: Icons.person_outline_rounded,
+              title: 'Cambiar usuario',
+              subtitle: 'Volver al inicio',
+              onTap: () {
+                Navigator.of(context).pop(); // close sheet
+                Navigator.of(context).pop(); // leave catalog → child portal
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
-        const SizedBox(height: 2),
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 2,
-          width: selected ? 28 : 0,
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // Wrap in Material so ListTile ink splashes paint correctly over the
+    // white Container background of _SettingsSheet.
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: _kNavy,
-            borderRadius: BorderRadius.circular(2),
+            color: _kNavy.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: Icon(icon, color: _kNavy, size: 20),
         ),
-      ],
+        title: Text(title,
+            style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700, color: _kNavy, fontSize: 15)),
+        subtitle: Text(subtitle,
+            style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500])),
+        trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+// ── Profile detail sheet (registered child) ───────────────────────────────────
+
+class _ProfileDetailSheet extends StatelessWidget {
+  const _ProfileDetailSheet({required this.profile});
+  final ChildProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            CircleAvatar(
+              radius: 36,
+              backgroundColor: _kNavy,
+              child: Text(
+                profile.name.isNotEmpty ? profile.name[0].toUpperCase() : '?',
+                style: GoogleFonts.fredoka(
+                    fontSize: 32,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              profile.name,
+              style: GoogleFonts.fredoka(
+                  fontSize: 24, fontWeight: FontWeight.w700, color: _kNavy),
+            ),
+            if (profile.focusSubject.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Enfoque: ${profile.focusSubject}',
+                style: GoogleFonts.nunito(
+                    fontSize: 13, color: Colors.grey[500]),
+              ),
+            ],
+            if (profile.levelLabel.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _kNavy.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  profile.levelLabel,
+                  style: GoogleFonts.nunito(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _kNavy),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _kNavy,
+                    side: BorderSide(color: _kNavy.withValues(alpha: 0.3)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: Text('Cerrar',
+                      style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Guest registration prompt ─────────────────────────────────────────────────
+
+class _GuestRegistrationPrompt extends StatelessWidget {
+  const _GuestRegistrationPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('👨‍👩‍👧', style: TextStyle(fontSize: 48)),
+            const SizedBox(height: 16),
+            Text(
+              'Pide a un adulto que te registre',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.fredoka(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: _kNavy,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Para guardar tus puntos y progreso, un padre o tutor\ndebe crear tu perfil en la app.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.nunito(
+                fontSize: 14,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kNavy,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Entendido',
+                  style: GoogleFonts.fredoka(
+                      fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NavTab extends StatelessWidget {
+  const _NavTab({
+    required this.label,
+    required this.selected,
+    this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.nunito(
+              fontSize: 14,
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              color: selected ? _kNavy : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 2),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 2,
+            width: selected ? 28 : 0,
+            decoration: BoxDecoration(
+              color: _kNavy,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -252,19 +781,22 @@ class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
     required this.onChanged,
+    this.autofocus = false,
   });
 
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
       onChanged: onChanged,
+      autofocus: autofocus,
       style: GoogleFonts.nunito(fontSize: 13),
       decoration: InputDecoration(
-        hintText: 'Search games...',
+        hintText: 'Buscar juegos...',
         hintStyle: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[400]),
         prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 18),
         filled: true,
@@ -300,14 +832,14 @@ class _FilterPanel extends StatelessWidget {
   final ValueChanged<Difficulty> onDifficultyToggled;
 
   static const _subjects = [
-    (GameSubject.all, 'All Games', Icons.grid_view_rounded),
-    (GameSubject.math, 'Math', Icons.calculate_rounded),
-    (GameSubject.science, 'Science', Icons.biotech_rounded),
-    (GameSubject.history, 'History', Icons.account_balance_rounded),
-    (GameSubject.languages, 'Languages', Icons.translate_rounded),
-    (GameSubject.logic, 'Logic', Icons.extension_rounded),
-    (GameSubject.art, 'Art', Icons.palette_rounded),
-    (GameSubject.music, 'Music', Icons.music_note_rounded),
+    (GameSubject.all, 'Todos los juegos', Icons.grid_view_rounded),
+    (GameSubject.math, 'Matemáticas', Icons.calculate_rounded),
+    (GameSubject.science, 'Ciencias', Icons.biotech_rounded),
+    (GameSubject.history, 'Historia', Icons.account_balance_rounded),
+    (GameSubject.languages, 'Idiomas', Icons.translate_rounded),
+    (GameSubject.logic, 'Lógica', Icons.extension_rounded),
+    (GameSubject.art, 'Arte', Icons.palette_rounded),
+    (GameSubject.music, 'Música', Icons.music_note_rounded),
   ];
 
   @override
@@ -323,7 +855,7 @@ class _FilterPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Catalog',
+                'Catálogo',
                 style: GoogleFonts.fredoka(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -331,7 +863,7 @@ class _FilterPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const _FilterSection(label: 'SUBJECT'),
+              const _FilterSection(label: 'MATERIAS'),
               const SizedBox(height: 10),
               for (final (subject, label, icon) in _subjects)
                 _SubjectTile(
@@ -341,7 +873,7 @@ class _FilterPanel extends StatelessWidget {
                   onTap: () => onSubjectChanged(subject),
                 ),
               const SizedBox(height: 20),
-              const _FilterSection(label: 'AGE RANGE'),
+              const _FilterSection(label: 'EDAD'),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -365,12 +897,12 @@ class _FilterPanel extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-              const _FilterSection(label: 'DIFFICULTY'),
+              const _FilterSection(label: 'DIFICULTAD'),
               const SizedBox(height: 10),
               for (final (d, label) in [
-                (Difficulty.beginner, 'Beginner'),
-                (Difficulty.intermediate, 'Intermediate'),
-                (Difficulty.advanced, 'Advanced'),
+                (Difficulty.beginner, 'Principiante'),
+                (Difficulty.intermediate, 'Intermedio'),
+                (Difficulty.advanced, 'Avanzado'),
               ])
                 _DifficultyCheck(
                   label: label,
@@ -381,10 +913,10 @@ class _FilterPanel extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.rocket_launch_rounded, size: 16),
                   label: Text(
-                    'Start Quest',
+                    '¡Explorar!',
                     style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -557,16 +1089,54 @@ class _MainContent extends StatelessWidget {
     required this.gridView,
     required this.onToggleView,
     this.filterDrawer,
+    this.activeFilterCount = 0,
   });
 
   final List<CatalogGame> filtered;
   final bool gridView;
   final VoidCallback onToggleView;
   final Widget? filterDrawer;
+  /// How many non-default filters are active (for the badge on mobile).
+  final int activeFilterCount;
+
+  void _openFilters(BuildContext context) {
+    if (filterDrawer == null) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              filterDrawer!,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final featured = featuredGames;
+    final isMobile = filterDrawer != null; // mobile passes filterDrawer
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -581,7 +1151,7 @@ class _MainContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Popular Learning Games',
+                  'Juegos Populares',
                   style: GoogleFonts.fredoka(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -589,7 +1159,7 @@ class _MainContent extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'Curated for Level 12 Explorers',
+                  'Seleccionados para ti',
                   style: GoogleFonts.nunito(
                     fontSize: 13,
                     color: Colors.grey[500],
@@ -598,13 +1168,24 @@ class _MainContent extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            Text(
-              'Sort by:',
-              style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
-            ),
-            const SizedBox(width: 6),
-            _SortDropdown(),
-            const SizedBox(width: 12),
+            // Mobile filter button
+            if (isMobile) ...[
+              _FilterButton(
+                activeCount: activeFilterCount,
+                onTap: () => _openFilters(context),
+              ),
+              const SizedBox(width: 8),
+            ],
+            if (!isMobile) ...[
+              Text(
+                'Ordenar por:',
+                style:
+                    GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
+              ),
+              const SizedBox(width: 6),
+              _SortDropdown(),
+              const SizedBox(width: 12),
+            ],
             _ViewToggle(gridView: gridView, onToggle: onToggleView),
           ],
         ),
@@ -622,7 +1203,7 @@ class _MainContent extends StatelessWidget {
             onPressed: () {},
             icon: const Icon(Icons.expand_more_rounded),
             label: Text(
-              'Load More Games',
+              'Cargar más juegos',
               style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
             ),
             style: OutlinedButton.styleFrom(
@@ -637,6 +1218,72 @@ class _MainContent extends StatelessWidget {
         ),
         const SizedBox(height: 32),
       ],
+    );
+  }
+}
+
+// ── Mobile filter button ──────────────────────────────────────────────────────
+
+class _FilterButton extends StatelessWidget {
+  const _FilterButton({required this.activeCount, required this.onTap});
+  final int activeCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: activeCount > 0 ? _kNavy : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: activeCount > 0
+                ? _kNavy
+                : Colors.grey.shade300,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.tune_rounded,
+              size: 15,
+              color: activeCount > 0 ? Colors.white : Colors.grey[600],
+            ),
+            const SizedBox(width: 5),
+            Text(
+              'Filtrar',
+              style: GoogleFonts.nunito(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: activeCount > 0 ? Colors.white : Colors.grey[600],
+              ),
+            ),
+            if (activeCount > 0) ...[
+              const SizedBox(width: 5),
+              Container(
+                width: 16,
+                height: 16,
+                decoration: const BoxDecoration(
+                  color: _kCoral,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '$activeCount',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -660,18 +1307,24 @@ class _FeaturedSection extends StatelessWidget {
     if (!isDesktop) {
       return Column(
         children: [
-          _HeroCard(game: hero),
+          // Hero card needs a fixed height so Stack(fit: StackFit.expand)
+          // and the inner Spacer() have a bounded constraint on mobile.
+          SizedBox(height: 270, child: _HeroCard(game: hero)),
           const SizedBox(height: 12),
           for (final g in sides) ...[
-            _SideFeaturedCard(game: g),
+            // Side cards: bounded height so Spacer() doesn't overflow.
+            SizedBox(height: 150, child: _SideFeaturedCard(game: g)),
             const SizedBox(height: 12),
           ],
         ],
       );
     }
 
+    // 320px: each side card gets (320−12)/2 = 154px → inner Column = 118px.
+    // Content is ~110px so Spacer absorbs the remaining 8px — no overflow.
+    // (At 300px the inner Column was only 108px, causing a 2px overflow.)
     return SizedBox(
-      height: 300,
+      height: 320,
       child: Row(
         children: [
           Expanded(flex: 6, child: _HeroCard(game: hero)),
@@ -1023,8 +1676,8 @@ class _SortDropdownState extends State<_SortDropdown> {
           fontSize: 13, fontWeight: FontWeight.w700, color: _kNavy),
       items: const [
         DropdownMenuItem(value: 'Popular', child: Text('Popular')),
-        DropdownMenuItem(value: 'Newest', child: Text('Newest')),
-        DropdownMenuItem(value: 'Level', child: Text('Level')),
+        DropdownMenuItem(value: 'Newest', child: Text('Más nuevos')),
+        DropdownMenuItem(value: 'Level', child: Text('Nivel')),
       ],
       onChanged: (v) => setState(() => _value = v!),
     );
@@ -1300,7 +1953,7 @@ class _GameCard extends StatelessWidget {
                     icon:
                         const Icon(Icons.play_circle_outline_rounded, size: 16),
                     label: Text(
-                      'Play',
+                      'Jugar',
                       style: GoogleFonts.nunito(
                           fontWeight: FontWeight.w700, fontSize: 13),
                     ),
@@ -1496,6 +2149,7 @@ class _CatalogFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = ScreenSize.of(context).isDesktop;
+    final year = DateTime.now().year;
 
     return Container(
       color: const Color(0xFFEEEDF8),
@@ -1508,22 +2162,22 @@ class _CatalogFooter extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _FooterBrand()),
-                const Expanded(
-                    child: _FooterLinks('Quick Links', [
-                  'Teacher Resources',
-                  'Parent Guide',
-                  'Support Center',
+                Expanded(
+                    child: _FooterLinks('Recursos', [
+                  ('Recursos para maestros', RouterPaths.parentGuide),
+                  ('Guía para padres', RouterPaths.parentGuide),
+                  ('Centro de ayuda', null),
                 ])),
-                const Expanded(
+                Expanded(
                     child: _FooterLinks('Legal', [
-                  'Privacy Policy',
-                  'Terms of Service',
+                  ('Política de privacidad', null),
+                  ('Términos de servicio', null),
                 ])),
                 Expanded(
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Text(
-                      '© 2024 EduPlay Learning. All rights reserved.',
+                      '© $year EduPlay Learning. Todos los derechos reservados.',
                       style: GoogleFonts.nunito(
                           fontSize: 11, color: Colors.grey[500]),
                       textAlign: TextAlign.right,
@@ -1537,11 +2191,22 @@ class _CatalogFooter extends StatelessWidget {
               children: [
                 _FooterBrand(),
                 const SizedBox(height: 20),
-                const _FooterLinks('Quick Links',
-                    ['Teacher Resources', 'Parent Guide', 'Support Center']),
+                _FooterLinks('Recursos', [
+                  ('Recursos para maestros', RouterPaths.parentGuide),
+                  ('Guía para padres', RouterPaths.parentGuide),
+                  ('Centro de ayuda', null),
+                ]),
                 const SizedBox(height: 16),
-                const _FooterLinks(
-                    'Legal', ['Privacy Policy', 'Terms of Service']),
+                _FooterLinks('Legal', [
+                  ('Política de privacidad', null),
+                  ('Términos de servicio', null),
+                ]),
+                const SizedBox(height: 16),
+                Text(
+                  '© $year EduPlay Learning. Todos los derechos reservados.',
+                  style: GoogleFonts.nunito(
+                      fontSize: 11, color: Colors.grey[500]),
+                ),
               ],
             ),
     );
@@ -1564,7 +2229,7 @@ class _FooterBrand extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Empowering the next generation of explorers\nthrough play-based scholarly excellence.',
+          'Empoderando a la próxima generación de exploradores\na través de la excelencia basada en el juego.',
           style: GoogleFonts.nunito(
             fontSize: 12,
             color: Colors.grey[600],
@@ -1584,11 +2249,13 @@ class _FooterBrand extends StatelessWidget {
   }
 }
 
+/// [links] is a list of (label, route?) pairs. When route is null the item
+/// is shown as plain text (placeholder for future pages).
 class _FooterLinks extends StatelessWidget {
   const _FooterLinks(this.title, this.links);
 
   final String title;
-  final List<String> links;
+  final List<(String, String?)> links;
 
   @override
   Widget build(BuildContext context) {
@@ -1604,10 +2271,20 @@ class _FooterLinks extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        for (final link in links) ...[
-          Text(
-            link,
-            style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600]),
+        for (final (label, route) in links) ...[
+          GestureDetector(
+            onTap: route != null
+                ? () => Navigator.pushNamed(context, route)
+                : null,
+            child: Text(
+              label,
+              style: GoogleFonts.nunito(
+                fontSize: 13,
+                color: route != null ? _kNavy.withValues(alpha: 0.7) : Colors.grey[600],
+                decoration: route != null ? TextDecoration.underline : null,
+                decorationColor: _kNavy.withValues(alpha: 0.4),
+              ),
+            ),
           ),
           const SizedBox(height: 6),
         ],

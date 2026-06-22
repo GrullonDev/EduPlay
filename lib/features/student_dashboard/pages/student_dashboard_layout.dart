@@ -1004,6 +1004,8 @@ class _StatCard extends StatelessWidget {
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.nunito(
                     fontSize: 11,
                     color: Colors.grey[500],
@@ -1013,6 +1015,8 @@ class _StatCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.fredoka(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -1300,6 +1304,7 @@ class _SecondaryGameCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
@@ -1329,7 +1334,7 @@ class _SecondaryGameCard extends StatelessWidget {
                   color: _kNavy,
                 ),
               ),
-              const Spacer(),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Container(
