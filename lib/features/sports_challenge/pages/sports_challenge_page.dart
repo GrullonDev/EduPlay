@@ -3,7 +3,9 @@ import 'dart:math';
 
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SportsChallengePage extends StatefulWidget {
   const SportsChallengePage({super.key});
@@ -228,6 +230,10 @@ class _SportsChallengePageState extends State<SportsChallengePage>
     _gameTimer?.cancel();
     _spawnTimer?.cancel();
     _scaleController.stop();
+
+    // Capture before setState so the dialog builder always sees the real value
+    final finalScore = _score;
+
     setState(() {
       _isGameActive = false;
       _isItemVisible = false;
@@ -236,40 +242,115 @@ class _SportsChallengePageState extends State<SportsChallengePage>
     sl<StudentRepository>().recordScore(
       subjectKey: 'sports',
       gameTitle: 'Desafío Deportivo',
-      score: _score,
+      score: finalScore,
     );
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        title: const Text('¡Tiempo Agotado!'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.sports_soccer, size: 50, color: Colors.green),
-            const SizedBox(height: 10),
-            Text('Puntuación final: $_score',
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          ],
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Gradient header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF1E1B6A), Color(0xFF2D2A82)],
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const Text('⏱️', style: TextStyle(fontSize: 52)),
+                    const SizedBox(height: 10),
+                    Text(
+                      '¡Tiempo Agotado!',
+                      style: GoogleFonts.fredoka(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              // White body
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(24, 18, 24, 20),
+                child: Column(
+                  children: [
+                    Text(
+                      'Puntuación final: $finalScore goles ⚽',
+                      style: GoogleFonts.nunito(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E1B6A),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                RouterPaths.childPortal,
+                                (route) => false,
+                              );
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFF1E1B6A),
+                              side: const BorderSide(color: Color(0xFF1E1B6A)),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text('Inicio',
+                                style: GoogleFonts.fredoka(fontSize: 15)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _startGame();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF6E6C),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text('¡Jugar de nuevo!',
+                                style: GoogleFonts.fredoka(
+                                    fontSize: 15, fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _startGame();
-            },
-            child: const Text('Jugar de nuevo'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('Salir'),
-          ),
-        ],
       ),
     );
   }

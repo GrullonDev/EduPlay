@@ -117,10 +117,12 @@ class MathAdventureProvider with ChangeNotifier {
   void _showReward() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
         title: '¡Felicidades!',
-        content: 'Has ganado un premio 🎁',
-        buttonText: 'Aceptar',
+        content: '¡Has ganado puntos extra! 🎁',
+        buttonText: '¡Continuar! →',
+        type: DialogType.reward,
         onButtonPressed: () => Navigator.of(context).pop(),
       ),
     );
@@ -131,10 +133,12 @@ class MathAdventureProvider with ChangeNotifier {
       _level++;
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => CustomDialog(
-          title: '¡Nivel alcanzado!',
-          content: '¡Nivel $level alcanzado!',
-          buttonText: 'Aceptar',
+          title: '¡Nivel $level!',
+          content: '¡Estás avanzando muy bien! ⚡',
+          buttonText: '¡Continuar! →',
+          type: DialogType.levelUp,
           onButtonPressed: () => Navigator.of(context).pop(),
         ),
       );
@@ -149,30 +153,35 @@ class MathAdventureProvider with ChangeNotifier {
   }
 
   void _gameOver() {
-    showDialog(
-      context: context,
-      builder: (context) => CustomDialog(
-        title: '¡Juego terminado!',
-        content: 'Volverás a comenzar.',
-        buttonText: 'Aceptar',
-        onButtonPressed: () => Navigator.pushNamed(
-          context,
-          RouterPaths.menu,
-          arguments: userName,
-        ),
-      ),
-    );
+    // Capture before reset — dialog builder runs on the next frame
+    final finalScore = _score;
 
     sl<StudentRepository>().recordScore(
       subjectKey: 'math',
       gameTitle: 'Aventura Matemática',
-      score: _score,
+      score: finalScore,
     );
 
     _score = 0;
     _lives = 3;
     _level = 1;
-    notifyListeners();
+    notifyListeners(); // reset state first
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CustomDialog(
+        title: '¡Buen intento!',
+        content: 'Puntuación final: $finalScore pts\n¡Sigue practicando!',
+        buttonText: 'Volver al inicio',
+        type: DialogType.gameOver,
+        onButtonPressed: () => Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouterPaths.childPortal,
+          (route) => false,
+        ),
+      ),
+    );
   }
 
   void resetScore() {

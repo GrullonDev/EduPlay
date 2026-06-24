@@ -37,12 +37,14 @@ class MathAdventurePage extends StatelessWidget {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Color(0xFF4CAF50), // Fresh Green
-                Color(0xFF81C784), // Lighter Green
+                Color(0xFF16125C),
+                Color(0xFF231B72),
+                Color(0xFF12104A),
               ],
+              stops: [0.0, 0.55, 1.0],
             ),
           ),
           child: const SafeArea(

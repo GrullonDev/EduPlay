@@ -43,9 +43,11 @@ class _FunEnglishLayout extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFF9A9E),
-              Color(0xFFFECFEF)
-            ], // Soft Red/Pink Gradient
+              Color(0xFF16125C),
+              Color(0xFF231B72),
+              Color(0xFF12104A),
+            ],
+            stops: [0.0, 0.55, 1.0],
           ),
         ),
         child: SafeArea(

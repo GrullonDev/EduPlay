@@ -25,12 +25,14 @@ class MagicWordsPage extends StatelessWidget {
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
               colors: [
-                Color(0xFF2196F3), // Bright Blue
-                Color(0xFF64B5F6), // Lighter Blue
+                Color(0xFF16125C), // Deep navy
+                Color(0xFF231B72), // Mid navy
+                Color(0xFF12104A), // Darker navy
               ],
+              stops: [0.0, 0.55, 1.0],
             ),
           ),
           child: const SafeArea(

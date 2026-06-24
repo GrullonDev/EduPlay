@@ -152,44 +152,53 @@ class MagicWordsProvider with ChangeNotifier {
   }
 
   void _showReward(String title, String content) {
+    final isLevelUp = title.contains('Nivel');
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
         title: title,
         content: content,
-        buttonText: 'Continuar',
+        buttonText: '¡Continuar! →',
+        type: isLevelUp ? DialogType.levelUp : DialogType.reward,
         onButtonPressed: () => Navigator.of(context).pop(),
       ),
     );
   }
 
   void _gameOver() {
-    showDialog(
-      context: context,
-      builder: (context) => CustomDialog(
-        title: '¡Juego terminado!',
-        content: 'Puntuación final: $_score',
-        buttonText: 'Menú',
-        onButtonPressed: () {
-          Navigator.of(context).pop();
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            RouterPaths.menu,
-            (route) => false,
-          );
-        },
-      ),
-    );
+    // Capture before reset — dialog builder runs on the next frame
+    final finalScore = _score;
+
     sl<StudentRepository>().recordScore(
       subjectKey: 'language',
       gameTitle: 'Palabras Mágicas',
-      score: _score,
+      score: finalScore,
     );
 
     _score = 0;
     _lives = 3;
     _level = 1;
-    notifyListeners();
+    notifyListeners(); // reset state first so UI reflects new game
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CustomDialog(
+        title: '¡Buen intento!',
+        content: 'Puntuación final: $finalScore pts\n¡Sigue practicando!',
+        buttonText: 'Volver al inicio',
+        type: DialogType.gameOver,
+        onButtonPressed: () {
+          Navigator.of(context).pop();
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            RouterPaths.childPortal,
+            (route) => false,
+          );
+        },
+      ),
+    );
   }
 
   void resetScore() {
