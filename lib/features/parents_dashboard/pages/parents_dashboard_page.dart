@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import 'package:edu_play/utils/child_portal_link.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
@@ -126,7 +128,7 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
 
 // ── Overview body ─────────────────────────────────────────────────────────────
 
-class _OverviewBody extends StatelessWidget {
+class _OverviewBody extends StatefulWidget {
   const _OverviewBody({
     required this.profiles,
     required this.parentName,
@@ -139,16 +141,49 @@ class _OverviewBody extends StatelessWidget {
   final VoidCallback onAddProfile;
   final ValueChanged<ChildProfile> onDeleteProfile;
 
-  // Computed mock weekly stats
-  int get _totalMinutes => profiles.isEmpty ? 0 : 765; // 12h 45m
+  @override
+  State<_OverviewBody> createState() => _OverviewBodyState();
+}
+
+class _OverviewBodyState extends State<_OverviewBody> {
+  List<PracticeSession> _allSessions = [];
+  bool _sessionsLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSessions();
+  }
+
+  Future<void> _loadSessions() async {
+    final sessions = await PracticeSessionsService.getAllSessions();
+    if (mounted) {
+      setState(() {
+        _allSessions = sessions;
+        _sessionsLoaded = true;
+      });
+    }
+  }
+
+  /// Total completed games × 5 min estimate for this week.
+  int get _totalMinutes {
+    if (!_sessionsLoaded || widget.profiles.isEmpty) return 0;
+    final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+    final weekSessions =
+        _allSessions.where((s) => s.createdAt.isAfter(weekAgo)).toList();
+    final completedGames =
+        weekSessions.fold<int>(0, (sum, s) => sum + s.completedCount);
+    return completedGames * 5; // ~5 min per game
+  }
+
   String get _topSubject =>
-      profiles.isEmpty ? '—' : (profiles.first.focusSubject);
+      widget.profiles.isEmpty ? '—' : widget.profiles.first.focusSubject;
 
   @override
   Widget build(BuildContext context) {
     final s = ScreenSize.of(context);
     final isDesktop = s.isDesktop;
-    final firstName = parentName.split(' ').first;
+    final firstName = widget.parentName.split(' ').first;
 
     Widget mainCol = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,7 +246,7 @@ class _OverviewBody extends StatelessWidget {
                       )),
               const SizedBox(width: 10),
               ElevatedButton.icon(
-                onPressed: onAddProfile,
+                onPressed: widget.onAddProfile,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(
                   'Añadir Perfil',
@@ -235,20 +270,20 @@ class _OverviewBody extends StatelessWidget {
         // Child profiles section
         const _SectionLabel(title: 'Perfiles de Niños', action: 'Ver todos'),
         const SizedBox(height: 14),
-        profiles.isEmpty
-            ? _EmptyProfiles(onAdd: onAddProfile)
+        widget.profiles.isEmpty
+            ? _EmptyProfiles(onAdd: widget.onAddProfile)
             : _ChildProfilesGrid(
-                profiles: profiles,
-                onDelete: onDeleteProfile,
+                profiles: widget.profiles,
+                onDelete: widget.onDeleteProfile,
               ),
 
         const SizedBox(height: 28),
 
         // Recommendations per child
-        if (profiles.isNotEmpty) ...[
+        if (widget.profiles.isNotEmpty) ...[
           const _SectionLabel(title: 'Necesita practicar', action: ''),
           const SizedBox(height: 14),
-          ...profiles.map((p) => _RecommendationsCard(profile: p)),
+          ...widget.profiles.map((p) => _RecommendationsCard(profile: p)),
           const SizedBox(height: 28),
         ],
 
@@ -260,7 +295,8 @@ class _OverviewBody extends StatelessWidget {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: _AchievementCard(profiles: profiles),
+                      child: _AchievementCard(
+                          profiles: widget.profiles, sessions: _allSessions),
                     ),
                     const SizedBox(width: 20),
                     const Expanded(
@@ -272,7 +308,8 @@ class _OverviewBody extends StatelessWidget {
               )
             : Column(
                 children: [
-                  _AchievementCard(profiles: profiles),
+                  _AchievementCard(
+                      profiles: widget.profiles, sessions: _allSessions),
                   const SizedBox(height: 20),
                   const _ChallengesCard(),
                 ],
@@ -789,6 +826,129 @@ class _QuickControlsCard extends StatefulWidget {
 
 class _QuickControlsCardState extends State<_QuickControlsCard> {
   bool _bedtimeEnabled = true;
+  int _dailyLimitMinutes = 120; // 2 hours default
+  int _bedtimeHour = 20; // 20:00 default
+  bool _saving = false;
+
+  static String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFromFirestore();
+  }
+
+  Future<void> _loadFromFirestore() async {
+    final uid = _uid;
+    if (uid == null) return;
+    try {
+      final doc =
+          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
+      final data = doc.data() ?? {};
+      if (mounted) {
+        setState(() {
+          _bedtimeEnabled = data['bedtimeEnabled'] as bool? ?? true;
+          _dailyLimitMinutes = data['dailyLimitMinutes'] as int? ?? 120;
+          _bedtimeHour = data['bedtimeHour'] as int? ?? 20;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveToFirestore() async {
+    final uid = _uid;
+    if (uid == null) return;
+    setState(() => _saving = true);
+    try {
+      await FirebaseFirestore.instance.collection('parents').doc(uid).update({
+        'bedtimeEnabled': _bedtimeEnabled,
+        'dailyLimitMinutes': _dailyLimitMinutes,
+        'bedtimeHour': _bedtimeHour,
+      });
+    } catch (_) {
+      // If update fails (doc doesn't exist), try set with merge
+      try {
+        final uid2 = _uid;
+        if (uid2 != null) {
+          await FirebaseFirestore.instance.collection('parents').doc(uid2).set({
+            'bedtimeEnabled': _bedtimeEnabled,
+            'dailyLimitMinutes': _dailyLimitMinutes,
+            'bedtimeHour': _bedtimeHour,
+          }, SetOptions(merge: true));
+        }
+      } catch (_) {}
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  String get _dailyLimitLabel {
+    final h = _dailyLimitMinutes ~/ 60;
+    final m = _dailyLimitMinutes % 60;
+    if (m == 0) return 'Activo · $h ${h == 1 ? 'hora' : 'horas'}';
+    return 'Activo · ${h}h ${m}m';
+  }
+
+  String get _bedtimeLabel =>
+      'Desde las ${_bedtimeHour.toString().padLeft(2, '0')}:00';
+
+  Future<void> _pickDailyLimit() async {
+    final options = [
+      (label: '30 minutos', minutes: 30),
+      (label: '1 hora', minutes: 60),
+      (label: '1.5 horas', minutes: 90),
+      (label: '2 horas', minutes: 120),
+      (label: '3 horas', minutes: 180),
+    ];
+    final chosen = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('Límite Diario',
+            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
+        children: options
+            .map((o) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, o.minutes),
+                  child: Text(o.label,
+                      style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          fontWeight: _dailyLimitMinutes == o.minutes
+                              ? FontWeight.w800
+                              : FontWeight.w500)),
+                ))
+            .toList(),
+      ),
+    );
+    if (chosen != null && mounted) {
+      setState(() => _dailyLimitMinutes = chosen);
+      await _saveToFirestore();
+    }
+  }
+
+  Future<void> _pickBedtimeHour() async {
+    final hours = [18, 19, 20, 21, 22];
+    final chosen = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text('Hora de Dormir',
+            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
+        children: hours
+            .map((h) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(ctx, h),
+                  child: Text('${h.toString().padLeft(2, '0')}:00',
+                      style: GoogleFonts.nunito(
+                          fontSize: 14,
+                          fontWeight: _bedtimeHour == h
+                              ? FontWeight.w800
+                              : FontWeight.w500)),
+                ))
+            .toList(),
+      ),
+    );
+    if (chosen != null && mounted) {
+      setState(() => _bedtimeHour = chosen);
+      await _saveToFirestore();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -815,43 +975,55 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                   color: Colors.white.withValues(alpha: 0.55),
                 ),
               ),
+              if (_saving) ...[
+                const Spacer(),
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                      color: Colors.white54, strokeWidth: 1.5),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 16),
           // Daily limit
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Límite Diario',
-                        style: GoogleFonts.nunito(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+          GestureDetector(
+            onTap: _pickDailyLimit,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Límite Diario',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Activo · 2 horas',
-                        style: GoogleFonts.nunito(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.55),
+                        Text(
+                          _dailyLimitLabel,
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Icon(Icons.chevron_right_rounded,
-                    color: Colors.white.withValues(alpha: 0.4)),
-              ],
+                  Icon(Icons.chevron_right_rounded,
+                      color: Colors.white.withValues(alpha: 0.4)),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -865,30 +1037,36 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Modo Dormir',
-                        style: GoogleFonts.nunito(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  child: GestureDetector(
+                    onTap: _bedtimeEnabled ? _pickBedtimeHour : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Modo Dormir',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      Text(
-                        'Desde las 20:30',
-                        style: GoogleFonts.nunito(
-                          fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.55),
+                        Text(
+                          _bedtimeEnabled ? _bedtimeLabel : 'Desactivado',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 Switch(
                   value: _bedtimeEnabled,
-                  onChanged: (v) => setState(() => _bedtimeEnabled = v),
+                  onChanged: (v) async {
+                    setState(() => _bedtimeEnabled = v);
+                    await _saveToFirestore();
+                  },
                   activeThumbColor: const Color(0xFF2ECC71),
                   inactiveTrackColor: Colors.white24,
                   thumbColor: WidgetStateProperty.all(Colors.white),
@@ -1104,12 +1282,113 @@ class _SessionRow extends StatelessWidget {
 // ── Achievement card ──────────────────────────────────────────────────────────
 
 class _AchievementCard extends StatelessWidget {
-  const _AchievementCard({required this.profiles});
+  const _AchievementCard({required this.profiles, required this.sessions});
   final List<ChildProfile> profiles;
+  final List<PracticeSession> sessions;
+
+  /// Derive achievement title + description from real session data.
+  ({String title, String description, String achiever}) get _achievement {
+    if (profiles.isEmpty || sessions.isEmpty) {
+      return (
+        title: 'Sin logros aún',
+        description: 'Los logros aparecerán cuando tu hijo complete misiones.',
+        achiever: 'Tu hijo',
+      );
+    }
+
+    final achiever = profiles.first.name;
+
+    // Find session with most completions
+    final best =
+        sessions.reduce((a, b) => a.completedCount >= b.completedCount ? a : b);
+    final count = best.completedCount;
+
+    if (count == 0) {
+      return (
+        title: '¡Comenzando!',
+        description: '$achiever ha iniciado su primera sesión. ¡Sigue así!',
+        achiever: achiever,
+      );
+    }
+
+    // Compute total completed across all sessions
+    final total = sessions.fold<int>(0, (sum, s) => sum + s.completedCount);
+
+    if (total >= 10) {
+      return (
+        title: '¡Explorador Galáctico!',
+        description:
+            '$achiever completó $total misiones en total. ¡Impresionante!',
+        achiever: achiever,
+      );
+    } else if (total >= 5) {
+      return (
+        title: '¡Aprendiz Estelar!',
+        description: '$achiever completó $total misiones. ¡Va por buen camino!',
+        achiever: achiever,
+      );
+    } else {
+      return (
+        title: '¡Primer Logro!',
+        description: '$achiever completó su primera misión. ¡Felicitaciones!',
+        achiever: achiever,
+      );
+    }
+  }
+
+  void _sendCongrats(BuildContext context, String achiever) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Enviar Felicitación',
+            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
+        content: Text(
+          '¡Comparte el logro de $achiever con tu familia! 🎉\n\n"$achiever ha conseguido un nuevo logro en EduPlay. ¡Sigue aprendiendo!"',
+          style: GoogleFonts.nunito(fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cerrar',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _kRed,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              // Clipboard copy for easy sharing
+              Clipboard.setData(ClipboardData(
+                text:
+                    '¡$achiever ha conseguido un nuevo logro en EduPlay! 🎉 #EduPlay',
+              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Mensaje copiado al portapapeles',
+                    style: GoogleFonts.nunito(),
+                  ),
+                  backgroundColor: _kNavy,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            child: Text('Copiar mensaje',
+                style: GoogleFonts.nunito(
+                    color: Colors.white, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final achiever = profiles.isNotEmpty ? profiles.first.name : 'Tu hijo';
+    final a = _achievement;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1157,16 +1436,17 @@ class _AchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '¡Explorador Galáctico!',
+                  a.title,
                   style: GoogleFonts.fredoka(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: _kNavy,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '$achiever completó 10 misiones de\nCiencias en una semana.',
+                  a.description,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.nunito(
                     fontSize: 12,
@@ -1176,7 +1456,9 @@ class _AchievementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: profiles.isEmpty
+                      ? null
+                      : () => _sendCongrats(context, a.achiever),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _kRed,
                     foregroundColor: Colors.white,
@@ -1204,35 +1486,51 @@ class _AchievementCard extends StatelessWidget {
 
 // ── Challenges card ───────────────────────────────────────────────────────────
 
-class _ChallengesCard extends StatelessWidget {
+class _ChallengesCard extends StatefulWidget {
   const _ChallengesCard();
 
-  static const _challenges = [
-    (
-      icon: Icons.calculate_rounded,
-      title: 'Tablas de Multiplicar del 7',
-      subtitle: 'Asignado por: Profe Marta',
-      tag: 'Urgente',
-      tagColor: Color(0xFFC0392B),
-    ),
-    (
-      icon: Icons.eco_rounded,
-      title: 'Ciclo de la Vida: Las Plantas',
-      subtitle: 'Basado en intereses de Sofía',
-      tag: 'Recomendado',
-      tagColor: Color(0xFF2ECC71),
-    ),
-    (
-      icon: Icons.translate_rounded,
-      title: 'Vocabulario: La Ciudad',
-      subtitle: 'Inglés Nivel A1',
-      tag: 'Próximamente',
-      tagColor: Color(0xFF95A5A6),
-    ),
-  ];
+  @override
+  State<_ChallengesCard> createState() => _ChallengesCardState();
+}
+
+class _ChallengesCardState extends State<_ChallengesCard> {
+  List<Map<String, dynamic>> _challenges = [];
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (mounted) setState(() => _loaded = true);
+      return;
+    }
+    try {
+      final snap = await FirebaseFirestore.instance
+          .collection('parents')
+          .doc(uid)
+          .collection('challenges')
+          .orderBy('createdAt', descending: false)
+          .get();
+      if (mounted) {
+        setState(() {
+          _challenges = snap.docs.map((d) => d.data()).toList();
+          _loaded = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pendingCount = _challenges.length;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1261,38 +1559,104 @@ class _ChallengesCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEEDF8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '4 Tareas Pendientes',
-                  style: GoogleFonts.nunito(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: _kNavy,
+              if (pendingCount > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEDF8),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '$pendingCount ${pendingCount == 1 ? 'Tarea Pendiente' : 'Tareas Pendientes'}',
+                    style: GoogleFonts.nunito(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: _kNavy,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 14),
-          for (final c in _challenges) ...[
-            _ChallengeTile(
-              icon: c.icon,
-              title: c.title,
-              subtitle: c.subtitle,
-              tag: c.tag,
-              tagColor: c.tagColor,
-            ),
-            const Divider(height: 1, color: Color(0xFFF3F4F6)),
-          ],
+          if (!_loaded)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (_challenges.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(Icons.assignment_outlined,
+                        size: 40, color: Colors.grey[300]),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No hay retos asignados',
+                      style: GoogleFonts.fredoka(
+                          fontSize: 15, color: Colors.grey[400]),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Los desafíos de maestros aparecerán aquí.',
+                      style: GoogleFonts.nunito(
+                          fontSize: 12, color: Colors.grey[400]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            for (final c in _challenges) ...[
+              _ChallengeTile(
+                icon: _iconForSubject(c['subject'] as String? ?? ''),
+                title: c['title'] as String? ?? 'Desafío',
+                subtitle: c['assignedBy'] != null
+                    ? 'Asignado por: ${c['assignedBy']}'
+                    : (c['subtitle'] as String? ?? ''),
+                tag: c['tag'] as String? ?? 'Pendiente',
+                tagColor: _colorForTag(c['tag'] as String? ?? ''),
+              ),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+            ],
         ],
       ),
     );
+  }
+
+  IconData _iconForSubject(String subject) {
+    switch (subject.toLowerCase()) {
+      case 'math':
+      case 'matemáticas':
+        return Icons.calculate_rounded;
+      case 'science':
+      case 'ciencias':
+        return Icons.eco_rounded;
+      case 'english':
+      case 'inglés':
+        return Icons.translate_rounded;
+      case 'history':
+      case 'historia':
+        return Icons.history_edu_rounded;
+      default:
+        return Icons.school_rounded;
+    }
+  }
+
+  Color _colorForTag(String tag) {
+    switch (tag.toLowerCase()) {
+      case 'urgente':
+        return const Color(0xFFC0392B);
+      case 'recomendado':
+        return const Color(0xFF2ECC71);
+      default:
+        return const Color(0xFF95A5A6);
+    }
   }
 }
 
@@ -2121,17 +2485,13 @@ class _ChildActivitySheet extends StatelessWidget {
             stream: PracticeSessionsService.watchAllSessionsByChild(profile.id),
             builder: (context, snap) {
               final sessions = snap.data ?? [];
-              final activeSessions =
-                  sessions.where((s) => s.isActive).toList();
+              final activeSessions = sessions.where((s) => s.isActive).toList();
               final completedSessions =
                   sessions.where((s) => s.isCompleted).toList();
-              final allCompletedGames = sessions
-                  .expand((s) => s.completedGameIds)
-                  .toSet()
-                  .length;
-              final allScores = sessions
-                  .expand((s) => s.scoreMap.values)
-                  .toList();
+              final allCompletedGames =
+                  sessions.expand((s) => s.completedGameIds).toSet().length;
+              final allScores =
+                  sessions.expand((s) => s.scoreMap.values).toList();
               final avgScore = allScores.isEmpty
                   ? 0
                   : (allScores.reduce((a, b) => a + b) / allScores.length)
@@ -2501,9 +2861,7 @@ class _SessionDetailRow extends StatelessWidget {
                 Text(
                   session.isActive
                       ? 'Sesión activa'
-                      : (session.isCompleted
-                          ? 'Completada'
-                          : 'En progreso'),
+                      : (session.isCompleted ? 'Completada' : 'En progreso'),
                   style: GoogleFonts.nunito(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
@@ -2513,8 +2871,8 @@ class _SessionDetailRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${session.completedCount} / ${session.totalCount} juegos completados',
-                  style: GoogleFonts.nunito(
-                      fontSize: 11, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 11, color: Colors.grey[500]),
                 ),
               ],
             ),
@@ -2541,16 +2899,15 @@ class _SessionDetailRow extends StatelessWidget {
                     value: session.progressFraction,
                     minHeight: 5,
                     backgroundColor: const Color(0xFFF3F4F6),
-                    color: session.isCompleted
-                        ? const Color(0xFF6366F1)
-                        : _kCoral,
+                    color:
+                        session.isCompleted ? const Color(0xFF6366F1) : _kCoral,
                   ),
                 ),
               ),
               Text(
                 '${(session.progressFraction * 100).toInt()}%',
-                style: GoogleFonts.nunito(
-                    fontSize: 10, color: Colors.grey[400]),
+                style:
+                    GoogleFonts.nunito(fontSize: 10, color: Colors.grey[400]),
               ),
             ],
           ),
