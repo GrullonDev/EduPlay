@@ -9,6 +9,7 @@ import 'package:edu_play/features/subscription/services/subscription_service.dar
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/features/subscription/services/stripe_service.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -156,7 +157,16 @@ class _SidebarPanel extends StatelessWidget {
           const SizedBox(height: 8),
           // Logout
           InkWell(
-            onTap: () {},
+            onTap: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  RouterPaths.login,
+                  (route) => false,
+                );
+              }
+            },
             borderRadius: BorderRadius.circular(10),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -165,7 +175,7 @@ class _SidebarPanel extends StatelessWidget {
                   const Icon(Icons.logout_rounded, size: 18, color: _kRed),
                   const SizedBox(width: 12),
                   Text(
-                    'Logout',
+                    'Cerrar sesión',
                     style: GoogleFonts.nunito(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -861,30 +871,50 @@ class _FieldLabel extends StatelessWidget {
       );
 }
 
-class _PwField extends StatelessWidget {
+class _PwField extends StatefulWidget {
   const _PwField({
     required this.label,
     required this.ctrl,
     required this.hint,
-    required this.showPw,
+    // showPw param kept for backward compat but ignored — state manages it
+    this.showPw = false,
   });
   final String label;
   final TextEditingController ctrl;
   final String hint;
+  // ignore: unused_field
   final bool showPw;
+
+  @override
+  State<_PwField> createState() => _PwFieldState();
+}
+
+class _PwFieldState extends State<_PwField> {
+  bool _visible = false;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FieldLabel(label),
+        _FieldLabel(widget.label),
         const SizedBox(height: 6),
         TextFormField(
-          controller: ctrl,
-          obscureText: !showPw,
+          controller: widget.ctrl,
+          obscureText: !_visible,
           style: GoogleFonts.nunito(fontSize: 14),
-          decoration: _sharedInputDec(hint),
+          decoration: _sharedInputDec(widget.hint).copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(
+                _visible
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                size: 18,
+                color: Colors.grey[400],
+              ),
+              onPressed: () => setState(() => _visible = !_visible),
+            ),
+          ),
         ),
       ],
     );
@@ -1720,15 +1750,42 @@ class _SecuritySectionState extends State<_SecuritySection> {
       // Delete Firestore data
       final db = FirebaseFirestore.instance;
       final uid = user.uid;
-      // Delete child profiles subcollection
+      // Delete child profiles subcollection + clean up child_pins
       final profilesSnap = await db
           .collection('parents')
           .doc(uid)
           .collection('child_profiles')
           .get();
       for (final doc in profilesSnap.docs) {
+        final pin = doc.data()['pin'] as String?;
+        if (pin != null) {
+          // Remove the global child_pins index entry
+          try {
+            await db.collection('child_pins').doc(pin).delete();
+          } catch (_) {}
+        }
         await doc.reference.delete();
       }
+
+      // Delete all practice sessions owned by this parent
+      final sessionsSnap = await db
+          .collection('practice_sessions')
+          .where('parentUid', isEqualTo: uid)
+          .get();
+      for (final doc in sessionsSnap.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete challenges subcollection
+      final challengesSnap = await db
+          .collection('parents')
+          .doc(uid)
+          .collection('challenges')
+          .get();
+      for (final doc in challengesSnap.docs) {
+        await doc.reference.delete();
+      }
+
       // Delete parent doc
       await db.collection('parents').doc(uid).delete();
       // Delete subscription
@@ -1737,7 +1794,14 @@ class _SecuritySectionState extends State<_SecuritySection> {
       // Delete Firebase Auth account
       await user.delete();
 
-      // AuthGate will handle redirect
+      // Navigate to login after deletion
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouterPaths.login,
+          (route) => false,
+        );
+      }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       String msg = 'No se pudo eliminar la cuenta.';
@@ -1900,6 +1964,13 @@ class _SecuritySectionState extends State<_SecuritySection> {
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     await FirebaseAuth.instance.signOut();
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        RouterPaths.login,
+                        (route) => false,
+                      );
+                    }
                   },
                   icon: const Icon(Icons.logout_rounded, size: 16),
                   label: Text(

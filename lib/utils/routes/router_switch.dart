@@ -44,8 +44,9 @@ class AppRouter {
     // as the route name. Strip the query string so the switch matches correctly.
     // ChildPortalPage reads the pin/profile data from Uri.base.fragment itself.
     final rawName = settings.name ?? '';
-    final String name =
-        rawName.contains('?') ? rawName.substring(0, rawName.indexOf('?')) : rawName;
+    final String name = rawName.contains('?')
+        ? rawName.substring(0, rawName.indexOf('?'))
+        : rawName;
 
     switch (name) {
       case RouterPaths.root:

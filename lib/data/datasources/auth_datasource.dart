@@ -108,19 +108,18 @@ class ImplAuthDatasource implements AuthDatasource {
     required String email,
     required String password,
   }) async {
+    // Do NOT catch FirebaseAuthException here — rethrow it so the caller
+    // can differentiate error codes (wrong-password, user-not-found, etc.)
     try {
-      UserCredential userCredential =
-          await _firebaseAuth.signInWithEmailAndPassword(
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint('Error: $e');
-      return null;
+      return credential.user;
+    } on FirebaseAuthException {
+      rethrow; // let LoginBloc handle specific codes
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint('loginParent unexpected error: $e');
       return null;
     }
   }

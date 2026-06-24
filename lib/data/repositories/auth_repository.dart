@@ -63,11 +63,9 @@ class ImplAuthRepository implements AuthRepository {
   Future<User?> loginParent({
     required String email,
     required String password,
-  }) {
-    return _authDatasource.loginParent(
-      email: email,
-      password: password,
-    );
+  }) async {
+    // Let FirebaseAuthException propagate so LoginBloc can show specific messages.
+    return _authDatasource.loginParent(email: email, password: password);
   }
 
   @override
