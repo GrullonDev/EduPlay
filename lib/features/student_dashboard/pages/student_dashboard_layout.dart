@@ -676,7 +676,7 @@ class _MissionBanner extends StatelessWidget {
     final showMascot = !s.isMobile;
 
     return Container(
-      height: s.when(mobile: 160, tablet: 175, desktop: 185),
+      height: s.when(mobile: 200, tablet: 185, desktop: 195),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -792,7 +792,7 @@ class _MissionBanner extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
-                if (!s.isXs)
+                if (!s.isMobile)
                   ConstrainedBox(
                     constraints: BoxConstraints(
                       maxWidth: showMascot ? 210 : double.infinity,

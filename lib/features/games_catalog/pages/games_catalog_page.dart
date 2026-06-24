@@ -4,6 +4,7 @@ import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 
@@ -38,6 +39,9 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
   };
   bool _gridView = true;
   String _searchQuery = '';
+  String _sortBy = 'Popular'; // 'Popular' | 'Newest' | 'Level'
+  int _visibleCount = 9; // games shown before "load more"
+  static const _pageSize = 6; // how many each "load more" reveals
   final _searchController = TextEditingController();
   int _localPoints = 0;
 
@@ -71,7 +75,7 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
   }
 
   List<CatalogGame> get _filtered {
-    return allCatalogGames.where((g) {
+    final list = allCatalogGames.where((g) {
       if (_selectedSubject != GameSubject.all &&
           g.subject != _selectedSubject) {
         return false;
@@ -90,6 +94,16 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
       }
       return true;
     }).toList();
+
+    switch (_sortBy) {
+      case 'Newest':
+        list.sort((a, b) => b.level.compareTo(a.level));
+      case 'Level':
+        list.sort((a, b) => a.level.compareTo(b.level));
+      default: // 'Popular' — sort by xpProgress desc as popularity proxy
+        list.sort((a, b) => b.xpProgress.compareTo(a.xpProgress));
+    }
+    return list;
   }
 
   @override
@@ -102,7 +116,10 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
         children: [
           _TopBar(
             searchController: _searchController,
-            onSearch: (q) => setState(() => _searchQuery = q),
+            onSearch: (q) => setState(() {
+              _searchQuery = q;
+              _visibleCount = 9;
+            }),
             childProfile: widget.childProfile,
             localPoints: _localPoints,
           ),
@@ -115,17 +132,21 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                         selectedSubject: _selectedSubject,
                         selectedAges: _selectedAges,
                         selectedDifficulties: _selectedDifficulties,
-                        onSubjectChanged: (s) =>
-                            setState(() => _selectedSubject = s),
+                        onSubjectChanged: (s) => setState(() {
+                          _selectedSubject = s;
+                          _visibleCount = 9;
+                        }),
                         onAgeToggled: (a) => setState(() {
                           _selectedAges.contains(a)
                               ? _selectedAges.remove(a)
                               : _selectedAges.add(a);
+                          _visibleCount = 9;
                         }),
                         onDifficultyToggled: (d) => setState(() {
                           _selectedDifficulties.contains(d)
                               ? _selectedDifficulties.remove(d)
                               : _selectedDifficulties.add(d);
+                          _visibleCount = 9;
                         }),
                       ),
                       Expanded(
@@ -135,6 +156,14 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                           onToggleView: () =>
                               setState(() => _gridView = !_gridView),
                           activeFilterCount: _activeFilterCount,
+                          sortBy: _sortBy,
+                          onSortChanged: (v) => setState(() {
+                            _sortBy = v;
+                            _visibleCount = 9;
+                          }),
+                          visibleCount: _visibleCount,
+                          onLoadMore: () =>
+                              setState(() => _visibleCount += _pageSize),
                         ),
                       ),
                     ],
@@ -144,21 +173,33 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
                     gridView: _gridView,
                     onToggleView: () => setState(() => _gridView = !_gridView),
                     activeFilterCount: _activeFilterCount,
+                    sortBy: _sortBy,
+                    onSortChanged: (v) => setState(() {
+                      _sortBy = v;
+                      _visibleCount = 9;
+                    }),
+                    visibleCount: _visibleCount,
+                    onLoadMore: () =>
+                        setState(() => _visibleCount += _pageSize),
                     filterDrawer: _FilterPanel(
                       selectedSubject: _selectedSubject,
                       selectedAges: _selectedAges,
                       selectedDifficulties: _selectedDifficulties,
-                      onSubjectChanged: (s) =>
-                          setState(() => _selectedSubject = s),
+                      onSubjectChanged: (s) => setState(() {
+                        _selectedSubject = s;
+                        _visibleCount = 9;
+                      }),
                       onAgeToggled: (a) => setState(() {
                         _selectedAges.contains(a)
                             ? _selectedAges.remove(a)
                             : _selectedAges.add(a);
+                        _visibleCount = 9;
                       }),
                       onDifficultyToggled: (d) => setState(() {
                         _selectedDifficulties.contains(d)
                             ? _selectedDifficulties.remove(d)
                             : _selectedDifficulties.add(d);
+                        _visibleCount = 9;
                       }),
                     ),
                   ),
@@ -298,8 +339,8 @@ class _TopBarState extends State<_TopBar> {
               if (isDesktop) ...[
                 const SizedBox(width: 32),
                 // Juegos — already here, no-op
-                Padding(
-                  padding: const EdgeInsets.only(right: 24),
+                const Padding(
+                  padding: EdgeInsets.only(right: 24),
                   child: _NavTab(label: 'Juegos', selected: true),
                 ),
                 // Aprender → student dashboard (needs a profile)
@@ -337,8 +378,8 @@ class _TopBarState extends State<_TopBar> {
                   child: _NavTab(
                     label: 'Salón',
                     selected: false,
-                    onTap: () => Navigator.pushNamed(
-                        context, RouterPaths.childPortal),
+                    onTap: () =>
+                        Navigator.pushNamed(context, RouterPaths.childPortal),
                   ),
                 ),
                 // Reportes → progress reports
@@ -375,7 +416,8 @@ class _TopBarState extends State<_TopBar> {
                       color: Colors.grey[500], size: 22),
                   onPressed: _toggleSearch,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  constraints:
+                      const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
               if (isDesktop) const SizedBox(width: 12),
               // Settings
@@ -444,8 +486,198 @@ class _CatalogPointsBadge extends StatelessWidget {
 
 // ── Settings sheet ────────────────────────────────────────────────────────────
 
-class _SettingsSheet extends StatelessWidget {
+class _SettingsSheet extends StatefulWidget {
   const _SettingsSheet();
+
+  @override
+  State<_SettingsSheet> createState() => _SettingsSheetState();
+}
+
+class _SettingsSheetState extends State<_SettingsSheet> {
+  static const _kNotifKey = 'edu_play_notifications_enabled';
+  static const _kThemeKey = 'edu_play_theme';
+
+  bool _notifEnabled = true;
+  String _theme = 'Claro';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _notifEnabled = prefs.getBool(_kNotifKey) ?? true;
+      _theme = prefs.getString(_kThemeKey) ?? 'Claro';
+    });
+  }
+
+  Future<void> _setNotif(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kNotifKey, value);
+    if (!mounted) return;
+    setState(() => _notifEnabled = value);
+  }
+
+  Future<void> _setTheme(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kThemeKey, value);
+    if (!mounted) return;
+    setState(() => _theme = value);
+  }
+
+  void _showLanguagePicker() {
+    final languages = [
+      ('Español', '🇪🇸', true),
+      ('English', '🇺🇸', false),
+      ('Français', '🇫🇷', false),
+      ('Português', '🇧🇷', false),
+    ];
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Seleccionar idioma',
+          style: GoogleFonts.fredoka(
+              fontSize: 20, fontWeight: FontWeight.w700, color: _kNavy),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: languages.map((lang) {
+            final (name, flag, available) = lang;
+            return Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Text(flag, style: const TextStyle(fontSize: 22)),
+                title: Text(
+                  name,
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w700,
+                    color: available ? _kNavy : Colors.grey[400],
+                  ),
+                ),
+                trailing: available
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: _kCoral, size: 22)
+                    : Text(
+                        'próximamente',
+                        style: GoogleFonts.nunito(
+                            fontSize: 11, color: Colors.grey[400]),
+                      ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                onTap: available
+                    ? () => Navigator.of(ctx).pop()
+                    : () {
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('🌐  $name — próximamente',
+                                style: GoogleFonts.nunito()),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      },
+              ),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cerrar',
+                style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w700, color: _kNavy)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showThemePicker() {
+    final themes = [
+      ('Claro', Icons.light_mode_rounded, true),
+      ('Oscuro', Icons.dark_mode_rounded, false),
+      ('Sistema', Icons.settings_system_daydream_rounded, false),
+    ];
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Seleccionar tema',
+          style: GoogleFonts.fredoka(
+              fontSize: 20, fontWeight: FontWeight.w700, color: _kNavy),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: themes.map((t) {
+            final (name, icon, available) = t;
+            final isSelected = _theme == name;
+            return Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Icon(icon,
+                    color: available ? _kNavy : Colors.grey[400], size: 22),
+                title: Text(
+                  name,
+                  style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w700,
+                    color: available ? _kNavy : Colors.grey[400],
+                  ),
+                ),
+                trailing: isSelected
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: _kCoral, size: 22)
+                    : available
+                        ? null
+                        : Text(
+                            'próximamente',
+                            style: GoogleFonts.nunito(
+                                fontSize: 11, color: Colors.grey[400]),
+                          ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                onTap: available
+                    ? () {
+                        Navigator.of(ctx).pop();
+                        _setTheme(name);
+                      }
+                    : () {
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('🎨  Tema $name — próximamente',
+                                style: GoogleFonts.nunito()),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      },
+              ),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Cerrar',
+                style: GoogleFonts.nunito(
+                    fontWeight: FontWeight.w700, color: _kNavy)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -486,20 +718,48 @@ class _SettingsSheet extends StatelessWidget {
               icon: Icons.language_rounded,
               title: 'Idioma',
               subtitle: 'Español',
-              onTap: () {},
+              onTap: _showLanguagePicker,
             ),
-            _SettingsTile(
-              icon: Icons.notifications_outlined,
-              title: 'Notificaciones',
-              subtitle: 'Activadas',
-              onTap: () {},
+            // Notifications — trailing toggle instead of chevron
+            Material(
+              color: Colors.transparent,
+              child: ListTile(
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _kNavy.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.notifications_outlined,
+                      color: _kNavy, size: 20),
+                ),
+                title: Text('Notificaciones',
+                    style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy,
+                        fontSize: 15)),
+                subtitle: Text(
+                  _notifEnabled ? 'Activadas' : 'Desactivadas',
+                  style:
+                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
+                ),
+                trailing: Switch.adaptive(
+                  value: _notifEnabled,
+                  activeThumbColor: _kCoral,
+                  activeTrackColor: _kCoral.withValues(alpha: 0.35),
+                  onChanged: _setNotif,
+                ),
+                onTap: () => _setNotif(!_notifEnabled),
+              ),
             ),
             _SettingsTile(
               icon: Icons.palette_outlined,
               title: 'Tema',
-              subtitle: 'Claro',
-              onTap: () {},
+              subtitle: _theme,
+              onTap: _showThemePicker,
             ),
+            const Divider(height: 1, indent: 72, endIndent: 24),
             _SettingsTile(
               icon: Icons.person_outline_rounded,
               title: 'Cambiar usuario',
@@ -608,8 +868,8 @@ class _ProfileDetailSheet extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 'Enfoque: ${profile.focusSubject}',
-                style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.grey[500]),
+                style:
+                    GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
               ),
             ],
             if (profile.levelLabel.isNotEmpty) ...[
@@ -624,9 +884,7 @@ class _ProfileDetailSheet extends StatelessWidget {
                 child: Text(
                   profile.levelLabel,
                   style: GoogleFonts.nunito(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: _kNavy),
+                      fontSize: 13, fontWeight: FontWeight.w700, color: _kNavy),
                 ),
               ),
             ],
@@ -1088,6 +1346,10 @@ class _MainContent extends StatelessWidget {
     required this.filtered,
     required this.gridView,
     required this.onToggleView,
+    required this.sortBy,
+    required this.onSortChanged,
+    required this.visibleCount,
+    required this.onLoadMore,
     this.filterDrawer,
     this.activeFilterCount = 0,
   });
@@ -1095,8 +1357,11 @@ class _MainContent extends StatelessWidget {
   final List<CatalogGame> filtered;
   final bool gridView;
   final VoidCallback onToggleView;
+  final String sortBy;
+  final ValueChanged<String> onSortChanged;
+  final int visibleCount;
+  final VoidCallback onLoadMore;
   final Widget? filterDrawer;
-  /// How many non-default filters are active (for the badge on mobile).
   final int activeFilterCount;
 
   void _openFilters(BuildContext context) {
@@ -1183,39 +1448,43 @@ class _MainContent extends StatelessWidget {
                     GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
               ),
               const SizedBox(width: 6),
-              _SortDropdown(),
+              _SortDropdown(value: sortBy, onChanged: onSortChanged),
               const SizedBox(width: 12),
             ],
             _ViewToggle(gridView: gridView, onToggle: onToggleView),
           ],
         ),
         const SizedBox(height: 20),
-        // Game grid
-        filtered.isEmpty
-            ? _EmptyState()
-            : gridView
-                ? _GameGrid(games: filtered)
-                : _GameList(games: filtered),
+        // Game grid — sliced to visibleCount
+        () {
+          final visible = filtered.take(visibleCount).toList();
+          if (filtered.isEmpty) return _EmptyState();
+          return gridView
+              ? _GameGrid(games: visible)
+              : _GameList(games: visible);
+        }(),
         const SizedBox(height: 24),
-        // Load more
-        Center(
-          child: OutlinedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.expand_more_rounded),
-            label: Text(
-              'Cargar más juegos',
-              style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _kNavy,
-              side: BorderSide(color: Colors.grey.shade300),
-              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+        // Load more — hidden when everything is already visible
+        if (visibleCount < filtered.length)
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: onLoadMore,
+              icon: const Icon(Icons.expand_more_rounded),
+              label: Text(
+                'Cargar más juegos  (${filtered.length - visibleCount} restantes)',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _kNavy,
+                side: BorderSide(color: Colors.grey.shade300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
             ),
           ),
-        ),
         const SizedBox(height: 32),
       ],
     );
@@ -1239,9 +1508,7 @@ class _FilterButton extends StatelessWidget {
           color: activeCount > 0 ? _kNavy : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: activeCount > 0
-                ? _kNavy
-                : Colors.grey.shade300,
+            color: activeCount > 0 ? _kNavy : Colors.grey.shade300,
           ),
         ),
         child: Row(
@@ -1659,18 +1926,15 @@ class _FeaturedBadge extends StatelessWidget {
 
 // ── Game grid / list ──────────────────────────────────────────────────────────
 
-class _SortDropdown extends StatefulWidget {
-  @override
-  State<_SortDropdown> createState() => _SortDropdownState();
-}
-
-class _SortDropdownState extends State<_SortDropdown> {
-  String _value = 'Popular';
+class _SortDropdown extends StatelessWidget {
+  const _SortDropdown({required this.value, required this.onChanged});
+  final String value;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return DropdownButton<String>(
-      value: _value,
+      value: value,
       underline: const SizedBox.shrink(),
       style: GoogleFonts.nunito(
           fontSize: 13, fontWeight: FontWeight.w700, color: _kNavy),
@@ -1679,7 +1943,7 @@ class _SortDropdownState extends State<_SortDropdown> {
         DropdownMenuItem(value: 'Newest', child: Text('Más nuevos')),
         DropdownMenuItem(value: 'Level', child: Text('Nivel')),
       ],
-      onChanged: (v) => setState(() => _value = v!),
+      onChanged: (v) => onChanged(v!),
     );
   }
 }
@@ -2145,150 +2409,109 @@ class _EmptyState extends StatelessWidget {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 
+/// Compact single-bar footer — brand · links · copyright on one line (desktop)
+/// or stacked minimally on mobile.
 class _CatalogFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = ScreenSize.of(context).isDesktop;
+    final s = ScreenSize.of(context);
     final year = DateTime.now().year;
+
+    const links = [
+      ('Recursos para maestros', RouterPaths.parentGuide),
+      ('Guía para padres', RouterPaths.parentGuide),
+      ('Privacidad', null),
+      ('Términos', null),
+    ];
+
+    void snack(BuildContext ctx, String label) =>
+        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+          content:
+              Text('🚧  $label — próximamente', style: GoogleFonts.nunito()),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ));
+
+    Widget linkRow() => Wrap(
+          spacing: 16,
+          runSpacing: 4,
+          children: [
+            for (final (label, route) in links)
+              GestureDetector(
+                onTap: route != null
+                    ? () => Navigator.pushNamed(context, route)
+                    : () => snack(context, label),
+                child: Text(
+                  label,
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    color:
+                        _kNavy.withValues(alpha: route != null ? 0.55 : 0.35),
+                    decoration: TextDecoration.underline,
+                    decorationColor:
+                        _kNavy.withValues(alpha: route != null ? 0.3 : 0.15),
+                  ),
+                ),
+              ),
+          ],
+        );
 
     return Container(
       color: const Color(0xFFEEEDF8),
       padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? 40 : 24,
-        vertical: 28,
+        horizontal: s.isDesktop ? 40 : 20,
+        vertical: 14,
       ),
-      child: isDesktop
+      child: s.isDesktop
           ? Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _FooterBrand()),
-                Expanded(
-                    child: _FooterLinks('Recursos', [
-                  ('Recursos para maestros', RouterPaths.parentGuide),
-                  ('Guía para padres', RouterPaths.parentGuide),
-                  ('Centro de ayuda', null),
-                ])),
-                Expanded(
-                    child: _FooterLinks('Legal', [
-                  ('Política de privacidad', null),
-                  ('Términos de servicio', null),
-                ])),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      '© $year EduPlay Learning. Todos los derechos reservados.',
-                      style: GoogleFonts.nunito(
-                          fontSize: 11, color: Colors.grey[500]),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ),
+                // Brand
+                Text('EduPlay',
+                    style: GoogleFonts.fredoka(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: _kNavy)),
+                const SizedBox(width: 6),
+                Text('·',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 13)),
+                const SizedBox(width: 6),
+                Text('Aprende jugando',
+                    style: GoogleFonts.nunito(
+                        fontSize: 11, color: Colors.grey[500])),
+                const Spacer(),
+                // Links
+                linkRow(),
+                const Spacer(),
+                // Copyright
+                Text('© $year EduPlay Learning',
+                    style: GoogleFonts.nunito(
+                        fontSize: 11, color: Colors.grey[400])),
               ],
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _FooterBrand(),
-                const SizedBox(height: 20),
-                _FooterLinks('Recursos', [
-                  ('Recursos para maestros', RouterPaths.parentGuide),
-                  ('Guía para padres', RouterPaths.parentGuide),
-                  ('Centro de ayuda', null),
+                Row(children: [
+                  Text('EduPlay',
+                      style: GoogleFonts.fredoka(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: _kNavy)),
+                  const SizedBox(width: 6),
+                  Text('· Aprende jugando',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11, color: Colors.grey[500])),
                 ]),
-                const SizedBox(height: 16),
-                _FooterLinks('Legal', [
-                  ('Política de privacidad', null),
-                  ('Términos de servicio', null),
-                ]),
-                const SizedBox(height: 16),
-                Text(
-                  '© $year EduPlay Learning. Todos los derechos reservados.',
-                  style: GoogleFonts.nunito(
-                      fontSize: 11, color: Colors.grey[500]),
-                ),
+                const SizedBox(height: 8),
+                linkRow(),
+                const SizedBox(height: 6),
+                Text('© $year EduPlay Learning',
+                    style: GoogleFonts.nunito(
+                        fontSize: 10, color: Colors.grey[400])),
               ],
             ),
-    );
-  }
-}
-
-class _FooterBrand extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'EduPlay',
-          style: GoogleFonts.fredoka(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _kNavy,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Empoderando a la próxima generación de exploradores\na través de la excelencia basada en el juego.',
-          style: GoogleFonts.nunito(
-            fontSize: 12,
-            color: Colors.grey[600],
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Icon(Icons.language, size: 16, color: Colors.grey[500]),
-            const SizedBox(width: 8),
-            Icon(Icons.alternate_email, size: 16, color: Colors.grey[500]),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// [links] is a list of (label, route?) pairs. When route is null the item
-/// is shown as plain text (placeholder for future pages).
-class _FooterLinks extends StatelessWidget {
-  const _FooterLinks(this.title, this.links);
-
-  final String title;
-  final List<(String, String?)> links;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: GoogleFonts.nunito(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            color: _kNavy,
-          ),
-        ),
-        const SizedBox(height: 10),
-        for (final (label, route) in links) ...[
-          GestureDetector(
-            onTap: route != null
-                ? () => Navigator.pushNamed(context, route)
-                : null,
-            child: Text(
-              label,
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                color: route != null ? _kNavy.withValues(alpha: 0.7) : Colors.grey[600],
-                decoration: route != null ? TextDecoration.underline : null,
-                decorationColor: _kNavy.withValues(alpha: 0.4),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
-        ],
-      ],
     );
   }
 }

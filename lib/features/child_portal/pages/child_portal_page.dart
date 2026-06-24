@@ -18,7 +18,6 @@ const _kPinKey = 'edu_play_child_pin';
 // ── Color tokens ──────────────────────────────────────────────────────────────
 
 const _kNavy = Color(0xFF1E1B6A);
-const _kNavyDark = Color(0xFF14125A);
 const _kCoral = Color(0xFFFF6E6C);
 const _kLavender = Color(0xFFEEEDF8);
 const _kBg = Color(0xFFF8F7FF);
@@ -137,6 +136,7 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
     _pinError = false;
     _resolvePin(pin);
   }
+
   void _onGuest() => setState(() => _state = const _Guest());
   void _onBackToWelcome() => setState(() => _state = const _Welcome());
 
@@ -240,8 +240,12 @@ class _WelcomeViewState extends State<_WelcomeView> {
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
-    for (final f in _focusNodes) f.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    for (final f in _focusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -263,7 +267,7 @@ class _WelcomeViewState extends State<_WelcomeView> {
     }
     _controllers[idx].text = digit;
     _controllers[idx].selection = TextSelection.fromPosition(
-      TextPosition(offset: 1),
+      const TextPosition(offset: 1),
     );
     setState(() {});
 
@@ -279,250 +283,231 @@ class _WelcomeViewState extends State<_WelcomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_kNavy, _kNavyDark],
-        ),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            // Decorative circles
-            const Positioned(
-              top: -80,
-              right: -80,
-              child: _Circle(size: 260, opacity: 0.04),
-            ),
-            const Positioned(
-              bottom: -100,
-              left: -50,
-              child: _Circle(size: 320, opacity: 0.04),
-            ),
-            const Positioned(
-              top: 80,
-              left: -100,
-              child: _Circle(size: 200, opacity: 0.03),
-            ),
-
-            // Main content
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Mascot
-                        Container(
-                          width: 90,
-                          height: 90,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withValues(alpha: 0.1),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              width: 2,
+    return Stack(
+      children: [
+        const Positioned.fill(child: _FunBackground()),
+        SafeArea(
+          child: Stack(
+            children: [
+              // Main content
+              Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Mascot
+                          Container(
+                            width: 90,
+                            height: 90,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withValues(alpha: 0.1),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.2),
+                                width: 2,
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text('🚀', style: TextStyle(fontSize: 44)),
                             ),
                           ),
-                          child: const Center(
-                            child: Text('🚀', style: TextStyle(fontSize: 44)),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
-                        Text(
-                          '¡Bienvenido a EduPlay!',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.fredoka(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-                        // "Ask adult" banner
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.15),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Text('👋', style: TextStyle(fontSize: 20)),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Pide a un adulto que cree un PIN para ti,\n¡o ingrésalo si ya tienes uno!',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 13,
-                                    color: Colors.white.withValues(alpha: 0.85),
-                                    height: 1.5,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Game previews
-                        const _GamePreviewRow(),
-                        const SizedBox(height: 36),
-
-                        // PIN label
-                        Text(
-                          'INGRESA TU PIN',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.4,
-                            color: Colors.white.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // 4-box PIN entry
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(4, (i) {
-                            final filled = _controllers[i].text.isNotEmpty;
-                            return Container(
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 6),
-                              width: 56,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: _hasError
-                                    ? Colors.red.withValues(alpha: 0.15)
-                                    : Colors.white
-                                        .withValues(alpha: filled ? 0.18 : 0.07),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: _hasError
-                                      ? Colors.red.withValues(alpha: 0.6)
-                                      : Colors.white.withValues(
-                                          alpha: filled ? 0.55 : 0.2),
-                                  width: 2,
-                                ),
-                              ),
-                              child: Center(
-                                child: TextField(
-                                  controller: _controllers[i],
-                                  focusNode: _focusNodes[i],
-                                  textAlign: TextAlign.center,
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(1),
-                                  ],
-                                  style: GoogleFonts.fredoka(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                  obscureText: filled,
-                                  obscuringCharacter: '●',
-                                  decoration: const InputDecoration(
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                    isDense: true,
-                                  ),
-                                  onChanged: (v) => _onDigit(i, v),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-
-                        if (_hasError) ...[
-                          const SizedBox(height: 8),
                           Text(
-                            'PIN incorrecto. Pide a tu papá o mamá que lo revise.',
+                            '¡Bienvenido a EduPlay!',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.nunito(
-                              fontSize: 12,
-                              color: const Color(0xFFFF6E6C),
+                            style: GoogleFonts.fredoka(
+                              fontSize: 28,
                               fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+
+                          // "Ask adult" banner
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Text('👋',
+                                    style: TextStyle(fontSize: 20)),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Pide a un adulto que cree un PIN para ti,\n¡o ingrésalo si ya tienes uno!',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 13,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
+                                      height: 1.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Game previews
+                          const _GamePreviewRow(),
+                          const SizedBox(height: 36),
+
+                          // PIN label
+                          Text(
+                            'INGRESA TU PIN',
+                            style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.4,
+                              color: Colors.white.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // 4-box PIN entry
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(4, (i) {
+                              final filled = _controllers[i].text.isNotEmpty;
+                              return Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 6),
+                                width: 56,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: _hasError
+                                      ? Colors.red.withValues(alpha: 0.15)
+                                      : Colors.white.withValues(
+                                          alpha: filled ? 0.18 : 0.07),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: _hasError
+                                        ? Colors.red.withValues(alpha: 0.6)
+                                        : Colors.white.withValues(
+                                            alpha: filled ? 0.55 : 0.2),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: TextField(
+                                    controller: _controllers[i],
+                                    focusNode: _focusNodes[i],
+                                    textAlign: TextAlign.center,
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(1),
+                                    ],
+                                    style: GoogleFonts.fredoka(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                    obscureText: filled,
+                                    obscuringCharacter: '●',
+                                    decoration: const InputDecoration(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                      isDense: true,
+                                    ),
+                                    onChanged: (v) => _onDigit(i, v),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+
+                          if (_hasError) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'PIN incorrecto. Pide a tu papá o mamá que lo revise.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.nunito(
+                                fontSize: 12,
+                                color: const Color(0xFFFF6E6C),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+
+                          const SizedBox(height: 32),
+
+                          // Skip to guest
+                          TextButton(
+                            onPressed: widget.onGuest,
+                            style: TextButton.styleFrom(
+                              foregroundColor:
+                                  Colors.white.withValues(alpha: 0.55),
+                            ),
+                            child: Text(
+                              'Continuar sin PIN  →',
+                              style: GoogleFonts.nunito(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
-
-                        const SizedBox(height: 32),
-
-                        // Skip to guest
-                        TextButton(
-                          onPressed: widget.onGuest,
-                          style: TextButton.styleFrom(
-                            foregroundColor:
-                                Colors.white.withValues(alpha: 0.55),
-                          ),
-                          child: Text(
-                            'Continuar sin PIN  →',
-                            style: GoogleFonts.nunito(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
 
-            // Footer
-            Positioned(
-              bottom: 12,
-              left: 0,
-              right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'EduPlay · Aprende jugando',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, RouterPaths.login),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      '¿Eres padre o profesor?  Entrar →',
-                      style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.55),
+              // Footer
+              Positioned(
+                bottom: 12,
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'EduPlay · Aprende jugando',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.35),
                       ),
                     ),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, RouterPaths.login),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        '¿Eres padre o profesor?  Entrar →',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        ), // SafeArea
+      ],
     );
   }
 }
@@ -535,204 +520,300 @@ class _GuestView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [_kNavy, _kNavyDark],
-        ),
-      ),
-      child: SafeArea(
-        child: Stack(
-          children: [
-            const Positioned(
-              top: -80,
-              right: -80,
-              child: _Circle(size: 260, opacity: 0.04),
-            ),
-            const Positioned(
-              bottom: -100,
-              left: -50,
-              child: _Circle(size: 320, opacity: 0.04),
-            ),
-
-            // Back button
-            Positioned(
-              top: 12,
-              left: 12,
-              child: IconButton(
-                onPressed: onBack,
-                icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                    color: Colors.white70, size: 20),
+    return Stack(
+      children: [
+        const Positioned.fill(child: _FunBackground()),
+        SafeArea(
+          child: Stack(
+            children: [
+              // Back button
+              Positioned(
+                top: 12,
+                left: 12,
+                child: IconButton(
+                  onPressed: onBack,
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white70, size: 20),
+                ),
               ),
-            ),
 
-            // Content
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.1),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 2,
+              // Content
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.1),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text('🌟', style: TextStyle(fontSize: 44)),
                           ),
                         ),
-                        child: const Center(
-                          child: Text('🌟', style: TextStyle(fontSize: 44)),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Explorando como invitado',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.fredoka(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        '¡Echa un vistazo a los juegos!\nPide a tu papá o mamá que cree un perfil para guardar tu progreso.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.7),
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      const _GamePreviewRow(),
-                      const SizedBox(height: 36),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => Navigator.pushNamed(
-                              context, RouterPaths.gamesCatalog),
-                          // no profile arg → guest mode in catalog
-                          icon: const Icon(Icons.grid_view_rounded, size: 18),
-                          label: Text(
-                            'Ver todos los juegos',
-                            style: GoogleFonts.fredoka(
-                                fontSize: 17, fontWeight: FontWeight.w600),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Explorando como invitado',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.fredoka(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _kCoral,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          '¡Echa un vistazo a los juegos!\nPide a tu papá o mamá que cree un perfil para guardar tu progreso.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.nunito(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        const _GamePreviewRow(),
+                        const SizedBox(height: 36),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => Navigator.pushNamed(
+                                context, RouterPaths.gamesCatalog),
+                            // no profile arg → guest mode in catalog
+                            icon: const Icon(Icons.grid_view_rounded, size: 18),
+                            label: Text(
+                              'Ver todos los juegos',
+                              style: GoogleFonts.fredoka(
+                                  fontSize: 17, fontWeight: FontWeight.w600),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _kCoral,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // Footer
-            Positioned(
-              bottom: 12,
-              left: 0,
-              right: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'EduPlay · Aprende jugando',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        Navigator.pushNamed(context, RouterPaths.login),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      '¿Eres padre o profesor?  Entrar →',
-                      style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white.withValues(alpha: 0.55),
+              // Footer
+              Positioned(
+                bottom: 12,
+                left: 0,
+                right: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'EduPlay · Aprende jugando',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 13,
+                        color: Colors.white.withValues(alpha: 0.35),
                       ),
                     ),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, RouterPaths.login),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        '¿Eres padre o profesor?  Entrar →',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        ), // SafeArea
+      ],
     );
   }
 }
 
 class _GamePreviewRow extends StatelessWidget {
   const _GamePreviewRow();
-  final _previews = const [
-    (icon: '🔢', label: 'Matemáticas', color: Color(0xFF3498DB)),
-    (icon: '📖', label: 'Palabras', color: Color(0xFF9B59B6)),
-    (icon: '🌍', label: 'Ciencias', color: Color(0xFF27AE60)),
-    (icon: '🎨', label: 'Arte', color: Color(0xFFE67E22)),
+
+  static const _previews = [
+    _SubjectData(
+      icon: '🔢',
+      label: 'Matemáticas',
+      tag: 'POPULAR',
+      gradientA: Color(0xFF1565C0),
+      gradientB: Color(0xFF42A5F5),
+      accentColor: Color(0xFF64B5F6),
+    ),
+    _SubjectData(
+      icon: '📖',
+      label: 'Palabras',
+      tag: 'NUEVO',
+      gradientA: Color(0xFF6A1B9A),
+      gradientB: Color(0xFFAB47BC),
+      accentColor: Color(0xFFCE93D8),
+    ),
+    _SubjectData(
+      icon: '🌍',
+      label: 'Ciencias',
+      tag: 'TOP',
+      gradientA: Color(0xFF1B5E20),
+      gradientB: Color(0xFF43A047),
+      accentColor: Color(0xFF81C784),
+    ),
+    _SubjectData(
+      icon: '🎨',
+      label: 'Arte',
+      tag: '🔥',
+      gradientA: Color(0xFFE65100),
+      gradientB: Color(0xFFFFA726),
+      accentColor: Color(0xFFFFCC80),
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Wrap instead of Row so items reflow on narrow phones instead of
-    // triggering a RenderFlex overflow.
     return Wrap(
       alignment: WrapAlignment.center,
-      spacing: 10,
-      runSpacing: 10,
-      children: _previews.map((p) {
-        return Container(
-          width: 72,
-          height: 80,
-          decoration: BoxDecoration(
-            color: p.color.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: p.color.withValues(alpha: 0.35),
-              width: 1.5,
-            ),
+      spacing: 12,
+      runSpacing: 12,
+      children: _previews.map((p) => _SubjectCard(data: p)).toList(),
+    );
+  }
+}
+
+class _SubjectData {
+  const _SubjectData({
+    required this.icon,
+    required this.label,
+    required this.tag,
+    required this.gradientA,
+    required this.gradientB,
+    required this.accentColor,
+  });
+  final String icon;
+  final String label;
+  final String tag;
+  final Color gradientA;
+  final Color gradientB;
+  final Color accentColor;
+}
+
+class _SubjectCard extends StatelessWidget {
+  const _SubjectCard({required this.data});
+  final _SubjectData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      height: 100,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [data.gradientA, data.gradientB],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: data.gradientB.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+            spreadRadius: -2,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(p.icon, style: const TextStyle(fontSize: 26)),
-              const SizedBox(height: 4),
-              Text(
-                p.label,
-                style: GoogleFonts.nunito(
-                  fontSize: 10,
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontWeight: FontWeight.w700,
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Shine overlay in top-right
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.topRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.20),
+                    Colors.white.withValues(alpha: 0.0),
+                  ],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(20),
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      }).toList(),
+          // Tag badge
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                data.tag,
+                style: TextStyle(
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white.withValues(alpha: 0.95),
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+          ),
+          // Icon + label
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Text(data.icon, style: const TextStyle(fontSize: 32)),
+                const SizedBox(height: 6),
+                Text(
+                  data.label,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1142,11 +1223,94 @@ class _SessionCard extends StatelessWidget {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Fun background ────────────────────────────────────────────────────────────
+/// Replaces the flat navy gradient with colorful radial glow blobs and
+/// floating decorative stars/dots, giving both welcome screens a playful feel.
+class _FunBackground extends StatelessWidget {
+  const _FunBackground();
 
-class _Circle extends StatelessWidget {
-  const _Circle({required this.size, required this.opacity});
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base gradient — richer than flat navy
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF16125C), Color(0xFF231B72), Color(0xFF12104A)],
+              stops: [0.0, 0.55, 1.0],
+            ),
+          ),
+        ),
+        // ── Colored glow blobs ──
+        // Coral blob — top right
+        const Positioned(
+          top: -100,
+          right: -80,
+          child: _GlowBlob(
+            size: 340,
+            color: Color(0xFFFF6E6C),
+            opacity: 0.18,
+          ),
+        ),
+        // Teal blob — bottom left
+        const Positioned(
+          bottom: -120,
+          left: -90,
+          child: _GlowBlob(
+            size: 380,
+            color: Color(0xFF00D2D3),
+            opacity: 0.13,
+          ),
+        ),
+        // Gold blob — center left
+        const Positioned(
+          top: 180,
+          left: -100,
+          child: _GlowBlob(
+            size: 240,
+            color: Color(0xFFFFD32A),
+            opacity: 0.10,
+          ),
+        ),
+        // Purple blob — bottom right
+        const Positioned(
+          bottom: 100,
+          right: -60,
+          child: _GlowBlob(
+            size: 200,
+            color: Color(0xFF9B59B6),
+            opacity: 0.12,
+          ),
+        ),
+        // ── Floating decorative stars/dots ──
+        const _FloatingStar(top: 60, left: 28, size: 18, opacity: 0.35),
+        const _FloatingStar(top: 140, right: 44, size: 12, opacity: 0.25),
+        const _FloatingStar(top: 320, left: 60, size: 10, opacity: 0.20),
+        const _FloatingStar(bottom: 200, right: 36, size: 16, opacity: 0.30),
+        const _FloatingStar(bottom: 280, left: 100, size: 8, opacity: 0.22),
+        const _FloatingStar(top: 500, right: 80, size: 14, opacity: 0.18),
+        // Bright accent dots
+        const _AccentDot(
+            top: 90, right: 110, color: Color(0xFFFFD32A), size: 7),
+        const _AccentDot(top: 200, left: 30, color: Color(0xFF00D2D3), size: 5),
+        const _AccentDot(
+            bottom: 350, right: 55, color: Color(0xFFFF6E6C), size: 6),
+        const _AccentDot(
+            bottom: 160, left: 55, color: Color(0xFFFFD32A), size: 8),
+      ],
+    );
+  }
+}
+
+class _GlowBlob extends StatelessWidget {
+  const _GlowBlob(
+      {required this.size, required this.color, required this.opacity});
   final double size;
+  final Color color;
   final double opacity;
 
   @override
@@ -1156,7 +1320,89 @@ class _Circle extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: opacity),
+        gradient: RadialGradient(
+          colors: [
+            color.withValues(alpha: opacity),
+            color.withValues(alpha: 0.0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FloatingStar extends StatelessWidget {
+  const _FloatingStar({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.size,
+    required this.opacity,
+  });
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: Transform.rotate(
+        angle: 0.4,
+        child: Icon(
+          Icons.star_rounded,
+          size: size,
+          color: Colors.white.withValues(alpha: opacity),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccentDot extends StatelessWidget {
+  const _AccentDot({
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.color,
+    required this.size,
+  });
+  final double? top;
+  final double? bottom;
+  final double? left;
+  final double? right;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.8),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.6),
+              blurRadius: size * 2,
+              spreadRadius: size * 0.5,
+            ),
+          ],
+        ),
       ),
     );
   }
