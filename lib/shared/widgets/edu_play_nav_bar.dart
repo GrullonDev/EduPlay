@@ -1,4 +1,5 @@
 import 'package:edu_play/utils/responsive.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -182,10 +183,29 @@ class EduPlayNavBar extends StatelessWidget {
     );
   }
 
+  // Routes that are exclusively for authenticated parents/teachers.
+  // A guest or anonymous user clicking these is sent to login instead.
+  static const _parentOnlyRoutes = {
+    RouterPaths.parentsDashboard,
+    RouterPaths.parentGuide,
+    RouterPaths.progressReports,
+    RouterPaths.settings,
+  };
+
   void _navigate(BuildContext context, String route) {
     if (route.isEmpty) return;
     final current = ModalRoute.of(context)?.settings.name ?? '';
     if (current == route) return; // already here
+
+    // In student mode, parent-only routes require a real (non-anonymous) login.
+    if (_mode == _Mode.student && _parentOnlyRoutes.contains(route)) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) {
+        Navigator.of(context).pushNamed(RouterPaths.login);
+        return;
+      }
+    }
+
     Navigator.of(context).pushNamed(route);
   }
 }

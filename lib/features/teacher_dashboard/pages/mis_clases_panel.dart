@@ -11,7 +11,6 @@ import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_ser
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
 const _kLavender = Color(0xFFEEEDF8);
-const _kBg = Color(0xFFF3F2FF);
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -293,6 +292,41 @@ class _ClassCardState extends State<_ClassCard> {
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600),
               ),
+              const SizedBox(width: 10),
+              const Icon(Icons.cake_outlined, size: 14, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                tc.ageRangeLabel,
+                style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              if (tc.isPublic)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.public_rounded,
+                          size: 10, color: Color(0xFF2E7D32)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Pública',
+                        style: GoogleFonts.nunito(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2E7D32)),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),
@@ -336,6 +370,70 @@ class _ClassCardState extends State<_ClassCard> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          FutureBuilder<List<ClassMember>>(
+            future: TeacherClassesService.getMembers(tc.id),
+            builder: (context, snapshot) {
+              final members = snapshot.data ?? const <ClassMember>[];
+              if (members.isEmpty) {
+                return Text(
+                  'Aún no hay alumnos en esta clase.',
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                );
+              }
+
+              final visible = members.take(3).toList();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Alumnos a cargo',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: _kNavy,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final member in visible)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _accentColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            member.displayName,
+                            style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _accentColor,
+                            ),
+                          ),
+                        ),
+                      if (members.length > visible.length)
+                        Text(
+                          '+${members.length - visible.length} más',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -420,6 +518,8 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
   final _nameCtrl = TextEditingController();
   final _subjectCtrl = TextEditingController();
   String? _gradeLevel;
+  RangeValues _ageRange = const RangeValues(6, 10);
+  bool _isPublic = true;
   bool _loading = false;
   String? _error;
 
@@ -452,6 +552,9 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
             ? 'General'
             : _subjectCtrl.text.trim(),
         gradeLevel: _gradeLevel!,
+        minAge: _ageRange.start.round(),
+        maxAge: _ageRange.end.round(),
+        isPublic: _isPublic,
       );
 
       if (!mounted) return;
@@ -496,6 +599,100 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                   label: 'Asignatura',
                   ctrl: _subjectCtrl,
                   hint: 'Ej: Matemáticas, Lengua…'),
+              const SizedBox(height: 14),
+              // ── Age range ─────────────────────────────────────────────────
+              Text(
+                'Rango de edad de los alumnos',
+                style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF374151)),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Text(
+                    '${_ageRange.start.round()} – ${_ageRange.end.round()} años',
+                    style: GoogleFonts.fredoka(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy),
+                  ),
+                ],
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: _kNavy,
+                  inactiveTrackColor: _kLavender,
+                  thumbColor: _kNavy,
+                  rangeThumbShape:
+                      const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
+                  overlayColor: _kNavy.withValues(alpha: 0.12),
+                  showValueIndicator: ShowValueIndicator.always,
+                ),
+                child: RangeSlider(
+                  values: _ageRange,
+                  min: 3,
+                  max: 17,
+                  divisions: 14,
+                  labels: RangeLabels(
+                    '${_ageRange.start.round()}',
+                    '${_ageRange.end.round()}',
+                  ),
+                  onChanged: (v) => setState(() => _ageRange = v),
+                ),
+              ),
+              const SizedBox(height: 8),
+              // ── Visibility toggle ─────────────────────────────────────────
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: _kLavender,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isPublic
+                          ? Icons.public_rounded
+                          : Icons.lock_outline_rounded,
+                      size: 18,
+                      color: _isPublic ? _kNavy : Colors.grey[500],
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isPublic
+                                ? 'Visible en el directorio'
+                                : 'Solo con código de acceso',
+                            style: GoogleFonts.nunito(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _isPublic ? _kNavy : Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            _isPublic
+                                ? 'Los padres podrán encontrarla y solicitar inscripción'
+                                : 'Solo quienes tengan el código pueden unirse',
+                            style: GoogleFonts.nunito(
+                                fontSize: 11, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _isPublic,
+                      activeColor: _kNavy,
+                      onChanged: (v) => setState(() => _isPublic = v),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 14),
               Text('Nivel *',
                   style: GoogleFonts.nunito(

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -31,6 +33,8 @@ class JoinClassPage extends StatefulWidget {
 class _JoinClassPageState extends State<JoinClassPage> {
   late final TextEditingController _codeCtrl;
   final _nameCtrl = TextEditingController();
+  List<ChildProfile> _profiles = const [];
+  ChildProfile? _selectedProfile;
   bool _loading = false;
   TeacherClass? _found;
   String? _error;
@@ -41,6 +45,7 @@ class _JoinClassPageState extends State<JoinClassPage> {
     super.initState();
     final preCode = widget.codeFromArgs ?? _codeFromUrl();
     _codeCtrl = TextEditingController(text: preCode ?? '');
+    _loadProfiles();
     if (preCode != null && preCode.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _lookup());
     }
@@ -65,6 +70,19 @@ class _JoinClassPageState extends State<JoinClassPage> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _loadProfiles() async {
+    final profiles = await ChildProfilesService.getProfiles();
+    if (!mounted) return;
+    setState(() {
+      _profiles = profiles;
+      _selectedProfile = profiles.isNotEmpty ? profiles.first : null;
+    });
+  }
+
+  void _selectProfile(ChildProfile? profile) {
+    setState(() => _selectedProfile = profile);
   }
 
   Future<void> _lookup() async {
@@ -94,9 +112,11 @@ class _JoinClassPageState extends State<JoinClassPage> {
 
   Future<void> _join() async {
     final user = FirebaseAuth.instance.currentUser;
-    final displayName = _nameCtrl.text.trim().isEmpty
-        ? (user?.displayName ?? 'Alumno')
-        : _nameCtrl.text.trim();
+    final selectedProfile = _selectedProfile;
+    final displayName = selectedProfile?.name ??
+        (_nameCtrl.text.trim().isEmpty
+            ? (user?.displayName ?? 'Alumno')
+            : _nameCtrl.text.trim());
     final email = user?.email ?? '';
 
     setState(() {
@@ -110,6 +130,11 @@ class _JoinClassPageState extends State<JoinClassPage> {
         displayName: displayName,
         email: email,
         role: 'student',
+        studentId: selectedProfile?.id,
+        childProfileId: selectedProfile?.id,
+        parentUid: user?.uid,
+        age: selectedProfile?.age,
+        focusSubject: selectedProfile?.focusSubject,
       );
       if (!mounted) return;
       setState(() => _joined = true);
@@ -251,9 +276,31 @@ class _FormView extends StatelessWidget {
           const SizedBox(height: 24),
           _ClassPreview(tc: state._found!),
           const SizedBox(height: 20),
-
-          // Name field (optional if logged in)
-          if (FirebaseAuth.instance.currentUser?.displayName == null ||
+          if (state._profiles.isNotEmpty) ...[
+            Text('Alumno que se unirá',
+                style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF374151))),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<ChildProfile>(
+              initialValue: state._selectedProfile,
+              decoration: _inputDec(''),
+              items: state._profiles
+                  .map(
+                    (profile) => DropdownMenuItem(
+                      value: profile,
+                      child: Text(
+                        '${profile.name} · ${profile.focusSubject}',
+                        style: GoogleFonts.nunito(fontSize: 14, color: _kNavy),
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: state._selectProfile,
+            ),
+            const SizedBox(height: 16),
+          ] else if (FirebaseAuth.instance.currentUser?.displayName == null ||
               FirebaseAuth.instance.currentUser!.displayName!.isEmpty) ...[
             Text('Tu nombre',
                 style: GoogleFonts.nunito(
@@ -268,7 +315,6 @@ class _FormView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(

@@ -1633,7 +1633,7 @@ class _AmigosEnLineaCard extends StatelessWidget {
     required this.onComplete,
   });
   final List<Map<String, dynamic>> challenges;
-  final ValueChanged<int> onComplete;
+  final ValueChanged<String> onComplete;
 
   static const _friends = [
     (name: 'Oliver', initial: 'O', color: Color(0xFF43A047)),

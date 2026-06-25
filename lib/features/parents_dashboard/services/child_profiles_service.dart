@@ -108,6 +108,18 @@ class ChildProfilesService {
       await _profilesRef(uid).doc(docRef.id).set(data);
       // Mirror to global PIN index so children can resolve without parent auth
       await _pinsRef.doc(pin).set({...data, 'parentUid': uid});
+      // Keep the shared gamification profile aligned with the child profile id.
+      await _db.collection('students').doc(docRef.id).set({
+        'name': name,
+        'age': age,
+        'avatar': 'lion',
+        'points': 0,
+        'streak': 0,
+        'lastPlayedDate': null,
+        'childProfileId': docRef.id,
+        'focusSubject': focusSubject,
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     }
     return profile;
   }
@@ -130,6 +142,12 @@ class ChildProfilesService {
     await _profilesRef(uid).doc(updated.id).update(data);
     // Keep global index in sync
     await _pinsRef.doc(updated.pin).update({...data, 'parentUid': uid});
+    await _db.collection('students').doc(updated.id).set({
+      'name': updated.name,
+      'age': updated.age,
+      'childProfileId': updated.id,
+      'focusSubject': updated.focusSubject,
+    }, SetOptions(merge: true));
   }
 
   // ── Parent display name ───────────────────────────────────────────────────

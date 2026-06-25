@@ -24,7 +24,6 @@ const _kNavyDark = Color(0xFF14125A);
 const _kRed = Color(0xFFC0392B);
 const _kCoral = Color(0xFFFF6E6C);
 const _kBg = Color(0xFFF8F7FF);
-const _kLavender = Color(0xFFEEEDF8);
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -171,8 +170,10 @@ class _OverviewBodyState extends State<_OverviewBody> {
     final weekAgo = DateTime.now().subtract(const Duration(days: 7));
     final weekSessions =
         _allSessions.where((s) => s.createdAt.isAfter(weekAgo)).toList();
-    final completedGames =
-        weekSessions.fold<int>(0, (sum, s) => sum + s.completedCount);
+    final completedGames = weekSessions.fold<int>(
+      0,
+      (runningTotal, s) => runningTotal + s.completedCount,
+    );
     return completedGames * 5; // ~5 min per game
   }
 
@@ -616,6 +617,32 @@ class _ChildCard extends StatelessWidget {
                   'Detalle de Actividad',
                   style: GoogleFonts.nunito(
                       fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(height: 6),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  RouterPaths.browseTeachers,
+                  arguments: profile,
+                ),
+                icon: const Icon(Icons.person_search_rounded, size: 12),
+                label: Text(
+                  'Asignar Maestro',
+                  style: GoogleFonts.nunito(
+                      fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _kCoral,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],
@@ -1312,7 +1339,10 @@ class _AchievementCard extends StatelessWidget {
     }
 
     // Compute total completed across all sessions
-    final total = sessions.fold<int>(0, (sum, s) => sum + s.completedCount);
+    final total = sessions.fold<int>(
+      0,
+      (runningTotal, s) => runningTotal + s.completedCount,
+    );
 
     if (total >= 10) {
       return (
@@ -2910,37 +2940,6 @@ class _SessionDetailRow extends StatelessWidget {
                     GoogleFonts.nunito(fontSize: 10, color: Colors.grey[400]),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Placeholder for other tabs ────────────────────────────────────────────────
-
-class _PlaceholderTab extends StatelessWidget {
-  const _PlaceholderTab({required this.index});
-  final int index;
-
-  static const _titles = ['', 'Progreso', 'Recursos', 'Configuración'];
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.construction_rounded, size: 56, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(
-            _titles[index],
-            style: GoogleFonts.fredoka(fontSize: 22, color: Colors.grey[400]),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Próximamente',
-            style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[400]),
           ),
         ],
       ),

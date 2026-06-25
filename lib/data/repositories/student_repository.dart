@@ -37,6 +37,9 @@ class StudentRepository {
 
   static double xpProgress(int points) => xpIntoLevel(points) / 100.0;
 
+  Future<void> setActiveStudentId(String studentId) =>
+      _datasource.setStudentId(studentId);
+
   Future<void> ensureProfile({
     required String name,
     required int age,
@@ -51,12 +54,29 @@ class StudentRepository {
     );
   }
 
+  Future<void> ensureProfileForId({
+    required String studentId,
+    required String name,
+    required int age,
+    String? avatar,
+  }) {
+    return _datasource.ensureProfile(
+      studentId: studentId,
+      name: name,
+      age: age,
+      avatar: avatar,
+    );
+  }
+
   Future<Map<String, dynamic>?> getMyProfile() async {
     final id = await _datasource.getOrCreateStudentId();
     return _datasource.getProfile(id);
   }
 
   Future<String> getMyStudentId() => _datasource.getOrCreateStudentId();
+
+  Future<Map<String, dynamic>?> getStudentProfile(String studentId) =>
+      _datasource.getProfile(studentId);
 
   Future<void> recordScore({
     required String subjectKey,
@@ -80,6 +100,15 @@ class StudentRepository {
   Future<List<Map<String, dynamic>>> getAllStudents() =>
       _datasource.getAllStudents();
 
+  Future<List<Map<String, dynamic>>> getStudentsByIds(List<String> ids) =>
+      _datasource.getStudentsByIds(ids);
+
+  Future<List<Map<String, dynamic>>> getRecentScoresForStudents(
+    List<String> studentIds, {
+    int days = 28,
+  }) =>
+      _datasource.getRecentScoresForStudents(studentIds, days: days);
+
   /// Total score per week for the last [weeks] weeks, oldest first.
   Future<List<double>> getWeeklyScoreTotals({int weeks = 4}) async {
     final scores = await _datasource.getRecentScores(days: weeks * 7);
@@ -102,6 +131,50 @@ class StudentRepository {
 
   Future<List<SubjectPerformance>> getSubjectPerformance() async {
     final scores = await _datasource.getRecentScores(days: 14);
+    return _subjectPerformanceFromScores(scores);
+  }
+
+  Future<List<double>> getWeeklyScoreTotalsForStudents(
+    List<String> studentIds, {
+    int weeks = 4,
+  }) async {
+    final scores = await _datasource.getRecentScoresForStudents(studentIds,
+        days: weeks * 7);
+    return _weeklyTotalsFromScores(scores, weeks: weeks);
+  }
+
+  Future<List<SubjectPerformance>> getSubjectPerformanceForStudents(
+    List<String> studentIds,
+  ) async {
+    final scores =
+        await _datasource.getRecentScoresForStudents(studentIds, days: 14);
+    return _subjectPerformanceFromScores(scores);
+  }
+
+  List<double> _weeklyTotalsFromScores(
+    List<Map<String, dynamic>> scores, {
+    int weeks = 4,
+  }) {
+    final totals = List<double>.filled(weeks, 0);
+    final now = DateTime.now();
+
+    for (final entry in scores) {
+      final date = _toDate(entry['date']);
+      if (date == null) continue;
+
+      final diffDays = now.difference(date).inDays;
+      final weekIndex = weeks - 1 - (diffDays ~/ 7);
+      if (weekIndex >= 0 && weekIndex < weeks) {
+        totals[weekIndex] += (entry['score'] as num?)?.toDouble() ?? 0;
+      }
+    }
+
+    return totals;
+  }
+
+  List<SubjectPerformance> _subjectPerformanceFromScores(
+    List<Map<String, dynamic>> scores,
+  ) {
     final now = DateTime.now();
     final current = <String, List<double>>{};
     final previous = <String, List<double>>{};

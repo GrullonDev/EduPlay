@@ -12,7 +12,6 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
 const _kRed = Color(0xFFC0392B);
-const _kLavender = Color(0xFFEEEDF8);
 
 class ChildPinPage extends StatefulWidget {
   const ChildPinPage({super.key});

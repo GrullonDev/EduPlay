@@ -15,6 +15,11 @@ class StudentDatasource {
   CollectionReference<Map<String, dynamic>> get _students =>
       _firestore.collection('students');
 
+  Future<void> setStudentId(String studentId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_studentIdKey, studentId);
+  }
+
   Future<String> getOrCreateStudentId() async {
     final prefs = await SharedPreferences.getInstance();
     var id = prefs.getString(_studentIdKey);
@@ -42,6 +47,7 @@ class StudentDatasource {
           'points': 0,
           'streak': 0,
           'lastPlayedDate': null,
+          'childProfileId': studentId,
           'createdAt': FieldValue.serverTimestamp(),
         });
       } else {
@@ -49,6 +55,7 @@ class StudentDatasource {
           'name': name,
           'age': age,
           if (avatar != null) 'avatar': avatar,
+          'childProfileId': studentId,
         }, SetOptions(merge: true));
       }
     } catch (e) {
@@ -106,6 +113,7 @@ class StudentDatasource {
       });
 
       await doc.collection('scores').add({
+        'studentId': studentId,
         'subjectKey': subjectKey,
         'subjectLabel': subjectLabel,
         'gameTitle': gameTitle,
@@ -141,6 +149,26 @@ class StudentDatasource {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getStudentsByIds(List<String> ids) async {
+    if (ids.isEmpty) return [];
+
+    try {
+      final results = <Map<String, dynamic>>[];
+      for (var i = 0; i < ids.length; i += 10) {
+        final chunk = ids.sublist(i, i + 10 > ids.length ? ids.length : i + 10);
+        final snapshot =
+            await _students.where(FieldPath.documentId, whereIn: chunk).get();
+        results.addAll(
+          snapshot.docs.map((d) => {...d.data(), 'id': d.id}),
+        );
+      }
+      return results;
+    } catch (e) {
+      debugPrint('StudentDatasource.getStudentsByIds error: $e');
+      return [];
+    }
+  }
+
   /// All score entries (across every student) from the last [days] days,
   /// used to build the teacher's weekly progress chart and per-subject
   /// performance breakdown.
@@ -154,6 +182,36 @@ class StudentDatasource {
       return snapshot.docs.map((d) => d.data()).toList();
     } catch (e) {
       debugPrint('StudentDatasource.getRecentScores error: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getRecentScoresForStudents(
+    List<String> studentIds, {
+    int days = 28,
+  }) async {
+    if (studentIds.isEmpty) return [];
+
+    final cutoff = DateTime.now().subtract(Duration(days: days));
+    final results = <Map<String, dynamic>>[];
+
+    try {
+      for (final studentId in studentIds) {
+        final snapshot = await _students
+            .doc(studentId)
+            .collection('scores')
+            .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoff))
+            .get();
+        results.addAll(
+          snapshot.docs.map((d) => {
+                ...d.data(),
+                'studentId': studentId,
+              }),
+        );
+      }
+      return results;
+    } catch (e) {
+      debugPrint('StudentDatasource.getRecentScoresForStudents error: $e');
       return [];
     }
   }

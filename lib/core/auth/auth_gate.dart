@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
 import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layout.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 
 /// Listens to [FirebaseAuth.authStateChanges] and routes the user to the
 /// correct screen without going through the login page when they already
@@ -14,7 +14,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layo
 /// Role resolution:
 ///   • Unauthenticated              → [ChildPortalPage] (guest, child-first UX)
 ///   • UID exists in `parents/{uid}`  → [ParentsDashboardPage]
-///   • UID exists in `teachers/{uid}` → [TeacherDashboardLayout]
+///   • UID exists in `teachers/{uid}` → [TeacherDashboardPage]
 ///   • Unknown role                 → [ChildPortalPage] (guest)
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -73,7 +73,7 @@ class AuthGate extends StatelessWidget {
 
             switch (role) {
               case 'teacher':
-                return const TeacherDashboardLayout();
+                return const TeacherDashboardPage();
               case 'parent':
                 return const ParentsDashboardPage();
               default:

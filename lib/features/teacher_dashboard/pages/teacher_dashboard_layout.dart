@@ -1,4 +1,5 @@
 import 'dart:math' show max;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -31,7 +32,6 @@ class TeacherDashboardLayout extends StatefulWidget {
 
 class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   int _selectedIndex = 0;
-  final bool _sidebarOpen = false; // for mobile drawer
 
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
@@ -110,11 +110,11 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
       case 1:
         return const MisClasesPanel();
       case 2:
-        return const RetosPanel();
+        return RetosPanel(bloc: bloc);
       case 3:
-        return const RendimientoPanel();
+        return RendimientoPanel(bloc: bloc);
       default:
-        return const InformesPanel();
+        return InformesPanel(bloc: bloc);
     }
   }
 }
@@ -247,8 +247,12 @@ class _Sidebar extends StatelessWidget {
                 _SidebarTextBtn(
                   icon: Icons.logout_rounded,
                   label: 'Cerrar Sesión',
-                  onTap: () => Navigator.of(context)
-                      .pushReplacementNamed(RouterPaths.root),
+                  onTap: () async {
+                    await FirebaseAuth.instance.signOut();
+                    if (!context.mounted) return;
+                    Navigator.of(context)
+                        .pushReplacementNamed(RouterPaths.root);
+                  },
                   color: const Color(0xFFC0392B),
                 ),
               ],
@@ -304,6 +308,9 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bloc = context.watch<TeacherDashboardBloc>();
+    final initial =
+        bloc.teacherName.isNotEmpty ? bloc.teacherName[0].toUpperCase() : 'E';
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -366,7 +373,7 @@ class _TopBar extends StatelessWidget {
           CircleAvatar(
             radius: 18,
             backgroundColor: _kNavy,
-            child: Text('E',
+            child: Text(initial,
                 style: GoogleFonts.fredoka(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -474,6 +481,7 @@ class _OverviewPanel extends StatelessWidget {
 class _GreetingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final bloc = context.watch<TeacherDashboardBloc>();
     final now = DateTime.now();
     final months = [
       '',
@@ -499,7 +507,7 @@ class _GreetingRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '¡Hola, Profe Elena!',
+              '¡Hola, Profe ${bloc.teacherName}!',
               style: GoogleFonts.fredoka(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -545,16 +553,18 @@ class _StatCardsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = bloc.totalStudents == 0 ? 32 : bloc.totalStudents;
-    final pct = (bloc.averageProgress * 100).round();
-    final completionPct = pct == 0 ? 88 : pct;
+    final total = bloc.totalStudents;
+    final completionPct = bloc.completionRate;
+    final averageMinutes = bloc.averageMinutes;
 
     return LayoutBuilder(builder: (_, c) {
       final cards = [
         _StatCardData(
           label: 'Total Estudiantes',
           value: '$total',
-          badge: '+4% vs mes ant.',
+          badge: bloc.newStudentsThisWeek > 0
+              ? '+${bloc.newStudentsThisWeek} esta semana'
+              : 'Sin cambios',
           badgeColor: const Color(0xFF3B82F6),
           badgeBg: const Color(0xFFDBEAFE),
           iconBg: const Color(0xFFDBEAFE),
@@ -562,10 +572,10 @@ class _StatCardsRow extends StatelessWidget {
           iconColor: const Color(0xFF3B82F6),
           valueColor: _kNavy,
         ),
-        const _StatCardData(
+        _StatCardData(
           label: 'Tiempo Promedio',
-          value: '45 min',
-          badge: 'En meta',
+          value: '${averageMinutes == 0 ? 0 : averageMinutes} min',
+          badge: averageMinutes > 0 ? 'Actividad real' : 'Sin sesiones',
           badgeColor: Color(0xFFD97706),
           badgeBg: Color(0xFFFEF3C7),
           iconBg: Color(0xFFFEF3C7),
@@ -576,7 +586,7 @@ class _StatCardsRow extends StatelessWidget {
         _StatCardData(
           label: 'Tasa de Completado',
           value: '$completionPct%',
-          badge: 'Excelente',
+          badge: completionPct >= 70 ? 'Excelente' : 'En progreso',
           badgeColor: const Color(0xFFE11D48),
           badgeBg: const Color(0xFFFCE7F3),
           iconBg: const Color(0xFFFCE7F3),
@@ -717,9 +727,8 @@ class _WeeklyProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fall back to demo data if empty
     final media = weeklyTotals.isEmpty
-        ? [120.0, 180.0, 150.0, 210.0]
+        ? [0.0, 0.0, 0.0, 0.0]
         : weeklyTotals.take(4).toList();
     final retos = List.generate(
       media.length,
@@ -871,38 +880,52 @@ class _InsightsPanel extends StatelessWidget {
 
   final List<Map<String, dynamic>> students;
 
-  // Mock top students + refuerzo until real data available
-  static const _topStudents = [
-    _StudentInsight(
-        name: 'Lucas García', sub: 'Top 5% este mes', xp: '+120 xp'),
-    _StudentInsight(
-        name: 'Sofía Pérez', sub: 'Consistencia semanal', xp: '+95 xp'),
-  ];
-  static const _refuerzo = [
-    _StudentInsight(name: 'Mateo Rivas', sub: '3 retos pendientes', xp: null),
-    _StudentInsight(
-        name: 'Valeria Luna', sub: 'Baja actividad (3 días)', xp: null),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final trending = [...students]..sort(
+        (a, b) => ((b['trend'] as num?)?.toDouble() ?? 0)
+            .compareTo((a['trend'] as num?)?.toDouble() ?? 0),
+      );
+    final support = [...students]..sort(
+        (a, b) => ((a['recentAverage'] as num?)?.toDouble() ?? 0)
+            .compareTo((b['recentAverage'] as num?)?.toDouble() ?? 0),
+      );
+
+    final topStudents = trending.take(2).map((student) {
+      final trend = ((student['trend'] as num?)?.toDouble() ?? 0).round();
+      return _StudentInsight(
+        name: student['name'] as String? ?? 'Estudiante',
+        sub: trend > 0 ? 'Mejora reciente' : 'Actividad estable',
+        xp: trend > 0 ? '+$trend pts' : '+0 pts',
+      );
+    }).toList();
+
+    final refuerzo = support.take(2).map((student) {
+      final recentCount = (student['recentScoreCount'] as int?) ?? 0;
+      return _StudentInsight(
+        name: student['name'] as String? ?? 'Estudiante',
+        sub: recentCount == 0 ? 'Sin actividad reciente' : 'Requiere apoyo',
+        xp: null,
+      );
+    }).toList();
+
+    return Column(
       children: [
         _InsightsSection(
           title: 'Mayor Progreso',
           titleIcon: Icons.trending_up_rounded,
           titleColor: _kNavy,
           borderColor: _kNavy,
-          students: _topStudents,
+          students: topStudents,
           isProgress: true,
         ),
-        SizedBox(height: 14),
+        const SizedBox(height: 14),
         _InsightsSection(
           title: 'Necesitan Refuerzo',
           titleIcon: Icons.warning_amber_rounded,
-          titleColor: Color(0xFFE11D48),
-          borderColor: Color(0xFFE11D48),
-          students: _refuerzo,
+          titleColor: const Color(0xFFE11D48),
+          borderColor: const Color(0xFFE11D48),
+          students: refuerzo,
           isProgress: false,
         ),
       ],
@@ -1134,7 +1157,7 @@ class _SubjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final data = performance.isEmpty
-        ? _demo
+        ? _demo.map((d) => (d.$1, 0.0, d.$3)).toList()
         : performance
             .take(4)
             .map((p) => (
@@ -1206,39 +1229,6 @@ class _SubjectBar extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
-          ],
-        ),
-      );
-}
-
-// ── Placeholder panel ─────────────────────────────────────────────────────────
-
-class _PlaceholderPanel extends StatelessWidget {
-  const _PlaceholderPanel({
-    required this.icon,
-    required this.title,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: const Color(0xFFBBB9E0)),
-            const SizedBox(height: 16),
-            Text(title,
-                style: GoogleFonts.fredoka(
-                    fontSize: 22, color: _kNavy, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text(message,
-                style: GoogleFonts.nunito(
-                    color: Colors.grey.shade500, fontSize: 14),
-                textAlign: TextAlign.center),
           ],
         ),
       );

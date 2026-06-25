@@ -48,6 +48,50 @@ service cloud.firestore {
       }
     }
 
+    // ── Teacher classes (top-level collection used by the dashboard) ─────────
+    match /classes/{classId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.teacherUid == request.auth.uid;
+
+      allow update: if request.auth != null && (
+        resource.data.teacherUid == request.auth.uid
+        ||
+        (
+          request.resource.data.diff(resource.data)
+            .affectedKeys()
+            .hasOnly(['studentCount'])
+          && request.resource.data.studentCount == resource.data.studentCount + 1
+        )
+      );
+
+      allow delete: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
+
+      match /members/{memberId} {
+        allow read: if request.auth != null;
+
+        allow create, update: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || request.resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
+
+        allow delete: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
+      }
+
+      match /challenges/{challengeId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null
+          && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid;
+      }
+    }
+
     // ── Schools ───────────────────────────────────────────────────────────────
     match /schools/{schoolId} {
       allow create: if request.auth != null;
@@ -121,6 +165,23 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
+    // ── Child PIN index ───────────────────────────────────────────────────────
+    // Global PIN → profile lookup, readable by any authenticated user
+    // (including anonymous child sessions). Write is restricted to the
+    // owning parent, identified by the parentUid field on the document.
+    match /child_pins/{pin} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.parentUid == request.auth.uid;
+
+      allow update: if request.auth != null
+        && resource.data.parentUid == request.auth.uid;
+
+      allow delete: if request.auth != null
+        && resource.data.parentUid == request.auth.uid;
+    }
+
     // ── Legacy student scores (guest/child, shape-validated) ──────────────────
     function isValidStudent(data) {
       return data.name is string
@@ -136,14 +197,19 @@ service cloud.firestore {
         && data.date is timestamp;
     }
 
+    // Require auth (including anonymous) so unauthenticated crawlers cannot
+    // enumerate student records. Anonymous Firebase auth is always present for
+    // signed-in child sessions, so this is not a barrier for the app.
     match /students/{studentId} {
-      allow read: if true;
-      allow create, update: if isValidStudent(request.resource.data);
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && isValidStudent(request.resource.data);
       allow delete: if false;
 
       match /scores/{scoreId} {
-        allow read: if true;
-        allow create: if isValidScore(request.resource.data);
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && isValidScore(request.resource.data);
         allow update, delete: if false;
       }
     }

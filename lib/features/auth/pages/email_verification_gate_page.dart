@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_layout.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
@@ -68,7 +68,7 @@ class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
   void _advance() {
     if (!mounted) return;
     final destination = widget.role == 'teacher'
-        ? const TeacherDashboardLayout()
+        ? const TeacherDashboardPage()
         : const ParentsDashboardPage();
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => destination),

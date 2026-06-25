@@ -2,6 +2,7 @@ import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/utils/points_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -2420,19 +2421,22 @@ class _CatalogFooter extends StatelessWidget {
     const links = [
       ('Recursos para maestros', RouterPaths.parentGuide),
       ('Guía para padres', RouterPaths.parentGuide),
-      ('Privacidad', null),
-      ('Términos', null),
+      ('Privacidad', RouterPaths.privacyPolicy),
+      ('Términos', RouterPaths.termsOfService),
     ];
 
-    void snack(BuildContext ctx, String label) =>
-        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-          content:
-              Text('🚧  $label — próximamente', style: GoogleFonts.nunito()),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ));
+    // Parent/teacher routes require an authenticated (non-anonymous) account.
+    // Guests and unauthenticated users are redirected to the login page.
+    void navigateProtected(String route) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null || user.isAnonymous) {
+        Navigator.pushNamed(context, RouterPaths.login);
+      } else {
+        Navigator.pushNamed(context, route);
+      }
+    }
+
+    const parentRoutes = {RouterPaths.parentGuide, RouterPaths.parentsDashboard};
 
     Widget linkRow() => Wrap(
           spacing: 16,
@@ -2440,18 +2444,16 @@ class _CatalogFooter extends StatelessWidget {
           children: [
             for (final (label, route) in links)
               GestureDetector(
-                onTap: route != null
-                    ? () => Navigator.pushNamed(context, route)
-                    : () => snack(context, label),
+                onTap: () => parentRoutes.contains(route)
+                    ? navigateProtected(route)
+                    : Navigator.pushNamed(context, route),
                 child: Text(
                   label,
                   style: GoogleFonts.nunito(
                     fontSize: 11,
-                    color:
-                        _kNavy.withValues(alpha: route != null ? 0.55 : 0.35),
+                    color: _kNavy.withValues(alpha: 0.55),
                     decoration: TextDecoration.underline,
-                    decorationColor:
-                        _kNavy.withValues(alpha: route != null ? 0.3 : 0.15),
+                    decorationColor: _kNavy.withValues(alpha: 0.3),
                   ),
                 ),
               ),

@@ -70,9 +70,19 @@ class LandingFooter extends StatelessWidget {
           'GitHub: GrullonDev',
         ],
       ),
-      const _FooterColumn(
+      _FooterColumn(
         title: 'Legal',
-        items: ['Política de Privacidad', 'Términos de Servicio'],
+        items: const ['Política de Privacidad', 'Términos de Servicio'],
+        onTap: (index) {
+          switch (index) {
+            case 0:
+              Navigator.pushNamed(context, RouterPaths.privacyPolicy);
+              break;
+            case 1:
+              Navigator.pushNamed(context, RouterPaths.termsOfService);
+              break;
+          }
+        },
       ),
     ];
 

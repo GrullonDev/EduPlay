@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/pages/student_dashboard_layout.dart';
@@ -20,17 +21,21 @@ class StudentDashboardPage extends StatelessWidget {
   final String? username;
 
   /// Optional ChildProfile passed from the PIN login flow.
-  final Object? childProfile;
+  final ChildProfile? childProfile;
 
   @override
   Widget build(BuildContext context) {
     final registerProvider = context.read<RegisterProvider>();
-    final age = int.tryParse(registerProvider.age) ?? 6;
+    final age = childProfile?.age ?? int.tryParse(registerProvider.age) ?? 6;
 
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<StudentDashboardBloc>(
-          create: (_) => StudentDashboardBloc(username: username, age: age),
+          create: (_) => StudentDashboardBloc(
+            username: username,
+            age: age,
+            childProfile: childProfile,
+          ),
         ),
         ChangeNotifierProvider<MenuProvider>(
           create: (context) => MenuProvider(

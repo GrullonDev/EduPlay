@@ -1,156 +1,202 @@
-import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ── Palette ───────────────────────────────────────────────────────────────────
+import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
+import 'package:edu_play/shared/data/subject_catalog.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
-const _kNavyDark = Color(0xFF14125A);
 const _kCoral = Color(0xFFFF6E6C);
 
-// ── Demo data ─────────────────────────────────────────────────────────────────
+class RetosPanel extends StatelessWidget {
+  const RetosPanel({super.key, required this.bloc});
 
-enum _RetoStatus { active, scheduled, featured, completed, draft }
-
-class _RetoData {
-  const _RetoData({
-    required this.status,
-    required this.title,
-    required this.subject,
-    required this.group,
-    this.progressFraction,
-    this.dueDate,
-    this.startDate,
-    this.finalScore,
-    this.points,
-    this.participationFraction,
-  });
-  final _RetoStatus status;
-  final String title;
-  final String subject;
-  final String group;
-  final double? progressFraction;
-  final String? dueDate;
-  final String? startDate;
-  final int? finalScore;
-  final int? points;
-  final double? participationFraction;
-}
-
-const _kRetos = [
-  _RetoData(
-    status: _RetoStatus.active,
-    title: 'Dominio de Fracciones',
-    subject: 'Matemáticas',
-    group: '5to Grado A',
-    progressFraction: 0.78,
-    dueDate: '12 Oct',
-  ),
-  _RetoData(
-    status: _RetoStatus.scheduled,
-    title: 'Vocabulario: La Granja',
-    subject: 'Lenguaje',
-    group: '2do Grado B',
-    startDate: '15 Oct',
-  ),
-  _RetoData(
-    status: _RetoStatus.featured,
-    title: 'Exploradores Galácticos',
-    subject: 'Ciencias',
-    group: 'Inter-escolar',
-    participationFraction: 0.92,
-    points: 1250,
-  ),
-  _RetoData(
-    status: _RetoStatus.completed,
-    title: 'Ortografía Creativa',
-    subject: 'Lenguaje',
-    group: '4to Grado C',
-    finalScore: 98,
-  ),
-  _RetoData(
-    status: _RetoStatus.draft,
-    title: 'Viaje por el Cuerpo Humano',
-    subject: 'Biología',
-    group: 'Pendiente asignar curso',
-  ),
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class RetosPanel extends StatefulWidget {
-  const RetosPanel({super.key});
-
-  @override
-  State<RetosPanel> createState() => _RetosPanelState();
-}
-
-class _RetosPanelState extends State<RetosPanel>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabs;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabs = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabs.dispose();
-    super.dispose();
-  }
+  final TeacherDashboardBloc bloc;
 
   @override
   Widget build(BuildContext context) {
     final wide = ScreenSize.of(context).isDesktop;
+    final active =
+        bloc.challenges.where((c) => c['status'] == 'active').toList();
+    final completed =
+        bloc.challenges.where((c) => c['status'] == 'completed').toList();
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          _Header(),
-          const SizedBox(height: 20),
-
-          // Tab bar
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                  bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
-            ),
-            child: TabBar(
-              controller: _tabs,
-              isScrollable: true,
-              labelStyle:
-                  GoogleFonts.nunito(fontWeight: FontWeight.w800, fontSize: 14),
-              unselectedLabelStyle:
-                  GoogleFonts.nunito(fontWeight: FontWeight.w500, fontSize: 14),
-              labelColor: _kNavy,
-              unselectedLabelColor: Colors.grey.shade500,
-              indicatorColor: _kNavy,
-              indicatorWeight: 3,
-              tabs: const [
-                Tab(text: 'Activos (4)'),
-                Tab(text: 'Borradores (2)'),
-                Tab(text: 'Historial'),
-              ],
-            ),
+          _Header(
+            onCreate: () => _showCreateDialog(context),
           ),
           const SizedBox(height: 20),
-
-          // Cards grid
-          _RetosGrid(wide: wide),
+          Row(
+            children: [
+              _CountChip(label: 'Activos', count: active.length, active: true),
+              const SizedBox(width: 10),
+              _CountChip(label: 'Completados', count: completed.length),
+              const SizedBox(width: 10),
+              _CountChip(label: 'Clases', count: bloc.classes.length),
+            ],
+          ),
+          const SizedBox(height: 20),
+          if (bloc.classes.isEmpty)
+            _EmptyRetos(
+              message:
+                  'Crea una clase primero para poder asignar actividades reales a tus alumnos.',
+              onCreate: null,
+            )
+          else if (bloc.challenges.isEmpty)
+            _EmptyRetos(
+              message:
+                  'Todavía no has asignado retos. El siguiente reto que crees aparecerá también en el panel del alumno.',
+              onCreate: () => _showCreateDialog(context),
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: wide ? 360 : 540,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: wide ? 0.95 : 1.4,
+              ),
+              itemCount: bloc.challenges.length + 1,
+              itemBuilder: (context, index) {
+                if (index == bloc.challenges.length) {
+                  return _CreateCard(onTap: () => _showCreateDialog(context));
+                }
+                return _ChallengeCard(data: bloc.challenges[index]);
+              },
+            ),
         ],
       ),
     );
   }
+
+  Future<void> _showCreateDialog(BuildContext context) async {
+    if (bloc.classes.isEmpty) return;
+
+    final titleCtrl = TextEditingController();
+    String classId = bloc.classes.first.id;
+    String subjectKey = subjectCatalog.first.key;
+    String? dueDate;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Nuevo reto',
+                style: GoogleFonts.fredoka(
+                  fontSize: 20,
+                  color: _kNavy,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: titleCtrl,
+                    decoration:
+                        const InputDecoration(labelText: 'Título del reto'),
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: classId,
+                    decoration: const InputDecoration(labelText: 'Clase'),
+                    items: bloc.classes
+                        .map(
+                          (tc) => DropdownMenuItem(
+                            value: tc.id,
+                            child: Text('${tc.name} · ${tc.gradeLevel}'),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => classId = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: subjectKey,
+                    decoration: const InputDecoration(labelText: 'Materia'),
+                    items: subjectCatalog
+                        .map(
+                          (subject) => DropdownMenuItem(
+                            value: subject.key,
+                            child: Text(subject.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      if (value != null) setState(() => subjectKey = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (picked != null) {
+                        setState(() => dueDate = picked.toIso8601String());
+                      }
+                    },
+                    icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                    label: Text(
+                      dueDate == null
+                          ? 'Agregar fecha límite'
+                          : 'Fecha asignada',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final title = titleCtrl.text.trim();
+                    if (title.isEmpty) return;
+                    await bloc.addChallenge(
+                      classId: classId,
+                      title: title,
+                      subjectKey: subjectKey,
+                      dueDate: dueDate,
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kCoral,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Crear'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
-
 class _Header extends StatelessWidget {
+  const _Header({required this.onCreate});
+
+  final VoidCallback onCreate;
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -160,39 +206,50 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('DASHBOARD EDUCATIVO',
-                  style: GoogleFonts.nunito(
-                      fontSize: 11,
-                      color: _kCoral,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.5)),
+              Text(
+                'DASHBOARD EDUCATIVO',
+                style: GoogleFonts.nunito(
+                  fontSize: 11,
+                  color: _kCoral,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('Retos Gamificados',
-                  style: GoogleFonts.fredoka(
-                      fontSize: 30,
-                      color: _kNavy,
-                      fontWeight: FontWeight.w700)),
+              Text(
+                'Retos Gamificados',
+                style: GoogleFonts.fredoka(
+                  fontSize: 30,
+                  color: _kNavy,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
-                'Motiva a tus alumnos con desafíos interactivos diseñados\npara reforzar el aprendizaje de forma divertida y competitiva.',
+                'Asigna actividades reales a tus clases y publícalas en el panel del alumno.',
                 style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.grey.shade500),
+                  fontSize: 13,
+                  color: Colors.grey.shade500,
+                ),
               ),
             ],
           ),
         ),
         ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: onCreate,
           icon: const Icon(Icons.add_circle_outline_rounded, size: 16),
-          label: Text('Nuevo Reto',
-              style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          label: Text(
+            'Nuevo Reto',
+            style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+          ),
           style: ElevatedButton.styleFrom(
             backgroundColor: _kCoral,
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ],
@@ -200,398 +257,226 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ── Cards grid ────────────────────────────────────────────────────────────────
+class _CountChip extends StatelessWidget {
+  const _CountChip({
+    required this.label,
+    required this.count,
+    this.active = false,
+  });
 
-class _RetosGrid extends StatelessWidget {
-  const _RetosGrid({required this.wide});
-  final bool wide;
-
-  @override
-  Widget build(BuildContext context) {
-    final cols = wide ? 3 : 1;
-    final items = [
-      ..._kRetos.map((r) => _RetoCard(reto: r)),
-      _CreateRetoCard(),
-    ];
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: cols,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: wide ? 0.75 : 1.5,
-      children: items,
-    );
-  }
-}
-
-// ── Reto card ─────────────────────────────────────────────────────────────────
-
-class _RetoCard extends StatelessWidget {
-  const _RetoCard({required this.reto});
-  final _RetoData reto;
-
-  bool get _isFeatured => reto.status == _RetoStatus.featured;
-  bool get _isDraft => reto.status == _RetoStatus.draft;
+  final String label;
+  final int count;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: active ? _kNavy : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: active ? _kNavy : const Color(0xFFE0DEFF),
+        ),
+      ),
+      child: Text(
+        '$label ($count)',
+        style: GoogleFonts.nunito(
+          color: active ? Colors.white : _kNavy,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChallengeCard extends StatelessWidget {
+  const _ChallengeCard({required this.data});
+
+  final Map<String, dynamic> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final subject = subjectByKey((data['subject_key'] as String?) ?? 'math');
+    final className = data['class_name'] as String? ?? 'Clase';
+    final status = (data['status'] as String?) ?? 'active';
+    final dueDate = data['due_date'] as String?;
+
+    return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _isFeatured ? _kNavy : Colors.white,
+        color: status == 'completed' ? _kNavy : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: _isDraft
-            ? Border.all(
-                color: const Color(0xFFE0DEFF),
-                width: 1.5,
-                style: BorderStyle.solid)
-            : null,
-        boxShadow: _isDraft
-            ? []
-            : [
-                BoxShadow(
-                    color: _kNavy.withValues(alpha: 0.07),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3))
-              ],
+        boxShadow: [
+          BoxShadow(
+            color: _kNavy.withValues(alpha: 0.07),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status + menu row
-          Row(children: [
-            _StatusBadge(status: reto.status),
-            const Spacer(),
-            if (_isFeatured)
-              const Icon(Icons.star_border_rounded,
-                  size: 18, color: Colors.white54)
-            else if (!_isDraft)
-              Icon(Icons.more_vert_rounded,
-                  size: 18, color: Colors.grey.shade400),
-          ]),
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: status == 'completed'
+                      ? Colors.white.withValues(alpha: 0.14)
+                      : subject.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status == 'completed' ? 'Completado' : 'Activo',
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: status == 'completed' ? Colors.white : subject.color,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                subject.icon,
+                color: status == 'completed' ? Colors.white70 : subject.color,
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
-
-          // Title
           Text(
-            reto.title,
+            data['title'] as String? ?? 'Reto',
             style: GoogleFonts.fredoka(
-              fontSize: 20,
-              color: _isFeatured ? Colors.white : _kNavy,
+              fontSize: 22,
+              color: status == 'completed' ? Colors.white : _kNavy,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            '${reto.subject} • ${reto.group}',
+            '${subject.label} • $className',
             style: GoogleFonts.nunito(
               fontSize: 12,
-              color: _isFeatured ? Colors.white60 : Colors.grey.shade500,
+              color:
+                  status == 'completed' ? Colors.white60 : Colors.grey.shade500,
             ),
           ),
-          const SizedBox(height: 14),
-
-          // Middle content
-          if (reto.status == _RetoStatus.active) ...[
-            _progressRow(
-                'Progreso Grupal',
-                reto.progressFraction ?? 0,
-                Colors.amber,
-                '${((reto.progressFraction ?? 0) * 100).round()}%',
-                featured: false),
-          ] else if (reto.status == _RetoStatus.scheduled) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F2FF),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: const Color(0xFFE0DEFF),
-                    width: 1,
-                    style: BorderStyle.solid),
-              ),
-              child: Center(
-                child: Text('Empieza en 2 días',
-                    style: GoogleFonts.nunito(
-                        color: _kNavy,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
-              ),
-            ),
-          ] else if (reto.status == _RetoStatus.featured) ...[
-            _progressRow(
-                'Participación Activa',
-                reto.participationFraction ?? 0,
-                Colors.white,
-                '${((reto.participationFraction ?? 0) * 100).round()}%',
-                featured: true),
-          ] else if (reto.status == _RetoStatus.completed) ...[
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('RESULTADO FINAL',
-                    style: GoogleFonts.nunito(
-                        fontSize: 10,
-                        color: Colors.grey.shade400,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8)),
-                const SizedBox(height: 4),
-                Row(children: [
-                  Text('${reto.finalScore}%',
-                      style: GoogleFonts.fredoka(
-                          fontSize: 28,
-                          color: _kNavy,
-                          fontWeight: FontWeight.w700)),
-                  const Spacer(),
-                  const Text('🏆', style: TextStyle(fontSize: 24)),
-                ]),
-              ],
-            ),
-          ] else if (reto.status == _RetoStatus.draft) ...[
-            const Spacer(),
-            Row(children: [
-              const Spacer(),
-              Icon(Icons.arrow_forward_rounded,
-                  size: 18, color: Colors.grey.shade400),
-            ]),
-          ],
-
           const Spacer(),
-
-          // Footer row
-          if (reto.status == _RetoStatus.active)
-            Row(children: [
-              const Icon(Icons.calendar_today_rounded,
-                  size: 12, color: Color(0xFF9CA3AF)),
-              const SizedBox(width: 4),
-              Text('Vence: ${reto.dueDate}',
-                  style: GoogleFonts.nunito(
-                      fontSize: 11, color: Colors.grey.shade500)),
-              const Spacer(),
-              // Mini avatars
-              SizedBox(
-                width: 52,
-                height: 22,
-                child: Stack(
-                  children: List.generate(
-                      3,
-                      (i) => Positioned(
-                            left: i * 14.0,
-                            child: CircleAvatar(
-                              radius: 10,
-                              backgroundColor: const Color(0xFFDBEAFE),
-                              child: Text(['A', 'B', 'C'][i],
-                                  style: const TextStyle(
-                                      fontSize: 8, color: Color(0xFF3B82F6))),
-                            ),
-                          )),
-                ),
-              ),
-              Text('+12',
-                  style: GoogleFonts.nunito(
-                      fontSize: 10, color: Colors.grey.shade400)),
-            ])
-          else if (reto.status == _RetoStatus.scheduled)
-            Row(children: [
-              const Icon(Icons.calendar_today_rounded,
-                  size: 12, color: Color(0xFF9CA3AF)),
-              const SizedBox(width: 4),
-              Text('Inicio: ${reto.startDate}',
-                  style: GoogleFonts.nunito(
-                      fontSize: 11, color: Colors.grey.shade500)),
-              const Spacer(),
-              GestureDetector(
-                onTap: () {},
-                child: Text('Editar Detalle',
-                    style: GoogleFonts.nunito(
-                        fontSize: 12,
-                        color: _kNavy,
-                        fontWeight: FontWeight.w700)),
-              ),
-            ])
-          else if (reto.status == _RetoStatus.featured)
-            Row(children: [
-              const Icon(Icons.emoji_events_rounded,
-                  size: 14, color: Colors.amber),
-              const SizedBox(width: 6),
-              Text(
-                '${reto.points != null ? '${(reto.points! / 1000).toStringAsFixed(1).replaceAll('.0', '')},${(reto.points! % 1000).toString().padLeft(3, '0')}' : '0'} Puntos en juego',
-                style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600),
-              ),
-            ])
-          else if (reto.status == _RetoStatus.completed)
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFE0DEFF)),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text('Ver Reporte Final',
-                    style: GoogleFonts.nunito(
-                        color: _kNavy,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13)),
+          if (dueDate != null)
+            Text(
+              'Fecha límite asignada',
+              style: GoogleFonts.nunito(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: status == 'completed'
+                    ? Colors.white70
+                    : Colors.grey.shade600,
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Widget _progressRow(String label, double frac, Color barColor, String pctText,
-      {required bool featured}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(children: [
-          Text(label,
-              style: GoogleFonts.nunito(
-                  fontSize: 11,
-                  color: featured ? Colors.white60 : Colors.grey.shade500,
-                  fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Text(pctText,
-              style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  color: featured ? Colors.white : _kNavy,
-                  fontWeight: FontWeight.w800)),
-        ]),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: frac,
-            minHeight: 8,
-            backgroundColor: featured
-                ? Colors.white.withValues(alpha: 0.2)
-                : const Color(0xFFE8E8F0),
-            valueColor: AlwaysStoppedAnimation<Color>(
-                featured ? Colors.white : barColor),
+          const SizedBox(height: 8),
+          Text(
+            status == 'completed'
+                ? 'Este reto ya forma parte del historial de la clase.'
+                : 'Visible en el panel del alumno para esta clase.',
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              height: 1.4,
+              color:
+                  status == 'completed' ? Colors.white70 : Colors.grey.shade700,
+            ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Status badge ──────────────────────────────────────────────────────────────
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-  final _RetoStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, bg, color, icon) = switch (status) {
-      _RetoStatus.active => (
-          'Active',
-          const Color(0xFFDCFCE7),
-          const Color(0xFF16A34A),
-          Icons.circle
-        ),
-      _RetoStatus.scheduled => (
-          'Scheduled',
-          const Color(0xFFFEF3C7),
-          const Color(0xFFD97706),
-          Icons.access_time_rounded
-        ),
-      _RetoStatus.featured => (
-          'DESTACADO',
-          Colors.white.withValues(alpha: 0.15),
-          Colors.white,
-          null
-        ),
-      _RetoStatus.completed => (
-          'Completed',
-          const Color(0xFFEEEDF8),
-          const Color(0xFF6366F1),
-          Icons.check_circle_rounded
-        ),
-      _RetoStatus.draft => (
-          'BORRADOR',
-          Colors.transparent,
-          const Color(0xFF9CA3AF),
-          Icons.edit_note_rounded
-        ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: status == _RetoStatus.draft
-            ? Border.all(color: const Color(0xFFE0DEFF))
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon,
-                size: status == _RetoStatus.active ? 8 : 12, color: color),
-            const SizedBox(width: 4),
-          ],
-          Text(label,
-              style: GoogleFonts.nunito(
-                  fontSize: 11, color: color, fontWeight: FontWeight.w800)),
         ],
       ),
     );
   }
 }
 
-// ── Create reto card ──────────────────────────────────────────────────────────
+class _CreateCard extends StatelessWidget {
+  const _CreateCard({required this.onTap});
 
-class _CreateRetoCard extends StatelessWidget {
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: _kNavy.withValues(alpha: 0.06),
-                blurRadius: 10,
-                offset: const Offset(0, 3))
-          ],
+          border: Border.all(color: const Color(0xFFE0DEFF), width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 54,
+              height: 54,
               decoration: const BoxDecoration(
                 color: Color(0xFFEEEDF8),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.add_rounded,
-                  size: 28, color: Color(0xFF9CA3AF)),
+              child: const Icon(Icons.add_rounded, color: _kNavy, size: 28),
             ),
             const SizedBox(height: 12),
-            Text('Crear nuevo reto',
-                style: GoogleFonts.nunito(
-                    fontSize: 14, color: _kNavy, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            Text('Explora la biblioteca de plantillas',
-                style: GoogleFonts.nunito(
-                    fontSize: 12, color: Colors.grey.shade400),
-                textAlign: TextAlign.center),
+            Text(
+              'Crear nuevo reto',
+              style: GoogleFonts.nunito(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: _kNavy,
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EmptyRetos extends StatelessWidget {
+  const _EmptyRetos({
+    required this.message,
+    required this.onCreate,
+  });
+
+  final String message;
+  final VoidCallback? onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.emoji_events_outlined, size: 54, color: _kNavy),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style:
+                GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          if (onCreate != null) ...[
+            const SizedBox(height: 18),
+            ElevatedButton(
+              onPressed: onCreate,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kCoral,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Crear reto'),
+            ),
+          ],
+        ],
       ),
     );
   }

@@ -8,9 +8,7 @@ import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
-const _kNavyLight = Color(0xFF2D2A82);
 const _kRed = Color(0xFFC0392B);
-const _kRedLight = Color(0xFFE74C3C);
 
 class LoginLayout extends StatelessWidget {
   const LoginLayout({super.key, this.userType, this.onChangeRole});

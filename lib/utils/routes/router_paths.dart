@@ -33,4 +33,7 @@ class RouterPaths {
   static const childPortal = '/child-portal';
   static const joinClass = '/join-class';
   static const adminDashboard = '/admin';
+  static const privacyPolicy = '/privacy-policy';
+  static const termsOfService = '/terms-of-service';
+  static const browseTeachers = '/browse-teachers';
 }

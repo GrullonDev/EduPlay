@@ -14,7 +14,7 @@ class MyChallengesCard extends StatelessWidget {
   });
 
   final List<Map<String, dynamic>> challenges;
-  final ValueChanged<int> onComplete;
+  final ValueChanged<String> onComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +71,11 @@ class _ChallengeRow extends StatelessWidget {
   const _ChallengeRow({required this.challenge, required this.onComplete});
 
   final Map<String, dynamic> challenge;
-  final ValueChanged<int> onComplete;
+  final ValueChanged<String> onComplete;
 
   @override
   Widget build(BuildContext context) {
-    final id = challenge['id'] as int;
+    final id = challenge['id'] as String;
     final title = challenge['title'] as String? ?? 'Reto';
     final subjectKey = challenge['subject_key'] as String?;
     final subject = subjectKey != null ? subjectByKey(subjectKey) : null;

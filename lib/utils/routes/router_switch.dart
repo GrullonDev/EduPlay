@@ -1,4 +1,8 @@
+import 'package:edu_play/core/analytics/analytics_service.dart';
 import 'package:edu_play/features/main/main_page.dart';
+import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
+import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
+import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
 import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
@@ -184,6 +188,19 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => const AdminDashboardPage(),
         );
+      case RouterPaths.privacyPolicy:
+        return MaterialPageRoute(
+          builder: (_) => const PrivacyPolicyPage(),
+        );
+      case RouterPaths.termsOfService:
+        return MaterialPageRoute(
+          builder: (_) => const TermsOfServicePage(),
+        );
+      case RouterPaths.browseTeachers:
+        final child = settings.arguments as ChildProfile;
+        return MaterialPageRoute(
+          builder: (_) => BrowseTeachersPage(child: child),
+        );
       default:
         page = const Scaffold(
           body: Center(
@@ -201,7 +218,7 @@ class AppRouter {
     dynamic viewToShow,
     Object? args,
   ) {
-    // sl<GoogleAnalyticsService>().setScreenName(routeName);
+    AnalyticsService.logRouteChange(routeName);
     return MaterialPageRoute(
       settings: RouteSettings(
         name: routeName,

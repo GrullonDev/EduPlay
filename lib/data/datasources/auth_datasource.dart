@@ -111,6 +111,12 @@ class ImplAuthDatasource implements AuthDatasource {
     // Do NOT catch FirebaseAuthException here — rethrow it so the caller
     // can differentiate error codes (wrong-password, user-not-found, etc.)
     try {
+      // Sign out any existing session (e.g. an anonymous guest session from
+      // the child portal) before signing in with credentials. Without this,
+      // Firebase does not reliably replace an active anonymous session and the
+      // auth state may not update correctly.
+      await _firebaseAuth.signOut();
+
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,

@@ -10,7 +10,6 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
-const _kCoral = Color(0xFFFF6E6C);
 
 // ─────────────────────────────────────────────────────────────────────────────
 
