@@ -41,7 +41,7 @@ class RetosPanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           if (bloc.classes.isEmpty)
-            _EmptyRetos(
+            const _EmptyRetos(
               message:
                   'Crea una clase primero para poder asignar actividades reales a tus alumnos.',
               onCreate: null,

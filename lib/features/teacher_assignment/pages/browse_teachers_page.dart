@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 
@@ -81,7 +80,6 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
     setState(() => _enrolling[tc.id] = true);
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      await ChildProfilesService.getParentName();
       await TeacherClassesService.joinClass(
         classId: tc.id,
         displayName: widget.child.name,
@@ -156,14 +154,13 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
           children: [
             Text(
               'Buscar Maestro',
-              style:
-                  GoogleFonts.fredoka(fontWeight: FontWeight.w700, fontSize: 18),
+              style: GoogleFonts.fredoka(
+                  fontWeight: FontWeight.w700, fontSize: 18),
             ),
             Text(
               'Para ${child.name} · ${child.age} años',
               style: GoogleFonts.nunito(
-                  fontSize: 12,
-                  color: Colors.white.withValues(alpha: 0.75)),
+                  fontSize: 12, color: Colors.white.withValues(alpha: 0.75)),
             ),
           ],
         ),
@@ -198,13 +195,12 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: BorderSide(
-                      color: Colors.grey.shade200, width: 1.5),
+                  borderSide:
+                      BorderSide(color: Colors.grey.shade200, width: 1.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide:
-                      const BorderSide(color: _kNavy, width: 1.5),
+                  borderSide: const BorderSide(color: _kNavy, width: 1.5),
                 ),
               ),
             ),
@@ -293,8 +289,7 @@ class _ChildBanner extends StatelessWidget {
               Text(
                 'Nivel ${child.level} · ${child.focusSubject}',
                 style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Colors.white.withValues(alpha: 0.7)),
+                    fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
               ),
             ],
           ),
@@ -420,8 +415,8 @@ class _ClassDirectoryCard extends StatelessWidget {
                 // Enrolled badge
                 if (isEnrolled)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
@@ -519,7 +514,9 @@ class _ClassDirectoryCard extends StatelessWidget {
                                 )
                               : const Icon(Icons.person_add_rounded, size: 16),
                           label: Text(
-                            isEnrolling ? 'Inscribiendo…' : 'Inscribir a este maestro',
+                            isEnrolling
+                                ? 'Inscribiendo…'
+                                : 'Inscribir a este maestro',
                             style: GoogleFonts.nunito(
                                 fontWeight: FontWeight.w700, fontSize: 14),
                           ),
@@ -605,9 +602,7 @@ class _EmptyState extends StatelessWidget {
                   : 'No hay clases disponibles para $childAge años',
               textAlign: TextAlign.center,
               style: GoogleFonts.fredoka(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: _kNavy),
+                  fontSize: 20, fontWeight: FontWeight.w700, color: _kNavy),
             ),
             const SizedBox(height: 8),
             Text(
@@ -617,8 +612,7 @@ class _EmptyState extends StatelessWidget {
                       'que aparezca aquí. Puedes pedir el código directamente '
                       'al maestro.',
               textAlign: TextAlign.center,
-              style:
-                  GoogleFonts.nunito(fontSize: 14, color: Colors.grey[500]),
+              style: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[500]),
             ),
             const SizedBox(height: 20),
             OutlinedButton.icon(

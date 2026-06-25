@@ -628,7 +628,7 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                   rangeThumbShape:
                       const RoundRangeSliderThumbShape(enabledThumbRadius: 10),
                   overlayColor: _kNavy.withValues(alpha: 0.12),
-                  showValueIndicator: ShowValueIndicator.always,
+                  showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: RangeSlider(
                   values: _ageRange,
@@ -687,7 +687,8 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                     ),
                     Switch.adaptive(
                       value: _isPublic,
-                      activeColor: _kNavy,
+                      activeThumbColor: _kNavy,
+                      activeTrackColor: _kNavy.withValues(alpha: 0.35),
                       onChanged: (v) => setState(() => _isPublic = v),
                     ),
                   ],

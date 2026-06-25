@@ -40,7 +40,9 @@ class _Resource {
     if (filterIndex == 0) return true; // All
     if (filterIndex == 1) return type == _ResourceType.article;
     if (filterIndex == 2) return type == _ResourceType.video;
-    if (filterIndex == 3) return type == _ResourceType.worksheet || type == _ResourceType.pdf;
+    if (filterIndex == 3) {
+      return type == _ResourceType.worksheet || type == _ResourceType.pdf;
+    }
     return true;
   }
 
@@ -77,18 +79,21 @@ const _kAllResources = <_Resource>[
     type: _ResourceType.video,
     subject: 'METAS',
     title: 'Establecer metas con tu hijo',
-    subtitle: 'Guía de 5 minutos sobre cómo definir objetivos de aprendizaje colaborativos.',
+    subtitle:
+        'Guía de 5 minutos sobre cómo definir objetivos de aprendizaje colaborativos.',
     tag: '5:20 mins',
     icon: Icons.flag_rounded,
     color: Color(0xFF8E44AD),
     duration: '5:20',
-    fullContent: 'Este video muestra cómo sentarte con tu hijo cada semana, revisar los logros y elegir juntos el próximo reto de aprendizaje.',
+    fullContent:
+        'Este video muestra cómo sentarte con tu hijo cada semana, revisar los logros y elegir juntos el próximo reto de aprendizaje.',
   ),
   _Resource(
     type: _ResourceType.article,
     subject: 'TIEMPO DE PANTALLA',
     title: 'La regla "Uno por Uno"',
-    subtitle: 'Cómo equilibrar el juego digital con la actividad física de manera efectiva.',
+    subtitle:
+        'Cómo equilibrar el juego digital con la actividad física de manera efectiva.',
     tag: '6 min de lectura',
     icon: Icons.device_unknown_rounded,
     color: Color(0xFF2ECC71),
@@ -106,13 +111,15 @@ const _kAllResources = <_Resource>[
     icon: Icons.nights_stay_rounded,
     color: Color(0xFF2C3E50),
     duration: '',
-    fullContent: 'Un contrato sencillo que toda la familia puede firmar para acordar límites de pantalla, horarios y tipos de contenido permitido.',
+    fullContent:
+        'Un contrato sencillo que toda la familia puede firmar para acordar límites de pantalla, horarios y tipos de contenido permitido.',
   ),
   _Resource(
     type: _ResourceType.article,
     subject: 'CIENCIAS',
     title: 'Top 10 aplicaciones de ciencias para niños curiosos',
-    subtitle: 'Lista curada de apps seguras y exploratorias para jóvenes científicos.',
+    subtitle:
+        'Lista curada de apps seguras y exploratorias para jóvenes científicos.',
     tag: 'Recomendado por Maestra Sara',
     icon: Icons.science_rounded,
     color: Color(0xFF3498DB),
@@ -126,12 +133,14 @@ const _kAllResources = <_Resource>[
     type: _ResourceType.video,
     subject: 'MATEMÁTICAS',
     title: 'Alfabetización matemática: estrategias en casa',
-    subtitle: 'Maneras sencillas de incorporar las matemáticas en la rutina diaria.',
+    subtitle:
+        'Maneras sencillas de incorporar las matemáticas en la rutina diaria.',
     tag: '12:40 mins',
     icon: Icons.calculate_rounded,
     color: Color(0xFFFF9800),
     duration: '12:40',
-    fullContent: 'Este video muestra cómo usar actividades cotidianas —compras, cocina, juegos— para reforzar conceptos matemáticos de forma natural y divertida.',
+    fullContent:
+        'Este video muestra cómo usar actividades cotidianas —compras, cocina, juegos— para reforzar conceptos matemáticos de forma natural y divertida.',
   ),
   _Resource(
     type: _ResourceType.worksheet,
@@ -142,18 +151,21 @@ const _kAllResources = <_Resource>[
     icon: Icons.calculate_rounded,
     color: Color(0xFF2ECC71),
     duration: '',
-    fullContent: 'Laberinto de sumas donde el niño debe resolver operaciones para encontrar el camino correcto a través del jardín.',
+    fullContent:
+        'Laberinto de sumas donde el niño debe resolver operaciones para encontrar el camino correcto a través del jardín.',
   ),
   _Resource(
     type: _ResourceType.worksheet,
     subject: 'ARTES',
     title: 'Hábitats de Animales para Colorear',
-    subtitle: 'Colorea e identifica los hábitats naturales de 8 animales diferentes.',
+    subtitle:
+        'Colorea e identifica los hábitats naturales de 8 animales diferentes.',
     tag: 'Nivel 1 · Imprimible',
     icon: Icons.palette_rounded,
     color: Color(0xFFE91E63),
     duration: '',
-    fullContent: 'Lámina de colorear con 8 animales en sus hábitats: selva, desierto, océano, montaña y más.',
+    fullContent:
+        'Lámina de colorear con 8 animales en sus hábitats: selva, desierto, océano, montaña y más.',
   ),
   _Resource(
     type: _ResourceType.worksheet,
@@ -164,18 +176,21 @@ const _kAllResources = <_Resource>[
     icon: Icons.auto_stories_rounded,
     color: Color(0xFF3498DB),
     duration: '',
-    fullContent: '24 tarjetas fonéticas para recortar, cubiertas con los sonidos más frecuentes del español.',
+    fullContent:
+        '24 tarjetas fonéticas para recortar, cubiertas con los sonidos más frecuentes del español.',
   ),
   _Resource(
     type: _ResourceType.worksheet,
     subject: 'CIENCIAS',
     title: 'Diario de Observación del Clima',
-    subtitle: 'Registra el tiempo meteorológico durante 7 días y analiza los patrones.',
+    subtitle:
+        'Registra el tiempo meteorológico durante 7 días y analiza los patrones.',
     tag: 'Nivel 2 · Imprimible',
     icon: Icons.wb_sunny_rounded,
     color: Color(0xFFFF9800),
     duration: '',
-    fullContent: 'Tabla semanal donde el niño dibuja el clima de cada día y responde 3 preguntas de reflexión.',
+    fullContent:
+        'Tabla semanal donde el niño dibuja el clima de cada día y responde 3 preguntas de reflexión.',
   ),
 ];
 
@@ -250,7 +265,8 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.download_done_rounded, color: Colors.white, size: 18),
+            const Icon(Icons.download_done_rounded,
+                color: Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -288,7 +304,8 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
               style: GoogleFonts.nunito()),
           backgroundColor: _kRed,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -360,7 +377,8 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
 // ── Hero banner ───────────────────────────────────────────────────────────────
 
 class _HeroBanner extends StatelessWidget {
-  const _HeroBanner({required this.onExploreLibrary, required this.onLatestUpdates});
+  const _HeroBanner(
+      {required this.onExploreLibrary, required this.onLatestUpdates});
 
   final VoidCallback onExploreLibrary;
   final VoidCallback onLatestUpdates;
@@ -420,12 +438,14 @@ class _HeroBanner extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFD700).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                            color:
+                                const Color(0xFFFFD700).withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
@@ -462,17 +482,21 @@ class _HeroBanner extends StatelessWidget {
                         children: [
                           ElevatedButton.icon(
                             onPressed: onExploreLibrary,
-                            icon: const Icon(Icons.auto_stories_rounded, size: 16),
+                            icon: const Icon(Icons.auto_stories_rounded,
+                                size: 16),
                             label: Text(
                               'Explorar biblioteca',
-                              style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13),
+                              style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w700, fontSize: 13),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: _kRed,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -480,13 +504,17 @@ class _HeroBanner extends StatelessWidget {
                             onPressed: onLatestUpdates,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.4)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
                             ),
                             child: Text(
                               'Novedades',
-                              style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13),
+                              style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w700, fontSize: 13),
                             ),
                           ),
                         ],
@@ -497,9 +525,15 @@ class _HeroBanner extends StatelessWidget {
                         spacing: 20,
                         runSpacing: 8,
                         children: [
-                          _StatPill(label: '${_kAllResources.where((r) => r.type == _ResourceType.article).length} artículos'),
-                          _StatPill(label: '${_kAllResources.where((r) => r.type == _ResourceType.video).length} videos'),
-                          _StatPill(label: '${_kAllResources.where((r) => r.type == _ResourceType.worksheet || r.type == _ResourceType.pdf).length} fichas'),
+                          _StatPill(
+                              label:
+                                  '${_kAllResources.where((r) => r.type == _ResourceType.article).length} artículos'),
+                          _StatPill(
+                              label:
+                                  '${_kAllResources.where((r) => r.type == _ResourceType.video).length} videos'),
+                          _StatPill(
+                              label:
+                                  '${_kAllResources.where((r) => r.type == _ResourceType.worksheet || r.type == _ResourceType.pdf).length} fichas'),
                         ],
                       ),
                     ],
@@ -635,10 +669,13 @@ class _LibrarySection extends StatelessWidget {
     final isDesktop = ScreenSize.of(context).isDesktop;
     final hPad = isDesktop ? 56.0 : 24.0;
 
-    final articles = resources.where((r) => r.type == _ResourceType.article).toList();
-    final videos = resources.where((r) => r.type == _ResourceType.video).toList();
+    final articles =
+        resources.where((r) => r.type == _ResourceType.article).toList();
+    final videos =
+        resources.where((r) => r.type == _ResourceType.video).toList();
     final worksheets = resources
-        .where((r) => r.type == _ResourceType.worksheet || r.type == _ResourceType.pdf)
+        .where((r) =>
+            r.type == _ResourceType.worksheet || r.type == _ResourceType.pdf)
         .toList();
 
     final showArticles = filterIndex == 0 || filterIndex == 1;
@@ -668,7 +705,8 @@ class _LibrarySection extends StatelessWidget {
                     ),
                     Text(
                       'Contenido curado por expertos en educación.',
-                      style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
+                      style: GoogleFonts.nunito(
+                          fontSize: 13, color: Colors.grey[500]),
                     ),
                   ],
                 ),
@@ -739,17 +777,20 @@ class _LibrarySection extends StatelessWidget {
                     decoration: InputDecoration(
                       border: InputBorder.none,
                       hintText: 'Buscar artículos, videos, fichas...',
-                      hintStyle: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[400]),
+                      hintStyle: GoogleFonts.nunito(
+                          fontSize: 13, color: Colors.grey[400]),
                       isDense: true,
                     ),
                   ),
                 ),
                 if (searchCtrl.text.isNotEmpty)
                   IconButton(
-                    icon: Icon(Icons.close_rounded, size: 16, color: Colors.grey[400]),
+                    icon: Icon(Icons.close_rounded,
+                        size: 16, color: Colors.grey[400]),
                     onPressed: searchCtrl.clear,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
                   ),
                 const SizedBox(width: 4),
               ],
@@ -762,16 +803,19 @@ class _LibrarySection extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  Icon(Icons.search_off_rounded, size: 48, color: Colors.grey[300]),
+                  Icon(Icons.search_off_rounded,
+                      size: 48, color: Colors.grey[300]),
                   const SizedBox(height: 14),
                   Text(
                     'Sin resultados',
-                    style: GoogleFonts.fredoka(fontSize: 18, color: Colors.grey[400]),
+                    style: GoogleFonts.fredoka(
+                        fontSize: 18, color: Colors.grey[400]),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Prueba con otra búsqueda o cambia el filtro.',
-                    style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[400]),
+                    style: GoogleFonts.nunito(
+                        fontSize: 13, color: Colors.grey[400]),
                   ),
                 ],
               ),
@@ -781,7 +825,10 @@ class _LibrarySection extends StatelessWidget {
             // ── Articles ──────────────────────────────────────────────────────
             if (showArticles && articles.isNotEmpty) ...[
               const SizedBox(height: 28),
-              _SubsectionHeader(icon: Icons.article_rounded, title: 'Artículos'),
+              const _SubsectionHeader(
+                icon: Icons.article_rounded,
+                title: 'Artículos',
+              ),
               const SizedBox(height: 16),
               ...articles.map((r) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
@@ -797,7 +844,10 @@ class _LibrarySection extends StatelessWidget {
             // ── Videos ────────────────────────────────────────────────────────
             if (showVideos && videos.isNotEmpty) ...[
               const SizedBox(height: 28),
-              _SubsectionHeader(icon: Icons.play_circle_outline_rounded, title: 'Videos'),
+              const _SubsectionHeader(
+                icon: Icons.play_circle_outline_rounded,
+                title: 'Videos',
+              ),
               const SizedBox(height: 16),
               if (isDesktop)
                 Row(
@@ -889,7 +939,8 @@ class _LibrarySection extends StatelessWidget {
 // ── Filter chip ───────────────────────────────────────────────────────────────
 
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
+  const _FilterChip(
+      {required this.label, required this.selected, required this.onTap});
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -1019,7 +1070,8 @@ class _ResourceTile extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         resource.tag,
-                        style: GoogleFonts.nunito(fontSize: 10, color: Colors.grey[400]),
+                        style: GoogleFonts.nunito(
+                            fontSize: 10, color: Colors.grey[400]),
                       ),
                     ],
                   ),
@@ -1027,7 +1079,9 @@ class _ResourceTile extends StatelessWidget {
                   Text(
                     resource.title,
                     style: GoogleFonts.nunito(
-                        fontSize: 13, fontWeight: FontWeight.w700, color: _kNavy),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -1043,7 +1097,9 @@ class _ResourceTile extends StatelessWidget {
             // Bookmark icon
             IconButton(
               icon: Icon(
-                isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+                isBookmarked
+                    ? Icons.bookmark_rounded
+                    : Icons.bookmark_border_rounded,
                 size: 20,
                 color: isBookmarked ? _kRed : Colors.grey[300],
               ),
@@ -1098,7 +1154,8 @@ class _VideoCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Container(
                     height: 140,
                     width: double.infinity,
@@ -1122,8 +1179,8 @@ class _VideoCard extends StatelessWidget {
                 Positioned(
                   top: 10,
                   left: 10,
-                  child: _ContentTypeBadge(
-                      label: 'VIDEO', color: resource.color),
+                  child:
+                      _ContentTypeBadge(label: 'VIDEO', color: resource.color),
                 ),
                 // Duration pill
                 if (resource.duration.isNotEmpty)
@@ -1131,8 +1188,8 @@ class _VideoCard extends StatelessWidget {
                     bottom: 10,
                     right: 10,
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(6),
@@ -1199,7 +1256,9 @@ class _VideoCard extends StatelessWidget {
                   Text(
                     resource.title,
                     style: GoogleFonts.fredoka(
-                        fontSize: 15, fontWeight: FontWeight.w700, color: _kNavy),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -1254,14 +1313,16 @@ class _WorksheetCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(14)),
                   child: Container(
                     height: 90,
                     width: double.infinity,
                     color: resource.color.withValues(alpha: 0.1),
                     child: Center(
                       child: Icon(resource.icon,
-                          size: 40, color: resource.color.withValues(alpha: 0.45)),
+                          size: 40,
+                          color: resource.color.withValues(alpha: 0.45)),
                     ),
                   ),
                 ),
@@ -1336,7 +1397,9 @@ class _WorksheetCard extends StatelessWidget {
                   Text(
                     resource.title,
                     style: GoogleFonts.nunito(
-                        fontSize: 12, fontWeight: FontWeight.w700, color: _kNavy),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1454,8 +1517,8 @@ class _ResourceDetailSheet extends StatelessWidget {
                     )
                   else
                     Center(
-                      child: Icon(resource.icon, size: 60,
-                          color: Colors.white.withValues(alpha: 0.4)),
+                      child: Icon(resource.icon,
+                          size: 60, color: Colors.white.withValues(alpha: 0.4)),
                     ),
                   Positioned(
                     top: 14,
@@ -1497,13 +1560,17 @@ class _ResourceDetailSheet extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          isVideo ? Icons.access_time_rounded : Icons.menu_book_outlined,
+                          isVideo
+                              ? Icons.access_time_rounded
+                              : Icons.menu_book_outlined,
                           size: 14,
                           color: Colors.grey[400],
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          isVideo ? resource.duration : '${resource.duration} de lectura',
+                          isVideo
+                              ? resource.duration
+                              : '${resource.duration} de lectura',
                           style: GoogleFonts.nunito(
                               fontSize: 12, color: Colors.grey[400]),
                         ),
@@ -1579,7 +1646,9 @@ class _ResourceDetailSheet extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        isVideo ? 'Guardar en mi lista' : 'Leer recurso completo',
+                        isVideo
+                            ? 'Guardar en mi lista'
+                            : 'Leer recurso completo',
                         style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700, fontSize: 15),
                       ),
@@ -1617,21 +1686,24 @@ class _LatestUpdatesSheet extends StatelessWidget {
     (
       date: 'Junio 2026',
       title: '4 nuevas fichas de Ciencias',
-      body: 'Hemos agregado fichas sobre el ciclo del agua, los planetas, los tipos de suelo y la fotosíntesis.',
+      body:
+          'Hemos agregado fichas sobre el ciclo del agua, los planetas, los tipos de suelo y la fotosíntesis.',
       icon: Icons.science_rounded,
       color: Color(0xFF3498DB),
     ),
     (
       date: 'Mayo 2026',
       title: 'Nuevo video: Motivación en casa',
-      body: 'Una guía de 8 minutos para mantener la motivación de tu hijo durante las sesiones de práctica.',
+      body:
+          'Una guía de 8 minutos para mantener la motivación de tu hijo durante las sesiones de práctica.',
       icon: Icons.play_circle_rounded,
       color: Color(0xFF8E44AD),
     ),
     (
       date: 'Abril 2026',
       title: 'Artículo: Límites digitales saludables',
-      body: 'Estrategias basadas en evidencia para establecer rutinas digitales sanas sin generar conflictos en casa.',
+      body:
+          'Estrategias basadas en evidencia para establecer rutinas digitales sanas sin generar conflictos en casa.',
       icon: Icons.article_rounded,
       color: _kNavy,
     ),
@@ -1708,9 +1780,7 @@ class _LatestUpdatesSheet extends StatelessWidget {
                       Text(
                         u.body,
                         style: GoogleFonts.nunito(
-                            fontSize: 12,
-                            color: Colors.grey[500],
-                            height: 1.4),
+                            fontSize: 12, color: Colors.grey[500], height: 1.4),
                       ),
                     ],
                   ),
@@ -1718,8 +1788,7 @@ class _LatestUpdatesSheet extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            if (u != _updates.last)
-              Divider(color: Colors.grey[100], height: 1),
+            if (u != _updates.last) Divider(color: Colors.grey[100], height: 1),
             if (u != _updates.last) const SizedBox(height: 16),
           ],
           const SizedBox(height: 8),
@@ -1765,8 +1834,8 @@ class _NewsletterSection extends StatelessWidget {
 
     return Container(
       color: _kLavender,
-      padding: EdgeInsets.symmetric(
-          horizontal: isDesktop ? 56 : 24, vertical: 52),
+      padding:
+          EdgeInsets.symmetric(horizontal: isDesktop ? 56 : 24, vertical: 52),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
@@ -1984,7 +2053,8 @@ class _GuideFooter extends StatelessWidget {
                                   'Disponible en',
                                   style: GoogleFonts.nunito(
                                       fontSize: 9,
-                                      color: Colors.white.withValues(alpha: 0.6)),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.6)),
                                 ),
                                 Text(
                                   'App Store',
@@ -2019,8 +2089,8 @@ class _GuideFooter extends StatelessWidget {
                 const _FooterCol('Recursos',
                     ['Recursos para maestros', 'Guía para padres', 'Soporte']),
                 const SizedBox(height: 16),
-                const _FooterCol(
-                    'Legal', ['Política de privacidad', 'Términos de servicio']),
+                const _FooterCol('Legal',
+                    ['Política de privacidad', 'Términos de servicio']),
               ],
             ),
           const SizedBox(height: 32),

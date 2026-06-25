@@ -994,47 +994,6 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
-// ── Placeholder for other sections ───────────────────────────────────────────
-
-class _PlaceholderSection extends StatelessWidget {
-  const _PlaceholderSection({required this.icon, required this.title});
-  final IconData icon;
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SettingsCard(
-          icon: icon,
-          title: title,
-          child: SizedBox(
-            height: 200,
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.construction_rounded,
-                      size: 48, color: Colors.grey[300]),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Próximamente',
-                    style: GoogleFonts.fredoka(
-                        fontSize: 18, color: Colors.grey[400]),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 40),
-        const _SettingsFooter(),
-      ],
-    );
-  }
-}
-
 // ── Subscription section ──────────────────────────────────────────────────────
 
 class _SubscriptionSection extends StatelessWidget {
@@ -1735,7 +1694,7 @@ class _SecuritySectionState extends State<_SecuritySection> {
       ),
     );
 
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !context.mounted) return;
 
     setState(() => _deleting = true);
     try {
@@ -1795,19 +1754,19 @@ class _SecuritySectionState extends State<_SecuritySection> {
       await user.delete();
 
       // Navigate to login after deletion
-      if (mounted) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          RouterPaths.login,
-          (route) => false,
-        );
-      }
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        RouterPaths.login,
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       String msg = 'No se pudo eliminar la cuenta.';
       if (e.code == 'wrong-password') {
         msg = 'Contraseña incorrecta.';
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg, style: GoogleFonts.nunito()),

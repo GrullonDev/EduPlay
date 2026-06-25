@@ -28,13 +28,16 @@ void main() {
       for (var i = 0; i < 10; i++) {
         final hex = ChildProfile.avatarColorForIndex(i);
         expect(hex.length, 6,
-            reason: 'avatarColorForIndex($i) returned "$hex" (expected 6 chars)');
+            reason:
+                'avatarColorForIndex($i) returned "$hex" (expected 6 chars)');
         expect(RegExp(r'^[0-9a-fA-F]{6}$').hasMatch(hex), isTrue,
             reason: 'avatarColorForIndex($i) returned "$hex"');
       }
     });
 
-    test('cycles through the palette — index 0 and index (palette.length) match', () {
+    test(
+        'cycles through the palette — index 0 and index (palette.length) match',
+        () {
       // The palette has 6 entries; index 6 should equal index 0.
       final first = ChildProfile.avatarColorForIndex(0);
       final wrapped = ChildProfile.avatarColorForIndex(6);
@@ -47,7 +50,7 @@ void main() {
   });
 
   group('ChildProfile JSON round-trip', () {
-    final profile = ChildProfile(
+    const profile = ChildProfile(
       id: 'test-id-123',
       name: 'Sofía',
       age: 8,
@@ -75,8 +78,14 @@ void main() {
     test('toJson includes all required keys', () {
       final json = profile.toJson();
       for (final key in [
-        'id', 'name', 'age', 'level', 'pin', 'focusSubject',
-        'levelProgress', 'avatarColorHex',
+        'id',
+        'name',
+        'age',
+        'level',
+        'pin',
+        'focusSubject',
+        'levelProgress',
+        'avatarColorHex',
       ]) {
         expect(json.containsKey(key), isTrue, reason: 'Missing key: $key');
       }
@@ -85,35 +94,53 @@ void main() {
 
   group('ChildProfile.levelLabel', () {
     test('pads single-digit levels to two digits', () {
-      final p = ChildProfile(
-        id: 'x', name: 'Test', age: 6, level: 1, pin: '0000',
-        focusSubject: 'math', levelProgress: 0, avatarColorHex: 'E67E22',
+      const p = ChildProfile(
+        id: 'x',
+        name: 'Test',
+        age: 6,
+        level: 1,
+        pin: '0000',
+        focusSubject: 'math',
+        levelProgress: 0,
+        avatarColorHex: 'E67E22',
       );
       expect(p.levelLabel, 'Nivel 01');
     });
 
     test('does not pad double-digit levels', () {
-      final p = ChildProfile(
-        id: 'x', name: 'Test', age: 10, level: 12, pin: '0000',
-        focusSubject: 'science', levelProgress: 0.5, avatarColorHex: '9B59B6',
+      const p = ChildProfile(
+        id: 'x',
+        name: 'Test',
+        age: 10,
+        level: 12,
+        pin: '0000',
+        focusSubject: 'science',
+        levelProgress: 0.5,
+        avatarColorHex: '9B59B6',
       );
       expect(p.levelLabel, 'Nivel 12');
     });
   });
 
   group('ChildProfile.copyWith', () {
-    final original = ChildProfile(
-      id: 'abc', name: 'Miguel', age: 9, level: 2, pin: '1234',
-      focusSubject: 'english', levelProgress: 0.3, avatarColorHex: '2ECC71',
+    const original = ChildProfile(
+      id: 'abc',
+      name: 'Miguel',
+      age: 9,
+      level: 2,
+      pin: '1234',
+      focusSubject: 'english',
+      levelProgress: 0.3,
+      avatarColorHex: '2ECC71',
     );
 
     test('overrides only specified fields', () {
       final updated = original.copyWith(name: 'Miguel Ángel', level: 3);
       expect(updated.name, 'Miguel Ángel');
       expect(updated.level, 3);
-      expect(updated.id, original.id);          // unchanged
-      expect(updated.age, original.age);         // unchanged
-      expect(updated.pin, original.pin);         // unchanged
+      expect(updated.id, original.id); // unchanged
+      expect(updated.age, original.age); // unchanged
+      expect(updated.pin, original.pin); // unchanged
     });
   });
 }

@@ -124,14 +124,18 @@ class _OnboardingWizardState extends State<OnboardingWizard> {
       case 1:
         Navigator.of(ctx).pop();
         await OnboardingWizard._markComplete();
+        if (!ctx.mounted) return;
         Navigator.of(ctx).pushNamed(RouterPaths.settings);
       case 2:
         Navigator.of(ctx).pop();
         await OnboardingWizard._markComplete();
+        if (!ctx.mounted) return;
         Navigator.of(ctx).pushNamed(RouterPaths.createExplorer);
       case 3:
         await OnboardingWizard._markComplete();
+        if (!ctx.mounted) return;
         Navigator.of(ctx).pop();
+        if (!ctx.mounted) return;
         Navigator.of(ctx).pushNamed(RouterPaths.createSession);
     }
   }
