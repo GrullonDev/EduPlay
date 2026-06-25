@@ -5,9 +5,9 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
   DatabaseHelper._internal();
+  static final DatabaseHelper _instance = DatabaseHelper._internal();
 
   static Database? _database;
 
@@ -36,8 +36,9 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -71,7 +72,33 @@ class DatabaseHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE challenges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        subject_key TEXT NOT NULL,
+        due_date TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TEXT NOT NULL
+      )
+    ''');
+
     await _seedNatureItems(db);
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS challenges (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          subject_key TEXT NOT NULL,
+          due_date TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   Future<void> _seedNatureItems(Database db) async {
@@ -261,5 +288,70 @@ class DatabaseHelper {
     }
     final db = await database;
     return await db.query('nature_items');
+  }
+
+  // Challenges ("Retos Asignados" / "Misión del Día")
+  //
+  // Web doesn't support sqflite, so on web we keep an in-memory list that
+  // lasts only for the current session.
+  static final List<Map<String, dynamic>> _webChallenges = [];
+  static int _webChallengeNextId = 1;
+
+  Future<int> insertChallenge({
+    required String title,
+    required String subjectKey,
+    String? dueDate,
+  }) async {
+    final challenge = {
+      'title': title,
+      'subject_key': subjectKey,
+      'due_date': dueDate,
+      'status': 'active',
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    if (kIsWeb) {
+      final id = _webChallengeNextId++;
+      _webChallenges.insert(0, {'id': id, ...challenge});
+      return id;
+    }
+
+    final db = await database;
+    return await db.insert('challenges', challenge);
+  }
+
+  Future<List<Map<String, dynamic>>> getChallenges() async {
+    if (kIsWeb) {
+      return List.unmodifiable(_webChallenges);
+    }
+    final db = await database;
+    return await db.query('challenges', orderBy: 'created_at DESC');
+  }
+
+  Future<void> updateChallengeStatus(int id, String status) async {
+    if (kIsWeb) {
+      final challenge = _webChallenges.firstWhere(
+        (c) => c['id'] == id,
+        orElse: () => {},
+      );
+      challenge['status'] = status;
+      return;
+    }
+    final db = await database;
+    await db.update(
+      'challenges',
+      {'status': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Returns the count of active and completed challenges.
+  Future<({int active, int completed})> getChallengeCounts() async {
+    final challenges = await getChallenges();
+    final active = challenges.where((c) => c['status'] == 'active').length;
+    final completed =
+        challenges.where((c) => c['status'] == 'completed').length;
+    return (active: active, completed: completed);
   }
 }

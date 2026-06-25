@@ -1,7 +1,9 @@
 class RouterPaths {
   static const root = '/';
+  static const landing = '/landing';
   static const login = '/login';
   static const registerParents = '/register-parents';
+  static const registerTeacher = '/register-teacher';
   static const registerChild = '/register-child';
   static const menu = '/menu';
   static const mathAdventure = '/math-adventure';
@@ -9,7 +11,9 @@ class RouterPaths {
   static const funEnglish = '/fun-english';
   static const notFound = '/not-found';
   static const String guestEntry = 'guestEntry';
+  static const String studentDashboard = 'studentDashboard';
   static const String parentsDashboard = 'parentsDashboard';
+  static const String teacherDashboard = 'teacherDashboard';
   static const natureExplorers = '/nature-explorers';
   static const timeTravel = '/time-travel';
   static const treasureMap = '/treasure-map';
@@ -17,4 +21,19 @@ class RouterPaths {
   static const colorConcert = '/color-concert';
   static const sportsChallenge = '/sports-challenge';
   static const stickerAlbum = '/sticker-album';
+  static const gamesCatalog = '/games-catalog';
+  static const childPin = '/child-pin';
+  static const parentGuide = '/parent-guide';
+  static const settings = '/settings';
+  static const progressReports = '/progress-reports';
+  static const createExplorer = '/create-explorer';
+  static const createSession = '/create-session';
+  static const practiceSession = '/practice-session';
+  static const practiceKiosk = '/practice';
+  static const childPortal = '/child-portal';
+  static const joinClass = '/join-class';
+  static const adminDashboard = '/admin';
+  static const privacyPolicy = '/privacy-policy';
+  static const termsOfService = '/terms-of-service';
+  static const browseTeachers = '/browse-teachers';
 }

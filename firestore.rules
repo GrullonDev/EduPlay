@@ -1,0 +1,219 @@
+rules_version = '2';
+
+// ── EduPlay Firestore Security Rules ──────────────────────────────────────────
+//
+// Collections & access model:
+//
+//  parents/{uid}                     — authenticated parent only
+//    child_profiles/{profileId}      — parent only
+//    subscription/{doc}              — read-only for parent; Cloud Functions write
+//
+//  teachers/{uid}                    — authenticated teacher only
+//    classes/{classId}               — teacher only
+//
+//  schools/{schoolId}                — admin + member teachers read; admin write
+//
+//  practice_sessions/{sessionId}     — parent owns; anonymous child updates scores
+//
+//  leaderboard/{uid}                 — any auth reads; owner writes
+//
+//  students/{studentId}              — legacy guest/child scores (shape-validated)
+//    scores/{scoreId}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Parents ───────────────────────────────────────────────────────────────
+    match /parents/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /child_profiles/{profileId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /subscription/{doc} {
+        // Parents can read their subscription status.
+        // Only Cloud Functions (Stripe webhook) may write here.
+        allow read:  if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+    }
+
+    // ── Teachers ──────────────────────────────────────────────────────────────
+    match /teachers/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /classes/{classId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // ── Teacher classes (top-level collection used by the dashboard) ─────────
+    match /classes/{classId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.teacherUid == request.auth.uid;
+
+      allow update: if request.auth != null && (
+        resource.data.teacherUid == request.auth.uid
+        ||
+        (
+          request.resource.data.diff(resource.data)
+            .affectedKeys()
+            .hasOnly(['studentCount'])
+          && request.resource.data.studentCount == resource.data.studentCount + 1
+        )
+      );
+
+      allow delete: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
+
+      match /members/{memberId} {
+        allow read: if request.auth != null;
+
+        allow create, update: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || request.resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
+
+        allow delete: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
+      }
+
+      match /challenges/{challengeId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null
+          && get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid;
+      }
+    }
+
+    // ── Schools ───────────────────────────────────────────────────────────────
+    match /schools/{schoolId} {
+      allow create: if request.auth != null;
+      allow read:   if request.auth != null && (
+        resource.data.adminUid == request.auth.uid ||
+        request.auth.uid in resource.data.teacherIds
+      );
+      allow update, delete: if request.auth != null
+        && resource.data.adminUid == request.auth.uid;
+    }
+
+    // ── Practice Sessions ─────────────────────────────────────────────────────
+    // Children use anonymous Firebase Auth (signed in automatically on the
+    // SessionEntryPage). They can read active sessions and update only the
+    // score/progress fields — they cannot change parentUid, pin, etc.
+    match /practice_sessions/{sessionId} {
+
+      allow read: if request.auth != null && (
+        resource.data.isActive == true
+        || resource.data.parentUid == request.auth.uid
+      );
+
+      allow create: if request.auth != null
+        && request.resource.data.parentUid == request.auth.uid;
+
+      allow update: if request.auth != null && (
+        // Parent: full control over their session
+        resource.data.parentUid == request.auth.uid
+        ||
+        // Child (anonymous kiosk): may only advance score/progress on active sessions
+        (
+          resource.data.isActive == true
+          && request.resource.data.diff(resource.data)
+               .affectedKeys()
+               .hasOnly(['completedGameIds', 'scoreMap'])
+        )
+      );
+
+      allow delete: if request.auth != null
+        && resource.data.parentUid == request.auth.uid;
+    }
+
+    // ── Subscriptions ─────────────────────────────────────────────────────────
+    // Top-level collection: subscriptions/{uid}
+    // Parents read their own subscription. App client writes usage counters
+    // (sessionsThisMonth). Tier upgrades come via Cloud Functions / Stripe
+    // webhooks, so only Cloud Functions can set tier:'pro'.
+    // For now, allow the client to write usage counters but not the tier field.
+    match /subscriptions/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Allow client to create their own subscription doc (seeded at registration)
+      // and increment usage counters, but not self-promote tier.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.tier == 'free';
+
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && (!request.resource.data.diff(resource.data)
+               .affectedKeys()
+               .hasAny(['tier']));
+    }
+
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+    // Any authenticated user can read the leaderboard.
+    // Each user writes only their own entry.
+    // (Consider a Cloud Function to prevent score tampering in production.)
+    match /leaderboard/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ── Child PIN index ───────────────────────────────────────────────────────
+    // Global PIN → profile lookup, readable by any authenticated user
+    // (including anonymous child sessions). Write is restricted to the
+    // owning parent, identified by the parentUid field on the document.
+    match /child_pins/{pin} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.parentUid == request.auth.uid;
+
+      allow update: if request.auth != null
+        && resource.data.parentUid == request.auth.uid;
+
+      allow delete: if request.auth != null
+        && resource.data.parentUid == request.auth.uid;
+    }
+
+    // ── Legacy student scores (guest/child, shape-validated) ──────────────────
+    function isValidStudent(data) {
+      return data.name is string
+        && data.age is int
+        && data.points is int
+        && data.streak is int;
+    }
+
+    function isValidScore(data) {
+      return data.subjectKey is string
+        && data.gameTitle is string
+        && data.score is int
+        && data.date is timestamp;
+    }
+
+    // Require auth (including anonymous) so unauthenticated crawlers cannot
+    // enumerate student records. Anonymous Firebase auth is always present for
+    // signed-in child sessions, so this is not a barrier for the app.
+    match /students/{studentId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && isValidStudent(request.resource.data);
+      allow delete: if false;
+
+      match /scores/{scoreId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && isValidScore(request.resource.data);
+        allow update, delete: if false;
+      }
+    }
+
+    // ── Default: deny everything not matched above ────────────────────────────
+  }
+}

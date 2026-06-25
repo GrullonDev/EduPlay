@@ -60,7 +60,7 @@ class RegisterParentsBloc with ChangeNotifier {
       // Skipping setAge here. Logic check: Parent enters THEIR age.
       Navigator.pushNamedAndRemoveUntil(
         _context,
-        RouterPaths.registerChild,
+        RouterPaths.parentsDashboard,
         (route) => false,
       );
     } else {

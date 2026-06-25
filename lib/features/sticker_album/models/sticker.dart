@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 
 class Sticker {
-  final String id;
-  final String name;
-  final IconData icon;
-  final Color color;
-  final String description;
-
   const Sticker({
     required this.id,
     required this.name,
@@ -14,6 +8,11 @@ class Sticker {
     required this.color,
     required this.description,
   });
+  final String id;
+  final String name;
+  final IconData icon;
+  final Color color;
+  final String description;
 }
 
 // Static list of all available stickers

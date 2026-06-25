@@ -51,7 +51,7 @@ class _LoginMainPageState extends State<LoginMainPage> {
     return Scaffold(
       backgroundColor: Colors.greenAccent[200],
       body: const Center(
-          child: Text("Login Main Layout Missing")), // const LoginMainLayout(),
+          child: Text('Login Main Layout Missing')), // const LoginMainLayout(),
     );
   }
 }
