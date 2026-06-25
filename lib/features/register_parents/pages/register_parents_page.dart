@@ -17,13 +17,7 @@ class RegisterParentsPage extends StatelessWidget {
         context: context,
         authRepository: sl.get<AuthRepository>(),
       ),
-      builder: (_, __) => Scaffold(
-        appBar: AppBar(
-          title: const Text('Registro de Padres'),
-          centerTitle: true,
-        ),
-        body: const RegisterParentsLayout(),
-      ),
+      builder: (_, __) => const RegisterParentsLayout(),
     );
   }
 }

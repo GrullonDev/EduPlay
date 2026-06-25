@@ -1,82 +1,926 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import 'package:edu_play/features/login/bloc/login_bloc.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
+const _kNavy = Color(0xFF1E1B6A);
+const _kRed = Color(0xFFC0392B);
+
 class LoginLayout extends StatelessWidget {
-  const LoginLayout({super.key});
+  const LoginLayout({super.key, this.userType, this.onChangeRole});
+
+  final String? userType;
+
+  /// When non-null a "← Cambiar rol" back link is shown in the form.
+  final VoidCallback? onChangeRole;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 450),
-            child: Card(
-              elevation: 8,
-              shadowColor: Colors.black26,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(32),
+    final s = ScreenSize.of(context);
+
+    if (s.isDesktop) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: _LeftPanel(userType: userType),
+          ),
+          Expanded(
+            flex: 4,
+            child: _RightPanel(userType: userType, onChangeRole: onChangeRole),
+          ),
+        ],
+      );
+    }
+
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _MobileHeader(onChangeRole: onChangeRole),
+          _RightPanel(userType: userType, onChangeRole: onChangeRole),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Left panel ────────────────────────────────────────────────────────────────
+
+class _LeftPanel extends StatelessWidget {
+  const _LeftPanel({this.userType});
+
+  final String? userType;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _kNavy,
+      padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 56),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Logo
+          Text(
+            'EduPlay',
+            style: GoogleFonts.fredoka(
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Donde el aprendizaje y la diversión se\nencontran para crear un futuro brillante.',
+            style: GoogleFonts.nunito(
+              fontSize: 16,
+              color: Colors.white.withValues(alpha: 0.75),
+              height: 1.5,
+            ),
+          ),
+          const Spacer(),
+          // Feature cards
+          const _FeatureCard(
+            icon: Icons.school_rounded,
+            iconColor: Color(0xFFF4A82B),
+            title: 'Para Escuelas',
+            subtitle: 'Herramientas analíticas robustas para educadores.',
+          ),
+          const SizedBox(height: 16),
+          const _FeatureCard(
+            icon: Icons.videogame_asset_rounded,
+            iconColor: Color(0xFFF4A82B),
+            title: 'Para Estudiantes',
+            subtitle: 'Misiones y desafíos que motivan el progreso diario.',
+          ),
+          const Spacer(),
+          Text(
+            '© ${DateTime.now().year} EduPlay Learning.',
+            style: GoogleFonts.nunito(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatelessWidget {
+  const _FeatureCard({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor, size: 28),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: GoogleFonts.fredoka(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: GoogleFonts.nunito(
+              fontSize: 13,
+              color: Colors.white.withValues(alpha: 0.65),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileHeader extends StatelessWidget {
+  const _MobileHeader({this.onChangeRole});
+  final VoidCallback? onChangeRole;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: _kNavy,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      child: Row(
+        children: [
+          if (onChangeRole != null)
+            GestureDetector(
+              onTap: onChangeRole,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 12),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white70, size: 18),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32.0,
-                  vertical: 48.0,
+            ),
+          Text(
+            'EduPlay',
+            style: GoogleFonts.fredoka(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Right panel ───────────────────────────────────────────────────────────────
+
+class _RightPanel extends StatelessWidget {
+  const _RightPanel({this.userType, this.onChangeRole});
+
+  final String? userType;
+  final VoidCallback? onChangeRole;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ScreenSize.of(context);
+    final isTeacher = userType == 'teacher';
+    final roleLabel = isTeacher ? 'Profesor' : 'Padre / Madre';
+    final roleIcon =
+        isTeacher ? Icons.school_rounded : Icons.family_restroom_rounded;
+
+    return Container(
+      color: const Color(0xFFF8F7FF),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: s.when(mobile: 16, tablet: 40, desktop: 64),
+              vertical: 48,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Placeholder for Logo
-                    const Icon(
-                      Icons.school_rounded,
-                      size: 80,
-                      color: Color(0xFF6C63FF), // Primary color from theme
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      '¡EduPlay!',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF6C63FF),
-                            letterSpacing: 1.2,
+                    // Role badge + optional back link
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _kNavy.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Aprende jugando en esta aventura mágica.',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey[700],
-                            fontSize: 18,
-                          ),
-                    ),
-                    const SizedBox(height: 48),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pushNamed(
-                            context, RouterPaths.registerParents),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(roleIcon, size: 14, color: _kNavy),
+                              const SizedBox(width: 6),
+                              Text(
+                                roleLabel,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _kNavy,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: const Text(
-                          '¡COMENZAR!',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
+                        if (onChangeRole != null) ...[
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: onChangeRole,
+                            child: Text(
+                              '← Cambiar',
+                              style: GoogleFonts.nunito(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Bienvenido de nuevo',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Ingresa tus credenciales para acceder a tu panel.',
+                      style: GoogleFonts.nunito(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const _LoginForm(),
+                    const SizedBox(height: 24),
+                    _RegisterLink(userType: userType),
                   ],
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Password reset dialog ─────────────────────────────────────────────────────
+
+Future<void> _showPasswordReset(BuildContext context) async {
+  final emailCtrl = TextEditingController();
+  String? error;
+  bool sent = false;
+  bool loading = false;
+
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setState) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Restablecer contraseña',
+            style: GoogleFonts.fredoka(
+                fontSize: 20, fontWeight: FontWeight.w700, color: _kNavy)),
+        content: sent
+            ? Column(mainAxisSize: MainAxisSize.min, children: [
+                const Icon(Icons.mark_email_read_rounded,
+                    size: 48, color: Color(0xFF27AE60)),
+                const SizedBox(height: 16),
+                Text(
+                  'Revisa tu correo. Te enviamos un enlace para restablecer tu contraseña.',
+                  style: GoogleFonts.nunito(fontSize: 14, height: 1.5),
+                  textAlign: TextAlign.center,
+                ),
+              ])
+            : Column(mainAxisSize: MainAxisSize.min, children: [
+                Text(
+                  'Ingresa el correo asociado a tu cuenta y te enviaremos un enlace.',
+                  style: GoogleFonts.nunito(
+                      fontSize: 13, color: Colors.grey[600], height: 1.5),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  autofocus: true,
+                  style: GoogleFonts.nunito(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'correo@ejemplo.com',
+                    hintStyle: GoogleFonts.nunito(
+                        fontSize: 14, color: Colors.grey[400]),
+                    filled: true,
+                    fillColor: const Color(0xFFF8F7FF),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade200)),
+                    focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: _kNavy, width: 1.5)),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 10),
+                  Text(error!,
+                      style: GoogleFonts.nunito(fontSize: 12, color: _kRed)),
+                ],
+              ]),
+        actions: sent
+            ? [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cerrar',
+                      style: GoogleFonts.nunito(
+                          fontWeight: FontWeight.w700, color: _kNavy)),
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text('Cancelar',
+                      style: GoogleFonts.nunito(color: Colors.grey[600])),
+                ),
+                ElevatedButton(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          final email = emailCtrl.text.trim();
+                          if (email.isEmpty || !email.contains('@')) {
+                            setState(() => error = 'Ingresa un correo válido.');
+                            return;
+                          }
+                          setState(() {
+                            loading = true;
+                            error = null;
+                          });
+                          try {
+                            await FirebaseAuth.instance
+                                .sendPasswordResetEmail(email: email);
+                            setState(() {
+                              sent = true;
+                              loading = false;
+                            });
+                          } on FirebaseAuthException catch (e) {
+                            setState(() {
+                              loading = false;
+                              error = e.code == 'user-not-found'
+                                  ? 'No encontramos una cuenta con ese correo.'
+                                  : 'Error: ${e.message}';
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kNavy,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 0,
+                  ),
+                  child: loading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : Text('Enviar enlace',
+                          style:
+                              GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                ),
+              ],
+      ),
+    ),
+  );
+}
+
+// ── Login form ────────────────────────────────────────────────────────────────
+
+class _LoginForm extends StatelessWidget {
+  const _LoginForm();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<LoginBloc>(
+      builder: (context, bloc, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _FieldLabel('Correo electrónico'),
+          const SizedBox(height: 6),
+          _TextField(
+            controller: bloc.emailController,
+            hint: 'ejemplo@escuela.edu',
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Expanded(child: _FieldLabel('Contraseña')),
+              GestureDetector(
+                onTap: () => _showPasswordReset(context),
+                child: Text(
+                  '¿Olvidaste tu contraseña?',
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: _kNavy,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _TextField(
+            controller: bloc.passwordController,
+            hint: '••••••••',
+            obscure: true,
+            onToggleObscure: bloc.togglePasswordVisibility,
+            isObscured: bloc.obscurePassword,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: Checkbox(
+                  value: bloc.rememberMe,
+                  onChanged: (_) => bloc.toggleRememberMe(),
+                  activeColor: _kNavy,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Recordarme en este dispositivo',
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: bloc.isLoading ? null : bloc.login,
+              icon: bloc.isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.arrow_forward_rounded, size: 20),
+              label: Text(
+                bloc.isLoading ? 'Ingresando...' : 'Ingresar',
+                style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _kRed,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared field widgets ──────────────────────────────────────────────────────
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: GoogleFonts.nunito(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF374151),
+      ),
+    );
+  }
+}
+
+class _TextField extends StatelessWidget {
+  const _TextField({
+    required this.controller,
+    required this.hint,
+    this.keyboardType,
+    this.obscure = false,
+    this.isObscured = false,
+    this.onToggleObscure,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final TextInputType? keyboardType;
+  final bool obscure;
+  final bool isObscured;
+  final VoidCallback? onToggleObscure;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscure && isObscured,
+      style: GoogleFonts.nunito(fontSize: 14, color: const Color(0xFF111827)),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.nunito(
+          fontSize: 14,
+          color: Colors.grey[400],
+        ),
+        filled: true,
+        fillColor: const Color(0xFFF3F4F6),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _kNavy, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        suffixIcon: obscure
+            ? IconButton(
+                icon: Icon(
+                  isObscured ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey[400],
+                  size: 20,
+                ),
+                onPressed: onToggleObscure,
+              )
+            : null,
+      ),
+    );
+  }
+}
+
+// ── Register link (conditional on userType) ───────────────────────────────────
+
+class _RegisterLink extends StatelessWidget {
+  const _RegisterLink({this.userType});
+  final String? userType;
+
+  @override
+  Widget build(BuildContext context) {
+    final isTeacher = userType == 'teacher';
+    final label =
+        isTeacher ? 'Regístrate como docente' : 'Crear cuenta de padre/madre';
+    final route =
+        isTeacher ? RouterPaths.registerTeacher : RouterPaths.registerParents;
+
+    return Center(
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600]),
+          children: [
+            const TextSpan(text: '¿No tienes una cuenta? '),
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(context, route),
+                child: Text(
+                  label,
+                  style: GoogleFonts.nunito(
+                    fontSize: 13,
+                    color: _kNavy,
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _kNavy,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Role selector ─────────────────────────────────────────────────────────────
+
+/// Full-screen role picker shown when the user reaches the login page
+/// without a pre-selected role (i.e. cold start, unauthenticated).
+class RoleSelectorLayout extends StatelessWidget {
+  const RoleSelectorLayout({super.key, required this.onRoleSelected});
+
+  final ValueChanged<String> onRoleSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ScreenSize.of(context);
+    final isDesktop = s.isDesktop;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E1B6A), Color(0xFF2D2A82)],
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Top bar
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: s.when(mobile: 24, tablet: 40, desktop: 64),
+                vertical: 24,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'EduPlay',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Main content
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: s.when(mobile: 24, tablet: 48, desktop: 80),
+                    vertical: 32,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '¿Quién eres?',
+                          style: GoogleFonts.fredoka(
+                            fontSize: isDesktop ? 42 : 32,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Elige tu perfil para acceder al panel correcto.',
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            color: Colors.white.withValues(alpha: 0.65),
+                          ),
+                        ),
+                        const SizedBox(height: 48),
+
+                        // Role cards
+                        isDesktop
+                            ? Row(
+                                children: [
+                                  Expanded(
+                                    child: _RoleCard(
+                                      icon: Icons.family_restroom_rounded,
+                                      title: 'Padre / Madre',
+                                      subtitle:
+                                          'Sigue el progreso de tus hijos y gestiona su perfil educativo.',
+                                      accentColor: const Color(0xFFF4A82B),
+                                      onTap: () => onRoleSelected('parent'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    child: _RoleCard(
+                                      icon: Icons.school_rounded,
+                                      title: 'Profesor',
+                                      subtitle:
+                                          'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                      accentColor: const Color(0xFF4FC3F7),
+                                      onTap: () => onRoleSelected('teacher'),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                children: [
+                                  _RoleCard(
+                                    icon: Icons.family_restroom_rounded,
+                                    title: 'Padre / Madre',
+                                    subtitle:
+                                        'Sigue el progreso de tus hijos y gestiona su perfil educativo.',
+                                    accentColor: const Color(0xFFF4A82B),
+                                    onTap: () => onRoleSelected('parent'),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  _RoleCard(
+                                    icon: Icons.school_rounded,
+                                    title: 'Profesor',
+                                    subtitle:
+                                        'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                    accentColor: const Color(0xFF4FC3F7),
+                                    onTap: () => onRoleSelected('teacher'),
+                                  ),
+                                ],
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Footer
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                '© ${DateTime.now().year} EduPlay Learning.',
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleCard extends StatefulWidget {
+  const _RoleCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.accentColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color accentColor;
+  final VoidCallback onTap;
+
+  @override
+  State<_RoleCard> createState() => _RoleCardState();
+}
+
+class _RoleCardState extends State<_RoleCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: _hovered
+                ? Colors.white.withValues(alpha: 0.18)
+                : Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: _hovered
+                  ? widget.accentColor.withValues(alpha: 0.6)
+                  : Colors.white.withValues(alpha: 0.15),
+              width: 1.5,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: widget.accentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(widget.icon, color: widget.accentColor, size: 28),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                widget.title,
+                style: GoogleFonts.fredoka(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.subtitle,
+                style: GoogleFonts.nunito(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.65),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Text(
+                    'Continuar',
+                    style: GoogleFonts.nunito(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: widget.accentColor,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(Icons.arrow_forward_rounded,
+                      size: 16, color: widget.accentColor),
+                ],
+              ),
+            ],
           ),
         ),
       ),

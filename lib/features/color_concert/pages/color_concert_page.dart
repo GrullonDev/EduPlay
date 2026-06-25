@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 
 class ColorConcertPage extends StatefulWidget {
@@ -117,6 +119,13 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
       _isGameActive = false;
       _message = '¡Fallaste!';
     });
+
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'music',
+      gameTitle: 'Concierto de Colores',
+      score: _score * 10,
+    );
+
     showDialog(
       context: context,
       barrierDismissible: false,

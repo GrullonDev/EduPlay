@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +11,7 @@ class MathAdventureProvider with ChangeNotifier {
     required this.context,
     required this.age,
     required this.userName,
+    this.onScoreUpdate,
   }) {
     _generateQuestion();
   }
@@ -16,6 +19,10 @@ class MathAdventureProvider with ChangeNotifier {
   final BuildContext context;
   final int age;
   final String? userName;
+
+  /// Called every time the score changes. Used by the kiosk wrapper to
+  /// track the real score without needing to access internals.
+  final void Function(int score)? onScoreUpdate;
 
   int _score = 0;
   int _lives = 3;
@@ -101,6 +108,7 @@ class MathAdventureProvider with ChangeNotifier {
 
   void _increaseScore() {
     _score += 10;
+    onScoreUpdate?.call(_score);
     if (_score % 50 == 0) {
       _showReward();
     }
@@ -109,10 +117,12 @@ class MathAdventureProvider with ChangeNotifier {
   void _showReward() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
         title: '¡Felicidades!',
-        content: 'Has ganado un premio 🎁',
-        buttonText: 'Aceptar',
+        content: '¡Has ganado puntos extra! 🎁',
+        buttonText: '¡Continuar! →',
+        type: DialogType.reward,
         onButtonPressed: () => Navigator.of(context).pop(),
       ),
     );
@@ -123,10 +133,12 @@ class MathAdventureProvider with ChangeNotifier {
       _level++;
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (context) => CustomDialog(
-          title: '¡Nivel alcanzado!',
-          content: '¡Nivel $level alcanzado!',
-          buttonText: 'Aceptar',
+          title: '¡Nivel $level!',
+          content: '¡Estás avanzando muy bien! ⚡',
+          buttonText: '¡Continuar! →',
+          type: DialogType.levelUp,
           onButtonPressed: () => Navigator.of(context).pop(),
         ),
       );
@@ -141,24 +153,35 @@ class MathAdventureProvider with ChangeNotifier {
   }
 
   void _gameOver() {
-    showDialog(
-      context: context,
-      builder: (context) => CustomDialog(
-        title: '¡Juego terminado!',
-        content: 'Volverás a comenzar.',
-        buttonText: 'Aceptar',
-        onButtonPressed: () => Navigator.pushNamed(
-          context,
-          RouterPaths.menu,
-          arguments: userName,
-        ),
-      ),
+    // Capture before reset — dialog builder runs on the next frame
+    final finalScore = _score;
+
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'math',
+      gameTitle: 'Aventura Matemática',
+      score: finalScore,
     );
 
     _score = 0;
     _lives = 3;
     _level = 1;
-    notifyListeners();
+    notifyListeners(); // reset state first
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => CustomDialog(
+        title: '¡Buen intento!',
+        content: 'Puntuación final: $finalScore pts\n¡Sigue practicando!',
+        buttonText: 'Volver al inicio',
+        type: DialogType.gameOver,
+        onButtonPressed: () => Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouterPaths.childPortal,
+          (route) => false,
+        ),
+      ),
+    );
   }
 
   void resetScore() {
@@ -169,13 +192,12 @@ class MathAdventureProvider with ChangeNotifier {
 }
 
 class Question {
-  final String question;
-  final List<String> options;
-  final int answer;
-
   Question({
     required this.question,
     required this.options,
     required this.answer,
   });
+  final String question;
+  final List<String> options;
+  final int answer;
 }

@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -120,27 +122,39 @@ class FunEnglishProvider with ChangeNotifier {
   void _showReward() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
-        title: 'Very Good! 🌟',
-        content: '¡Has ganado un premio!',
-        buttonText: 'Thanks',
+        title: '¡Muy bien! 🌟',
+        content: '¡Has ganado puntos extra!',
+        buttonText: '¡Continuar! →',
+        type: DialogType.reward,
         onButtonPressed: () => Navigator.of(context).pop(),
       ),
     );
   }
 
   void _gameOver() {
+    // Capture before any reset — dialog builder runs on the next frame
+    final finalScore = _score;
+
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'english',
+      gameTitle: 'Inglés Divertido',
+      score: finalScore,
+    );
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
-        title: 'Game Over',
-        content: 'Try again!',
-        buttonText: 'OK',
+        title: '¡Buen intento!',
+        content: 'Puntuación: $finalScore pts\n¡Sigue practicando!',
+        buttonText: 'Volver al inicio',
+        type: DialogType.gameOver,
         onButtonPressed: () => Navigator.pushNamedAndRemoveUntil(
           context,
-          RouterPaths.menu,
+          RouterPaths.childPortal,
           (route) => false,
-          arguments: userName,
         ),
       ),
     );

@@ -1,19 +1,17 @@
+import 'package:edu_play/core/auth/auth_gate.dart';
 import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/routes/router_switch.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -32,8 +30,9 @@ class MyApp extends StatelessWidget {
         title: 'EduPlay',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.theme,
-        home: const LoginPage(),
-        initialRoute: RouterPaths.root,
+        // AuthGate listens to Firebase auth state and routes to the
+        // correct dashboard (or login) on every cold start.
+        home: const AuthGate(),
         onGenerateRoute: AppRouter.generateRoute,
       ),
     );

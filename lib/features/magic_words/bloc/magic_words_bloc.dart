@@ -1,6 +1,8 @@
 import 'dart:math';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
@@ -8,12 +10,14 @@ class MagicWordsProvider with ChangeNotifier {
   MagicWordsProvider({
     required this.context,
     required this.age,
+    this.onScoreUpdate,
   }) {
     _generateLevel();
   }
 
   final BuildContext context;
   final int age;
+  final void Function(int score)? onScoreUpdate;
 
   int _score = 0;
   int _lives = 3;
@@ -127,6 +131,7 @@ class MagicWordsProvider with ChangeNotifier {
 
   void _increaseScore() {
     _score += 10;
+    onScoreUpdate?.call(_score);
     if (_score % 50 == 0) {
       _showReward('¡Excelente!', '¡Has ganado puntos extras!');
     }
@@ -147,38 +152,53 @@ class MagicWordsProvider with ChangeNotifier {
   }
 
   void _showReward(String title, String content) {
+    final isLevelUp = title.contains('Nivel');
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
         title: title,
         content: content,
-        buttonText: 'Continuar',
+        buttonText: '¡Continuar! →',
+        type: isLevelUp ? DialogType.levelUp : DialogType.reward,
         onButtonPressed: () => Navigator.of(context).pop(),
       ),
     );
   }
 
   void _gameOver() {
+    // Capture before reset — dialog builder runs on the next frame
+    final finalScore = _score;
+
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'language',
+      gameTitle: 'Palabras Mágicas',
+      score: finalScore,
+    );
+
+    _score = 0;
+    _lives = 3;
+    _level = 1;
+    notifyListeners(); // reset state first so UI reflects new game
+
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => CustomDialog(
-        title: '¡Juego terminado!',
-        content: 'Puntuación final: $_score',
-        buttonText: 'Menú',
+        title: '¡Buen intento!',
+        content: 'Puntuación final: $finalScore pts\n¡Sigue practicando!',
+        buttonText: 'Volver al inicio',
+        type: DialogType.gameOver,
         onButtonPressed: () {
           Navigator.of(context).pop();
           Navigator.pushNamedAndRemoveUntil(
             context,
-            RouterPaths.menu,
+            RouterPaths.childPortal,
             (route) => false,
           );
         },
       ),
     );
-    _score = 0;
-    _lives = 3;
-    _level = 1;
-    notifyListeners();
   }
 
   void resetScore() {

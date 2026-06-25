@@ -25,11 +25,10 @@ abstract class AuthRepository {
 }
 
 class ImplAuthRepository implements AuthRepository {
-  final AuthDatasource _authDatasource;
-
   ImplAuthRepository({
     required AuthDatasource authDatasource,
   }) : _authDatasource = authDatasource;
+  final AuthDatasource _authDatasource;
 
   @override
   Future<User?> registerParent({
@@ -64,11 +63,9 @@ class ImplAuthRepository implements AuthRepository {
   Future<User?> loginParent({
     required String email,
     required String password,
-  }) {
-    return _authDatasource.loginParent(
-      email: email,
-      password: password,
-    );
+  }) async {
+    // Let FirebaseAuthException propagate so LoginBloc can show specific messages.
+    return _authDatasource.loginParent(email: email, password: password);
   }
 
   @override

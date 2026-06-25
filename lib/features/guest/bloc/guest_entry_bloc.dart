@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_play/data/datasources/local/database_helper.dart';
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class GuestEntryProvider with ChangeNotifier {
@@ -38,7 +40,18 @@ class GuestEntryProvider with ChangeNotifier {
             avatar: 'default_guest');
       } catch (e) {
         // Just log and continue, don't block user if DB fails (e.g. on Web)
-        debugPrint("Local DB skipped or failed: $e");
+        debugPrint('Local DB skipped or failed: $e');
+      }
+
+      // 1b. Create/update the Firestore gamification profile
+      try {
+        await sl<StudentRepository>().ensureProfile(
+          name: name,
+          age: _selectedAge,
+          avatar: 'default_guest',
+        );
+      } catch (e) {
+        debugPrint('StudentRepository ensureProfile failed: $e');
       }
 
       // 2. Update Global State for Game Difficulty
@@ -57,7 +70,7 @@ class GuestEntryProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      debugPrint("Error entering guest: $e");
+      debugPrint('Error entering guest: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('¡Ups! Algo salió mal.')),

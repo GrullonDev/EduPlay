@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:edu_play/features/subscription/services/subscription_service.dart';
+
 abstract class AuthDatasource {
   Future<User?> registerParent({
     required String email,
@@ -54,7 +56,23 @@ class ImplAuthDatasource implements AuthDatasource {
           'email': email,
           'age': age,
           'children': children,
+          'role': 'parent', // used by AuthGate to route back after reload
+          'onboardingComplete':
+              false, // triggers wizard on first dashboard visit
+          'notificationPrefs': {
+            'emailSessionComplete': true,
+            'emailWeeklyDigest': true,
+            'emailTips': false,
+            'emailNewFeatures': true,
+          },
         });
+        // Seed subscription document (free tier).
+        await SubscriptionService.initSubscription(user.uid);
+        // Send verification email immediately after account creation.
+        // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
+        // For better inbox placement, configure a custom sender domain in
+        // Firebase Console → Authentication → Templates → Customize action URL.
+        await user.sendEmailVerification();
       }
 
       return user;
@@ -90,19 +108,24 @@ class ImplAuthDatasource implements AuthDatasource {
     required String email,
     required String password,
   }) async {
+    // Do NOT catch FirebaseAuthException here — rethrow it so the caller
+    // can differentiate error codes (wrong-password, user-not-found, etc.)
     try {
-      UserCredential userCredential =
-          await _firebaseAuth.signInWithEmailAndPassword(
+      // Sign out any existing session (e.g. an anonymous guest session from
+      // the child portal) before signing in with credentials. Without this,
+      // Firebase does not reliably replace an active anonymous session and the
+      // auth state may not update correctly.
+      await _firebaseAuth.signOut();
+
+      final credential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      return userCredential.user;
-    } on FirebaseAuthException catch (e) {
-      debugPrint('Error: $e');
-      return null;
+      return credential.user;
+    } on FirebaseAuthException {
+      rethrow; // let LoginBloc handle specific codes
     } catch (e) {
-      debugPrint('Error: $e');
+      debugPrint('loginParent unexpected error: $e');
       return null;
     }
   }
