@@ -58,7 +58,7 @@ class _LeftPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showTeacherMessaging = ReleaseFlags.teacherExperienceEnabled;
+    const showTeacherMessaging = ReleaseFlags.teacherExperienceEnabled;
 
     return Container(
       color: _kNavy,
@@ -86,11 +86,11 @@ class _LeftPanel extends StatelessWidget {
           ),
           const Spacer(),
           // Feature cards
-          _FeatureCard(
+          const _FeatureCard(
             icon: showTeacherMessaging
                 ? Icons.school_rounded
                 : Icons.family_restroom_rounded,
-            iconColor: const Color(0xFFF4A82B),
+            iconColor: Color(0xFFF4A82B),
             title: showTeacherMessaging ? 'Para Escuelas' : 'Para Familias',
             subtitle: showTeacherMessaging
                 ? 'Herramientas analíticas robustas para educadores.'
@@ -703,7 +703,7 @@ class RoleSelectorLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = ScreenSize.of(context);
     final isDesktop = s.isDesktop;
-    final showTeacherOption = ReleaseFlags.teacherExperienceEnabled;
+    const showTeacherOption = ReleaseFlags.teacherExperienceEnabled;
 
     return Container(
       decoration: const BoxDecoration(
@@ -791,10 +791,8 @@ class RoleSelectorLayout extends StatelessWidget {
                                         title: 'Profesor',
                                         subtitle:
                                             'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
-                                        accentColor:
-                                            const Color(0xFF4FC3F7),
-                                        onTap: () =>
-                                            onRoleSelected('teacher'),
+                                        accentColor: const Color(0xFF4FC3F7),
+                                        onTap: () => onRoleSelected('teacher'),
                                       ),
                                     ),
                                   ],
@@ -817,10 +815,8 @@ class RoleSelectorLayout extends StatelessWidget {
                                       title: 'Profesor',
                                       subtitle:
                                           'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
-                                      accentColor:
-                                          const Color(0xFF4FC3F7),
-                                      onTap: () =>
-                                          onRoleSelected('teacher'),
+                                      accentColor: const Color(0xFF4FC3F7),
+                                      onTap: () => onRoleSelected('teacher'),
                                     ),
                                   ],
                                 ],

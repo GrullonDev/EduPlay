@@ -1,4 +1,5 @@
 import 'package:edu_play/core/analytics/analytics_service.dart';
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
@@ -51,6 +52,11 @@ class AppRouter {
     final String name = rawName.contains('?')
         ? rawName.substring(0, rawName.indexOf('?'))
         : rawName;
+
+    if (!ReleaseFlags.teacherExperienceEnabled &&
+        _teacherRoutesDisabledInPublicRelease.contains(name)) {
+      return _getPageRoute(RouterPaths.root, const MainPage(), null);
+    }
 
     switch (name) {
       case RouterPaths.root:
@@ -227,4 +233,11 @@ class AppRouter {
       builder: (_) => viewToShow,
     );
   }
+
+  static const _teacherRoutesDisabledInPublicRelease = {
+    RouterPaths.registerTeacher,
+    RouterPaths.teacherDashboard,
+    RouterPaths.joinClass,
+    RouterPaths.browseTeachers,
+  };
 }

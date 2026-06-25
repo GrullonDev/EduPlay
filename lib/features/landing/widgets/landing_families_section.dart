@@ -14,7 +14,7 @@ class LandingFamiliesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
-    final showTeacherCopy = ReleaseFlags.teacherExperienceEnabled;
+    const showTeacherCopy = ReleaseFlags.teacherExperienceEnabled;
 
     final textColumn = Column(
       crossAxisAlignment:

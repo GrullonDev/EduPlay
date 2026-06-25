@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
@@ -11,7 +12,6 @@ import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
 import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
-import 'package:edu_play/shared/widgets/placeholder_section.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -77,7 +77,12 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             backgroundColor: _kBg,
             body: Column(
               children: [
-                _TopNavBar(bloc: bloc, s: s),
+                _TopNavBar(
+                  bloc: bloc,
+                  s: s,
+                  selectedTab: _tab,
+                  onSelect: (i) => setState(() => _tab = i),
+                ),
                 Expanded(
                   child: Row(
                     children: [
@@ -166,11 +171,16 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _TopNavBar extends StatelessWidget {
-  const _TopNavBar({required this.bloc, required this.s});
+  const _TopNavBar({
+    required this.bloc,
+    required this.s,
+    required this.selectedTab,
+    required this.onSelect,
+  });
   final StudentDashboardBloc bloc;
   final ScreenSize s;
-
-  static const _links = ['Learn', 'Games', 'Classroom', 'Reports'];
+  final int selectedTab;
+  final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -190,39 +200,45 @@ class _TopNavBar extends StatelessWidget {
           ),
           const SizedBox(width: 32),
 
-          // Nav links (hide on narrower desktops if needed)
           if (s.isDesktop)
             Row(
-              children: _links.map((l) {
-                final active = l == 'Learn';
-                return Padding(
-                  padding: const EdgeInsets.only(right: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l,
-                        style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          fontWeight:
-                              active ? FontWeight.w800 : FontWeight.w600,
-                          color: active ? _kNavy : Colors.grey[500],
-                        ),
-                      ),
-                      if (active)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          height: 2,
-                          width: 24,
-                          decoration: BoxDecoration(
-                            color: _kNavy,
-                            borderRadius: BorderRadius.circular(2),
+              children: [
+                for (var index = 0; index < _sideNavItems.length; index++)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => onSelect(index),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _sideNavItems[index].label,
+                            style: GoogleFonts.nunito(
+                              fontSize: 14,
+                              fontWeight: index == selectedTab
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: index == selectedTab
+                                  ? _kNavy
+                                  : Colors.grey[500],
+                            ),
                           ),
-                        ),
-                    ],
+                          if (index == selectedTab)
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              height: 2,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: _kNavy,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
+              ],
             ),
 
           const Spacer(),
@@ -316,7 +332,10 @@ const _sideNavItems = [
   _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
   _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
-  // 'Amigos' and 'Tienda' intentionally omitted until v2 social features land.
+  if (ReleaseFlags.studentExtraTabsEnabled)
+    _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
+  if (ReleaseFlags.studentExtraTabsEnabled)
+    _SideItem(icon: Icons.storefront_rounded, label: 'Tienda'),
 ];
 
 class _SideItem {

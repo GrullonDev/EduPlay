@@ -22,7 +22,7 @@ class LandingNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
-    final familiesLabel = ReleaseFlags.teacherExperienceEnabled
+    const familiesLabel = ReleaseFlags.teacherExperienceEnabled
         ? 'Para Familias y Docentes'
         : 'Para Familias';
 

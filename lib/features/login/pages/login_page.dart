@@ -60,10 +60,10 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.white,
         body: LoginLayout(
           userType: _selectedRole,
-          onChangeRole: widget.userType == null &&
-                  ReleaseFlags.teacherExperienceEnabled
-              ? () => setState(() => _selectedRole = null)
-              : null,
+          onChangeRole:
+              widget.userType == null && ReleaseFlags.teacherExperienceEnabled
+                  ? () => setState(() => _selectedRole = null)
+                  : null,
         ),
       ),
     );

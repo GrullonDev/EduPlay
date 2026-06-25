@@ -18,7 +18,7 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
-    final showTeacherCard = ReleaseFlags.teacherExperienceEnabled;
+    const showTeacherCard = ReleaseFlags.teacherExperienceEnabled;
 
     return Stack(
       children: [
