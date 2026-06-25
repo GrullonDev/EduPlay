@@ -17,6 +17,7 @@ import 'package:edu_play/utils/routes/router_paths.dart';
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const _kNavy = Color(0xFF1E1B6A);
+const _kCoral = Color(0xFFFF6E6C);
 const _kBg = Color(0xFFF8F7FF);
 const _kLavender = Color(0xFFEEEDF8);
 
