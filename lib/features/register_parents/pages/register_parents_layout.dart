@@ -167,7 +167,8 @@ class _Navbar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () => Navigator.pushNamed(
+                    context, RouterPaths.registerParents),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kRed,
                   foregroundColor: Colors.white,
@@ -842,7 +843,12 @@ class _FooterNewsletter extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('¡Gracias! Te avisaremos pronto.'),
+                  duration: Duration(seconds: 3),
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kNavy,
                 foregroundColor: Colors.white,

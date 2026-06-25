@@ -891,7 +891,12 @@ class _LibrarySection extends StatelessWidget {
                       icon: Icons.print_rounded, title: 'Fichas Imprimibles'),
                   const Spacer(),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Más fichas próximamente.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    ),
                     child: Text(
                       'Ver todas',
                       style: GoogleFonts.nunito(

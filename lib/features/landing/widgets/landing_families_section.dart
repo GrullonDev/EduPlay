@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
@@ -13,6 +14,7 @@ class LandingFamiliesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
+    final showTeacherCopy = ReleaseFlags.teacherExperienceEnabled;
 
     final textColumn = Column(
       crossAxisAlignment:
@@ -25,7 +27,7 @@ class LandingFamiliesSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            'Para Familias y Docentes',
+            showTeacherCopy ? 'Para Familias y Docentes' : 'Para Familias',
             style: GoogleFonts.nunito(
               fontWeight: FontWeight.w700,
               color: AppTheme.accentColor,
@@ -45,7 +47,7 @@ class LandingFamiliesSection extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           'La Zona de Padres reúne en un solo lugar todo lo que necesitas '
-          'para ayudar a tus hijos o estudiantes a avanzar.',
+          '${showTeacherCopy ? 'para ayudar a tus hijos o estudiantes a avanzar.' : 'para ayudar a tus hijos a avanzar.'}',
           textAlign: desktop ? TextAlign.start : TextAlign.center,
           style: GoogleFonts.nunito(
             fontSize: 16,
@@ -70,9 +72,8 @@ class LandingFamiliesSection extends StatelessWidget {
         const _FeatureRow(
           icon: Icons.family_restroom_rounded,
           title: 'Múltiples perfiles',
-          description:
-              'Gestiona el progreso de varios niños o estudiantes desde un '
-              'mismo panel.',
+          description: 'Gestiona el progreso de varios niños desde un mismo '
+              'panel.',
         ),
         const SizedBox(height: 12),
         Align(

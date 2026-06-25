@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
@@ -21,6 +22,9 @@ class LandingNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
+    final familiesLabel = ReleaseFlags.teacherExperienceEnabled
+        ? 'Para Familias y Docentes'
+        : 'Para Familias';
 
     return Material(
       elevation: 2,
@@ -40,9 +44,7 @@ class LandingNavBar extends StatelessWidget {
                 const Spacer(),
                 _NavLink(label: 'Juegos', onTap: onNavigateToGames),
                 const SizedBox(width: 24),
-                _NavLink(
-                    label: 'Para Familias y Docentes',
-                    onTap: onNavigateToFamilies),
+                _NavLink(label: familiesLabel, onTap: onNavigateToFamilies),
                 const SizedBox(width: 24),
                 _NavLink(label: 'Comunidad', onTap: onNavigateToCommunity),
                 const Spacer(),

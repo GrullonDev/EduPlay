@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/login/bloc/login_bloc.dart';
 import 'package:edu_play/features/login/pages/login_layout.dart';
@@ -20,7 +21,18 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   // null  → show role picker
   // set   → show login form for that role
-  late String? _selectedRole = widget.userType;
+  String? _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRole = _initialRole(widget.userType);
+  }
+
+  String? _initialRole(String? requestedRole) {
+    if (ReleaseFlags.teacherExperienceEnabled) return requestedRole;
+    return requestedRole == 'teacher' ? 'parent' : (requestedRole ?? 'parent');
+  }
 
   void _onRoleSelected(String role) {
     setState(() => _selectedRole = role);
@@ -48,7 +60,8 @@ class _LoginPageState extends State<LoginPage> {
         backgroundColor: Colors.white,
         body: LoginLayout(
           userType: _selectedRole,
-          onChangeRole: widget.userType == null
+          onChangeRole: widget.userType == null &&
+                  ReleaseFlags.teacherExperienceEnabled
               ? () => setState(() => _selectedRole = null)
               : null,
         ),

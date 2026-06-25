@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/login/bloc/login_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -57,6 +58,8 @@ class _LeftPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showTeacherMessaging = ReleaseFlags.teacherExperienceEnabled;
+
     return Container(
       color: _kNavy,
       padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 56),
@@ -83,11 +86,15 @@ class _LeftPanel extends StatelessWidget {
           ),
           const Spacer(),
           // Feature cards
-          const _FeatureCard(
-            icon: Icons.school_rounded,
-            iconColor: Color(0xFFF4A82B),
-            title: 'Para Escuelas',
-            subtitle: 'Herramientas analíticas robustas para educadores.',
+          _FeatureCard(
+            icon: showTeacherMessaging
+                ? Icons.school_rounded
+                : Icons.family_restroom_rounded,
+            iconColor: const Color(0xFFF4A82B),
+            title: showTeacherMessaging ? 'Para Escuelas' : 'Para Familias',
+            subtitle: showTeacherMessaging
+                ? 'Herramientas analíticas robustas para educadores.'
+                : 'Sigue el progreso, los retos y la actividad de tus hijos.',
           ),
           const SizedBox(height: 16),
           const _FeatureCard(
@@ -208,7 +215,8 @@ class _RightPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = ScreenSize.of(context);
-    final isTeacher = userType == 'teacher';
+    final isTeacher =
+        ReleaseFlags.teacherExperienceEnabled && userType == 'teacher';
     final roleLabel = isTeacher ? 'Profesor' : 'Padre / Madre';
     final roleIcon =
         isTeacher ? Icons.school_rounded : Icons.family_restroom_rounded;
@@ -646,7 +654,8 @@ class _RegisterLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isTeacher = userType == 'teacher';
+    final isTeacher =
+        ReleaseFlags.teacherExperienceEnabled && userType == 'teacher';
     final label =
         isTeacher ? 'Regístrate como docente' : 'Crear cuenta de padre/madre';
     final route =
@@ -694,6 +703,7 @@ class RoleSelectorLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = ScreenSize.of(context);
     final isDesktop = s.isDesktop;
+    final showTeacherOption = ReleaseFlags.teacherExperienceEnabled;
 
     return Container(
       decoration: const BoxDecoration(
@@ -749,7 +759,9 @@ class RoleSelectorLayout extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Elige tu perfil para acceder al panel correcto.',
+                          showTeacherOption
+                              ? 'Elige tu perfil para acceder al panel correcto.'
+                              : 'Ingresa a tu panel familiar para continuar.',
                           style: GoogleFonts.nunito(
                             fontSize: 16,
                             color: Colors.white.withValues(alpha: 0.65),
@@ -771,17 +783,21 @@ class RoleSelectorLayout extends StatelessWidget {
                                       onTap: () => onRoleSelected('parent'),
                                     ),
                                   ),
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    child: _RoleCard(
-                                      icon: Icons.school_rounded,
-                                      title: 'Profesor',
-                                      subtitle:
-                                          'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
-                                      accentColor: const Color(0xFF4FC3F7),
-                                      onTap: () => onRoleSelected('teacher'),
+                                  if (showTeacherOption) ...[
+                                    const SizedBox(width: 24),
+                                    Expanded(
+                                      child: _RoleCard(
+                                        icon: Icons.school_rounded,
+                                        title: 'Profesor',
+                                        subtitle:
+                                            'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                        accentColor:
+                                            const Color(0xFF4FC3F7),
+                                        onTap: () =>
+                                            onRoleSelected('teacher'),
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ],
                               )
                             : Column(
@@ -794,15 +810,19 @@ class RoleSelectorLayout extends StatelessWidget {
                                     accentColor: const Color(0xFFF4A82B),
                                     onTap: () => onRoleSelected('parent'),
                                   ),
-                                  const SizedBox(height: 16),
-                                  _RoleCard(
-                                    icon: Icons.school_rounded,
-                                    title: 'Profesor',
-                                    subtitle:
-                                        'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
-                                    accentColor: const Color(0xFF4FC3F7),
-                                    onTap: () => onRoleSelected('teacher'),
-                                  ),
+                                  if (showTeacherOption) ...[
+                                    const SizedBox(height: 16),
+                                    _RoleCard(
+                                      icon: Icons.school_rounded,
+                                      title: 'Profesor',
+                                      subtitle:
+                                          'Gestiona tus clases, retos y el rendimiento de tus alumnos.',
+                                      accentColor:
+                                          const Color(0xFF4FC3F7),
+                                      onTap: () =>
+                                          onRoleSelected('teacher'),
+                                    ),
+                                  ],
                                 ],
                               ),
                       ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -67,9 +68,11 @@ class LoginBloc extends ChangeNotifier {
       if (!_context.mounted) return;
 
       if (user != null) {
+        final wantsTeacherDashboard =
+            ReleaseFlags.teacherExperienceEnabled && userType == 'teacher';
         Navigator.pushNamedAndRemoveUntil(
           _context,
-          userType == 'teacher'
+          wantsTeacherDashboard
               ? RouterPaths.teacherDashboard
               : RouterPaths.parentsDashboard,
           (route) => false,

@@ -43,18 +43,6 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
         return _GamesHubView(bloc: bloc, s: s);
       case 2:
         return _AchievementsView(s: s);
-      case 3:
-        return const PlaceholderSection(
-          icon: Icons.people_alt_rounded,
-          title: 'Amigos',
-          message: 'Pronto podrás ver a tus amigos en línea y jugar juntos.',
-        );
-      case 4:
-        return const PlaceholderSection(
-          icon: Icons.storefront_rounded,
-          title: 'Tienda',
-          message: 'Pronto podrás canjear tus XP por premios increíbles.',
-        );
       default:
         return _HomeView(
           bloc: bloc,
@@ -328,8 +316,7 @@ const _sideNavItems = [
   _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
   _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
-  _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
-  _SideItem(icon: Icons.storefront_rounded, label: 'Tienda'),
+  // 'Amigos' and 'Tienda' intentionally omitted until v2 social features land.
 ];
 
 class _SideItem {
@@ -409,13 +396,13 @@ class _Sidebar extends StatelessWidget {
 
             const Spacer(),
 
-            // Quest button
+            // Quest button → opens the Mis Juegos tab
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => onSelect(1),
                   icon: const Icon(Icons.rocket_launch_rounded, size: 16),
                   label: Text(
                     '¡Comenzar Quest!',
@@ -440,7 +427,12 @@ class _Sidebar extends StatelessWidget {
             _SideFooterTile(
               icon: Icons.help_outline_rounded,
               label: 'Ayuda',
-              onTap: () {},
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Centro de ayuda próximamente.'),
+                  duration: Duration(seconds: 2),
+                ),
+              ),
             ),
             _SideFooterTile(
               icon: Icons.logout_rounded,

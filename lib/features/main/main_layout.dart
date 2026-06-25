@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
 
@@ -17,6 +18,7 @@ class MainLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final desktop = isLandingDesktop(context);
+    final showTeacherCard = ReleaseFlags.teacherExperienceEnabled;
 
     return Stack(
       children: [
@@ -53,8 +55,10 @@ class MainLayout extends StatelessWidget {
                                   Expanded(child: _kidsCard(context)),
                                   const SizedBox(width: 20),
                                   Expanded(child: _parentsCard(context)),
-                                  const SizedBox(width: 20),
-                                  Expanded(child: _teachersCard(context)),
+                                  if (showTeacherCard) ...[
+                                    const SizedBox(width: 20),
+                                    Expanded(child: _teachersCard(context)),
+                                  ],
                                 ],
                               ),
                             )
@@ -63,8 +67,10 @@ class MainLayout extends StatelessWidget {
                                 _kidsCard(context),
                                 const SizedBox(height: 16),
                                 _parentsCard(context),
-                                const SizedBox(height: 16),
-                                _teachersCard(context),
+                                if (showTeacherCard) ...[
+                                  const SizedBox(height: 16),
+                                  _teachersCard(context),
+                                ],
                               ],
                             ),
                       SizedBox(height: desktop ? 60 : 48),
