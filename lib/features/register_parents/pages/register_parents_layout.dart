@@ -18,7 +18,6 @@ class RegisterParentsLayout extends StatefulWidget {
 
 class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
   final _confirmPasswordController = TextEditingController();
-  final _mobileScrollController = ScrollController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _acceptedTerms = false;
@@ -26,22 +25,7 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
   @override
   void dispose() {
     _confirmPasswordController.dispose();
-    _mobileScrollController.dispose();
     super.dispose();
-  }
-
-  void _scrollToForm() {
-    // Scroll to the end of the mobile SingleChildScrollView, which puts the
-    // form card in view. On desktop the form panel is always visible.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_mobileScrollController.hasClients) {
-        _mobileScrollController.animateTo(
-          _mobileScrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
   }
 
   @override
@@ -52,7 +36,7 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
       backgroundColor: const Color(0xFFF0EFF8),
       body: Column(
         children: [
-          _Navbar(onStartFree: isDesktop ? null : _scrollToForm),
+          _Navbar(),
           Expanded(
             child: isDesktop ? _desktopBody() : _mobileBody(),
           ),
@@ -73,7 +57,7 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
             child: _LeftContent(),
           ),
         ),
-        // Right: form — always visible on desktop, no scroll needed.
+        // Right: form
         Expanded(
           flex: 5,
           child: SingleChildScrollView(
@@ -97,7 +81,6 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
 
   Widget _mobileBody() {
     return SingleChildScrollView(
-      controller: _mobileScrollController,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: Column(
         children: [
@@ -123,12 +106,6 @@ class _RegisterParentsLayoutState extends State<RegisterParentsLayout> {
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 class _Navbar extends StatelessWidget {
-  const _Navbar({this.onStartFree});
-
-  /// Called when the "Start Free" CTA is tapped.
-  /// Null on desktop (form is always visible in the right panel).
-  final VoidCallback? onStartFree;
-
   @override
   Widget build(BuildContext context) {
     final isDesktop = ScreenSize.of(context).isDesktop;
@@ -190,9 +167,8 @@ class _Navbar extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                // On mobile: scroll to the sign-up form.
-                // On desktop: form is already in view (no-op).
-                onPressed: onStartFree,
+                onPressed: () => Navigator.pushNamed(
+                    context, RouterPaths.registerParents),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kRed,
                   foregroundColor: Colors.white,

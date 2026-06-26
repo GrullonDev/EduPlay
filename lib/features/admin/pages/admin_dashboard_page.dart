@@ -240,12 +240,7 @@ class _StatsView extends StatelessWidget {
             icon: Icons.school_rounded,
             label: 'Ver todas las clases',
             subtitle: '${stats.totalClasses} clases activas',
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vista de todas las clases próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
+            onTap: () {}, // Future: navigate to all-classes view
           ),
         ],
       ),
