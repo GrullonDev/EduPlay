@@ -221,9 +221,9 @@ class _Sidebar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Divider(height: 24),
-                // Nuevo Reporte button
+                // Nuevo Reporte → switches to Informes tab (index 4)
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => onSelect(4),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text(
                     'Nuevo Reporte',
@@ -242,7 +242,12 @@ class _Sidebar extends StatelessWidget {
                 _SidebarTextBtn(
                   icon: Icons.help_outline_rounded,
                   label: 'Ayuda',
-                  onTap: () {},
+                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Centro de ayuda próximamente.'),
+                      duration: Duration(seconds: 2),
+                    ),
+                  ),
                 ),
                 _SidebarTextBtn(
                   icon: Icons.logout_rounded,
@@ -365,9 +370,21 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           // Icons
-          const _TopIcon(Icons.notifications_none_rounded),
+          _TopIcon(
+            Icons.notifications_none_rounded,
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notificaciones próximamente.'),
+                duration: Duration(seconds: 2),
+              ),
+            ),
+          ),
           const SizedBox(width: 4),
-          const _TopIcon(Icons.settings_outlined),
+          _TopIcon(
+            Icons.settings_outlined,
+            onPressed: () =>
+                Navigator.pushNamed(context, RouterPaths.settings),
+          ),
           const SizedBox(width: 12),
           // Avatar
           CircleAvatar(
@@ -386,13 +403,14 @@ class _TopBar extends StatelessWidget {
 }
 
 class _TopIcon extends StatelessWidget {
-  const _TopIcon(this.icon);
+  const _TopIcon(this.icon, {this.onPressed});
   final IconData icon;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => IconButton(
         icon: Icon(icon, size: 22, color: Colors.grey.shade600),
-        onPressed: () {},
+        onPressed: onPressed,
         splashRadius: 20,
       );
 }
@@ -523,20 +541,28 @@ class _GreetingRow extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        OutlinedButton.icon(
-          onPressed: () {},
-          icon:
-              const Icon(Icons.calendar_today_rounded, size: 15, color: _kNavy),
-          label: Text(
-            dateLabel,
-            style: GoogleFonts.nunito(
-                color: _kNavy, fontWeight: FontWeight.w700, fontSize: 13),
+        // Display-only date chip — no interaction until date-filtering is built.
+        Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: _kNavy, width: 1.5),
+            borderRadius: BorderRadius.circular(12),
           ),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: _kNavy, width: 1.5),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.calendar_today_rounded,
+                  size: 15, color: _kNavy),
+              const SizedBox(width: 8),
+              Text(
+                dateLabel,
+                style: GoogleFonts.nunito(
+                    color: _kNavy,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13),
+              ),
+            ],
           ),
         ),
       ],

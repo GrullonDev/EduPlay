@@ -1736,24 +1736,6 @@ class _HeroCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side:
-                            const BorderSide(color: Colors.white54, width: 1.5),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 13),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: Text(
-                        'Detalles',
-                        style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-                      ),
-                    ),
                   ],
                 ),
               ],

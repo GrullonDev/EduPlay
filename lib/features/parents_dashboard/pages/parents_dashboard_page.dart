@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -619,32 +620,34 @@ class _ChildCard extends StatelessWidget {
                       fontSize: 10, fontWeight: FontWeight.w700),
                 ),
               ),
-              const SizedBox(height: 6),
-              ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(
-                  context,
-                  RouterPaths.browseTeachers,
-                  arguments: profile,
-                ),
-                icon: const Icon(Icons.person_search_rounded, size: 12),
-                label: Text(
-                  'Asignar Maestro',
-                  style: GoogleFonts.nunito(
-                      fontSize: 10, fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _kCoral,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (ReleaseFlags.teacherExperienceEnabled) ...[
+                const SizedBox(height: 6),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    RouterPaths.browseTeachers,
+                    arguments: profile,
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  icon: const Icon(Icons.person_search_rounded, size: 12),
+                  label: Text(
+                    'Asignar Maestro',
+                    style: GoogleFonts.nunito(
+                        fontSize: 10, fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kCoral,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
           // Delete

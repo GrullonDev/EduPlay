@@ -105,7 +105,12 @@ class _HeaderRow extends StatelessWidget {
         ),
         const Spacer(),
         OutlinedButton.icon(
-          onPressed: () {},
+          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Exportación disponible próximamente.'),
+              duration: Duration(seconds: 2),
+            ),
+          ),
           icon: const Icon(Icons.upload_rounded, size: 14, color: _kNavy),
           label: Text(
             'Exportar Todo',
@@ -266,7 +271,13 @@ class _BuilderCard extends StatelessWidget {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('Informes personalizados disponibles próximamente.'),
+                duration: Duration(seconds: 2),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: _kCoral,
               foregroundColor: Colors.white,

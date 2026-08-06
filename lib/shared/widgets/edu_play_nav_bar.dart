@@ -140,7 +140,12 @@ class EduPlayNavBar extends StatelessWidget {
               // Right side icons
               _IconBtn(
                 icon: Icons.notifications_outlined,
-                onTap: () {},
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Notificaciones próximamente.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               _IconBtn(
