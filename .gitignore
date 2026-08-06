@@ -10012,3 +10012,11 @@ ios/Flutter/ephemeral/
 /ios/Flutter/Generated.xcconfig
 /ios/Flutter/app.flx
 /ios/Flutter/app.zip
+
+# Platforms
+windows/
+linux/
+macos/
+
+# pubspec.lock
+pubspec.lock
