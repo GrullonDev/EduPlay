@@ -10,6 +10,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart'
 import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/friends_panel.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -39,6 +40,7 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
     _NavItem(icon: Icons.emoji_events_rounded, label: 'Retos'),
     _NavItem(icon: Icons.bar_chart_rounded, label: 'Rendimiento'),
     _NavItem(icon: Icons.description_rounded, label: 'Informes'),
+    _NavItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
   ];
 
   @override
@@ -88,7 +90,8 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
                     'Buscar reto...',
                     'Buscar alumno...',
                     'Buscar informes...',
-                  ][_selectedIndex.clamp(0, 4)],
+                    'Buscar amigos...',
+                  ][_selectedIndex.clamp(0, 5)],
                 ),
                 Expanded(
                   child: bloc.isLoading
@@ -113,8 +116,10 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
         return RetosPanel(bloc: bloc);
       case 3:
         return RendimientoPanel(bloc: bloc);
-      default:
+      case 4:
         return InformesPanel(bloc: bloc);
+      default:
+        return FriendsPanel(bloc: bloc);
     }
   }
 }

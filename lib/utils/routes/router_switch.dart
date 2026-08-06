@@ -40,6 +40,7 @@ import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
 import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
 import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
+import 'package:edu_play/features/friends/pages/friends_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -206,6 +207,10 @@ class AppRouter {
         final child = settings.arguments as ChildProfile;
         return MaterialPageRoute(
           builder: (_) => BrowseTeachersPage(child: child),
+        );
+      case RouterPaths.friends:
+        return MaterialPageRoute(
+          builder: (_) => const FriendsPage(),
         );
       default:
         page = const Scaffold(

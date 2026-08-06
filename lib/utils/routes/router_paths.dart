@@ -36,4 +36,5 @@ class RouterPaths {
   static const privacyPolicy = '/privacy-policy';
   static const termsOfService = '/terms-of-service';
   static const browseTeachers = '/browse-teachers';
+  static const friends = '/friends';
 }

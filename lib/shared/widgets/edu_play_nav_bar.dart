@@ -21,7 +21,7 @@ const _kNavy = Color(0xFF1E1B6A);
 //   ])
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum ParentTab { inicio, progreso, recursos, configuracion }
+enum ParentTab { inicio, progreso, recursos, amigos, configuracion }
 
 enum StudentTab { learn, games, classroom, reports }
 
@@ -62,6 +62,11 @@ class EduPlayNavBar extends StatelessWidget {
       label: 'Recursos',
       tab: ParentTab.recursos,
       route: RouterPaths.parentGuide
+    ),
+    (
+      label: 'Amigos',
+      tab: ParentTab.amigos,
+      route: RouterPaths.friends
     ),
     (
       label: 'Configuración',
@@ -195,6 +200,7 @@ class EduPlayNavBar extends StatelessWidget {
     RouterPaths.parentGuide,
     RouterPaths.progressReports,
     RouterPaths.settings,
+    RouterPaths.friends,
   };
 
   void _navigate(BuildContext context, String route) {

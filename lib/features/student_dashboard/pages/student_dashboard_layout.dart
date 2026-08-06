@@ -3,6 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/friends/models/friend_request.dart';
+import 'package:edu_play/features/friends/pages/friends_view.dart';
+import 'package:edu_play/features/friends/services/friends_service.dart';
+import 'package:edu_play/features/friends/widgets/add_friend_dialog.dart';
+import 'package:edu_play/features/friends/widgets/friend_avatar.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
@@ -43,6 +48,14 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
         return _GamesHubView(bloc: bloc, s: s);
       case 2:
         return _AchievementsView(s: s);
+      case 3:
+        return FriendsView(
+          identity: studentIdentity(
+            displayName: bloc.displayName,
+            childId: bloc.childProfile?.id,
+          ),
+          subtitle: 'Conecta con otros exploradores de EduPlay.',
+        );
       default:
         return _HomeView(
           bloc: bloc,
@@ -332,7 +345,7 @@ const _sideNavItems = [
   _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
   _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
-  if (ReleaseFlags.studentExtraTabsEnabled)
+  if (ReleaseFlags.friendsEnabled)
     _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
   if (ReleaseFlags.studentExtraTabsEnabled)
     _SideItem(icon: Icons.storefront_rounded, label: 'Tienda'),
@@ -640,8 +653,9 @@ class _HomeView extends StatelessWidget {
                   const SizedBox(width: 20),
                   Expanded(
                     child: _AmigosEnLineaCard(
-                      challenges: bloc.challenges,
+                      bloc: bloc,
                       onComplete: bloc.completeChallenge,
+                      onViewAll: () => onTabChange(3),
                     ),
                   ),
                 ],
@@ -654,8 +668,9 @@ class _HomeView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _AmigosEnLineaCard(
-              challenges: bloc.challenges,
+              bloc: bloc,
               onComplete: bloc.completeChallenge,
+              onViewAll: () => onTabChange(3),
             ),
           ],
         ],
@@ -1640,20 +1655,22 @@ class _StickerCell extends StatelessWidget {
 
 class _AmigosEnLineaCard extends StatelessWidget {
   const _AmigosEnLineaCard({
-    required this.challenges,
+    required this.bloc,
     required this.onComplete,
+    required this.onViewAll,
   });
-  final List<Map<String, dynamic>> challenges;
+  final StudentDashboardBloc bloc;
   final ValueChanged<String> onComplete;
+  final VoidCallback onViewAll;
 
-  static const _friends = [
-    (name: 'Oliver', initial: 'O', color: Color(0xFF43A047)),
-    (name: 'Emma', initial: 'E', color: Color(0xFF1E88E5)),
-    (name: 'Lucas', initial: 'L', color: Color(0xFFE53935)),
-  ];
+  List<Map<String, dynamic>> get challenges => bloc.challenges;
 
   @override
   Widget build(BuildContext context) {
+    final identity = studentIdentity(
+      displayName: bloc.displayName,
+      childId: bloc.childProfile?.id,
+    );
     final pending = challenges.isNotEmpty
         ? challenges.firstWhere(
             (c) => c['status'] == 'active',
@@ -1682,12 +1699,25 @@ class _AmigosEnLineaCard extends StatelessWidget {
             children: [
               const Text('🎮', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
-              Text(
-                'Amigos en Línea',
-                style: GoogleFonts.fredoka(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _kNavy,
+              Expanded(
+                child: Text(
+                  'Amigos en Línea',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _kNavy,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: onViewAll,
+                child: Text(
+                  'Ver todos',
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _kCoral,
+                  ),
                 ),
               ),
             ],
@@ -1699,51 +1729,69 @@ class _AmigosEnLineaCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 8,
             children: [
-              ..._friends.map((f) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: f.color,
-                        child: Text(
-                          f.initial,
-                          style: GoogleFonts.fredoka(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+              if (identity != null)
+                StreamBuilder<List<FriendRequestModel>>(
+                  stream: FriendsService.watchFriends(identity),
+                  builder: (context, snapshot) {
+                    final friends = snapshot.data ?? const <FriendRequestModel>[];
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: friends.take(4).map((r) {
+                        final other = r.other(identity.key);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FriendAvatar(name: other.name, radius: 20),
+                              const SizedBox(height: 4),
+                              Text(
+                                other.name,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        f.name,
-                        style: GoogleFonts.nunito(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  )),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
               // Add button
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
+              GestureDetector(
+                onTap: () async {
+                  if (identity == null) {
+                    Navigator.of(context).pushNamed(RouterPaths.login);
+                    return;
+                  }
+                  await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AddFriendDialog(identity: identity),
+                  );
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey[300]!, width: 2),
+                      ),
+                      child:
+                          Icon(Icons.add, color: Colors.grey[400], size: 18),
                     ),
-                    child: Icon(Icons.add, color: Colors.grey[400], size: 18),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Añadir',
-                    style: GoogleFonts.nunito(
-                        fontSize: 11, color: Colors.grey[400]),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Añadir',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
