@@ -16,12 +16,17 @@ class StudentDashboardPage extends StatelessWidget {
     super.key,
     required this.username,
     this.childProfile,
+    this.initialTab = 0,
   });
 
   final String? username;
 
   /// Optional ChildProfile passed from the PIN login flow.
   final ChildProfile? childProfile;
+
+  /// Which sidebar tab to open on — lets callers deep-link straight into
+  /// e.g. the Amigos tab instead of always landing on the home panel.
+  final int initialTab;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +50,7 @@ class StudentDashboardPage extends StatelessWidget {
           ),
         ),
       ],
-      child: const StudentDashboardLayout(),
+      child: StudentDashboardLayout(initialTab: initialTab),
     );
   }
 }

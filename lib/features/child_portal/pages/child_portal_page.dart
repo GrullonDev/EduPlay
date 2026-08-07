@@ -56,17 +56,21 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
 
   Future<void> _init() async {
     // Priority 1: profile data embedded in URL (new-style share link).
+    // A shared link means "let my kid play right now" — skip the profile/
+    // sessions summary and go straight into the games catalog, already
+    // scoped to their profile.
     final urlProfile = childProfileFromUrl();
     final urlPin = widget.pinFromArgs ?? pinFromUrl();
 
     if (urlProfile != null && urlPin != null) {
-      // Persist so the child can return without the full link.
+      // Persist so the child can return (via the portal) without the full link.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kPinKey, urlPin);
-      final sessions = await _loadSessions(urlProfile.id);
       if (!mounted) return;
-      setState(
-          () => _state = _ProfileView(profile: urlProfile, sessions: sessions));
+      Navigator.of(context).pushReplacementNamed(
+        RouterPaths.gamesCatalog,
+        arguments: urlProfile,
+      );
       return;
     }
 

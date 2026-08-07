@@ -33,14 +33,18 @@ const _kBg = Color(0xFFF3F5F9);
 // ─────────────────────────────────────────────────────────────────────────────
 
 class StudentDashboardLayout extends StatefulWidget {
-  const StudentDashboardLayout({super.key});
+  const StudentDashboardLayout({super.key, this.initialTab = 0});
+
+  /// Which sidebar tab to open on ("Panel de Control" by default). Lets
+  /// callers deep-link straight into e.g. the Amigos tab.
+  final int initialTab;
 
   @override
   State<StudentDashboardLayout> createState() => _StudentDashboardLayoutState();
 }
 
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
-  int _tab = 0;
+  late int _tab = widget.initialTab;
 
   Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s) {
     switch (_tab) {

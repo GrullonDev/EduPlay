@@ -1,4 +1,6 @@
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
 import 'package:edu_play/utils/points_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -383,16 +385,31 @@ class _TopBarState extends State<_TopBar> {
                         Navigator.pushNamed(context, RouterPaths.childPortal),
                   ),
                 ),
-                // Reportes → progress reports
-                Padding(
-                  padding: const EdgeInsets.only(right: 24),
-                  child: _NavTab(
-                    label: 'Reportes',
-                    selected: false,
-                    onTap: () => Navigator.pushNamed(
-                        context, RouterPaths.progressReports),
+                // Amigos → student dashboard, opened straight on the Amigos
+                // tab. Progress Reports is a parent-only, multi-child view
+                // (reads every sibling's sessions) so it's intentionally not
+                // reachable from here.
+                if (ReleaseFlags.friendsEnabled)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: _NavTab(
+                      label: 'Amigos',
+                      selected: false,
+                      onTap: () {
+                        final p = widget.childProfile;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => StudentDashboardPage(
+                              username: p?.name,
+                              childProfile: p,
+                              initialTab: 3,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
               ],
               const SizedBox(width: 16),
               if (isDesktop)
