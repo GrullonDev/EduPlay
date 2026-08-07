@@ -88,6 +88,53 @@ roles, ~15 mini-games, guest mode, subscriptions (Stripe), and a Firebase backen
   it's actually a fully designed gradient/icon composition, not a missing asset. Not a
   real gap; the comment should just be reworded or removed.
 
+**"Recursos" (`lib/features/parent_guide/pages/parent_guide_page.dart`, ~2160 lines) is
+100% hardcoded, static content — in progress, paused mid-implementation.** Every
+article/video/worksheet, the "Novedades" dates (already in the past), bookmarks
+(in-memory `Set`, lost on refresh), the newsletter signup (no backend), and worksheet
+"downloads" (a fake snackbar) are fabricated. The user explicitly does **not** want an
+in-house CMS/admin-CRUD solution for this (rejected — "no se quiere migrar nada") —
+the direction is to consume free external services directly, no new backend:
+- **Articles**: pull real, ever-updating content from public RSS feeds — no API key, no
+  quota, no backend. Two Spanish-language feeds were verified reachable and parseable
+  (via `WebFetch`) and are the intended sources: `https://www.serpadres.es/feed/`
+  ("Ser Padres" — parenting, tag `CRIANZA`) and
+  `https://www.educaciontrespuntocero.com/feed/` ("Educación 3.0" — edtech/teaching, tag
+  `EDUCACIÓN` — this one skews toward teachers, useful once that experience ships).
+  `guiainfantil.com`, `faros.hsjdbcn.org`, and `bebesymas.com` were tried and don't
+  expose a working feed at the obvious URL — don't re-try those without finding their
+  actual feed link first.
+- **Videos**: same idea via the YouTube Data API v3 (free quota, ~10k units/day) against
+  2-3 curated channel/playlist IDs — **blocked on the user creating their own free API
+  key** (Google Cloud Console: enable "YouTube Data API v3", create an API key, restrict
+  it by HTTP referrer since this is Flutter *Web* and the key will be visible in the
+  compiled JS bundle either way). Not started.
+- **Worksheets/PDFs**: explicitly out of scope for this pass (would require hosting
+  real files somewhere, e.g. Firebase Storage — closer to the "migration" the user
+  wants to avoid). Left as-is (hardcoded, fake download).
+
+**Done so far:** `lib/features/parent_guide/services/external_resources_service.dart`
+exists — `ExternalResourcesService.fetchArticles()` fetches both feeds in parallel via
+`http`, parses with `webfeed_plus` (`RssFeed.parse`), strips HTML from descriptions, and
+merges/sorts by `pubDate`. A single failed feed degrades gracefully (returns `[]` for
+that source, doesn't break the page). Dev deps added: `webfeed_plus`, `url_launcher`
+(for opening the real article URL — RSS is meant to be redisplayed with a link back to
+the source), and `http` promoted from transitive to direct dependency.
+
+**Not done yet — pick this back up here:**
+1. Wire `ExternalResourcesService.fetchArticles()` into `_ParentGuidePageState`
+   (currently reads only from the const `_kAllResources`). Load in `initState`, merge
+   into the article section, keep the one EduPlay-specific hardcoded article ("Cómo
+   interpretar los reportes de EduPlay") pinned since no external feed could ever
+   provide that — replace only the two generic hardcoded articles/videos.
+2. Add an `externalUrl` field to `_Resource` and make `_ResourceDetailSheet`'s CTA
+   button call `url_launcher` to open it for externally-sourced resources, instead of
+   the current canned snackbar.
+3. Get a YouTube Data API v3 key from the user, agree on 2-3 channels, implement the
+   video-fetching side the same way, and wire the CTA to open the video externally
+   (simplest option — no in-app player needed for v1).
+4. Re-run `flutter analyze`/`flutter test` once wired in.
+
 **Test coverage is the biggest gap**, though two areas were seeded this cycle:
 - `test/services/parent_child_stats_test.dart` — pure-logic coverage of
   `ChildGameplayStats`/`StudentRepository.levelForPoints`/`xpProgress`, i.e. the model
@@ -114,9 +161,11 @@ student_dashboard, child_portal, and every mini-game feature. Given the CI gate 
 in the untested areas would go undetected.
 
 **Backend (`functions/`) looks complete for its current scope** — Stripe checkout +
-webhook + post-payment Firestore update, no TODOs found. Worth double-checking whether
-`@sendgrid/mail` (a listed dependency) is actually wired into any function, since it
-isn't visibly used in the 3 exports.
+webhook + post-payment Firestore update, no TODOs found. `@sendgrid/mail` **is** wired
+up (correcting an earlier note here that said otherwise): `onSessionComplete` sends the
+parent an email via SendGrid using the `SENDGRID_API_KEY`/`SENDGRID_FROM_EMAIL` secrets
+already configured — reuse that same pattern for a future real newsletter signup
+instead of standing up a separate email pipeline.
 
 **Stale doc**: `EDUPLAY_PROJECT_ANALYSIS.md` at repo root is an older audit and is
 out of date — it claims no tests exist and no `firestore.rules` file exists; both are
