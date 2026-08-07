@@ -98,12 +98,13 @@ class EduPlayNavBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Logo — always navigates to home
+              // Logo — always navigates to home. Pops back to AuthGate
+              // (the bottom of the stack) instead of pushing the
+              // auth-blind MainPage, so it always reflects the live
+              // session instead of a stale route.
               GestureDetector(
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                  RouterPaths.root,
-                  (r) => false,
-                ),
+                onTap: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
                 child: Text(
                   'EduPlay',
                   style: GoogleFonts.fredoka(

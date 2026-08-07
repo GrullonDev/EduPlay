@@ -19,22 +19,76 @@ import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
+  /// Caches only successful role lookups, keyed by uid, so redundant
+  /// `authStateChanges()` emissions for an already-resolved session (e.g. a
+  /// token refresh) don't hit Firestore again — reducing how often the
+  /// transient-error race below is even triggered. Errors and "no role" are
+  /// never cached, so they're always re-checked.
+  static final Map<String, String> _roleCache = {};
+
   static Future<String?> _resolveRole(String uid) async {
+    final cached = _roleCache[uid];
+    if (cached != null) return cached;
+
     final db = FirebaseFirestore.instance;
 
     final parentDoc = await db.collection('parents').doc(uid).get();
-    if (parentDoc.exists) return 'parent';
+    if (parentDoc.exists) {
+      _roleCache[uid] = 'parent';
+      return 'parent';
+    }
 
     final teacherDoc = await db.collection('teachers').doc(uid).get();
-    if (teacherDoc.exists) return 'teacher';
+    if (teacherDoc.exists) {
+      _roleCache[uid] = 'teacher';
+      return 'teacher';
+    }
 
     return null;
+  }
+
+  /// Renders the destination for a *successfully resolved* role (or a
+  /// genuine "no role" result). Shared by the happy path and by
+  /// [_RoleResolutionRetry] once its retry succeeds.
+  static Widget _buildForRole(User user, String? role) {
+    // Unknown role — sign out to avoid an infinite loop.
+    if (role == null) {
+      // Anonymous sign-in is used by the child portal — leave it alone.
+      if (user.isAnonymous) return const _SplashLoader();
+      Future.microtask(() => FirebaseAuth.instance.signOut());
+      return const ChildPortalPage();
+    }
+
+    // Email not yet verified → show the hard gate.
+    // Anonymous users (child kiosk) are always considered verified so
+    // they are never blocked by this check.
+    if (!user.isAnonymous && !(user.emailVerified)) {
+      return EmailVerificationGatePage(role: role);
+    }
+
+    switch (role) {
+      case 'teacher':
+        return const TeacherDashboardPage();
+      case 'parent':
+        return const ParentsDashboardPage();
+      default:
+        if (!user.isAnonymous) {
+          Future.microtask(() => FirebaseAuth.instance.signOut());
+        }
+        return const ChildPortalPage();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      // Firebase can emit redundant events for the same signed-in user (e.g.
+      // on token refresh); collapsing those avoids re-running role
+      // resolution — and hitting the transient-error race — more than
+      // necessary.
+      stream: FirebaseAuth.instance
+          .authStateChanges()
+          .distinct((prev, next) => prev?.uid == next?.uid),
       builder: (context, authSnap) {
         // Still waiting for Firebase to restore the session
         if (authSnap.connectionState == ConnectionState.waiting) {
@@ -54,37 +108,111 @@ class AuthGate extends StatelessWidget {
               return const _SplashLoader();
             }
 
-            final role = roleSnap.data;
-
-            // Unknown role — sign out to avoid an infinite loop.
-            if (role == null) {
-              // Anonymous sign-in is used by the child portal — leave it alone.
-              if (user.isAnonymous) return const _SplashLoader();
-              Future.microtask(() => FirebaseAuth.instance.signOut());
-              return const ChildPortalPage();
+            // A Firestore error (token-refresh race, network blip, cold
+            // reconnect — all plausible while navigating) is NOT the same
+            // as "authenticated user with no role". Treating it that way
+            // used to trigger a real, silent FirebaseAuth.signOut() here —
+            // retry instead.
+            if (roleSnap.hasError) {
+              return _RoleResolutionRetry(user: user);
             }
 
-            // Email not yet verified → show the hard gate.
-            // Anonymous users (child kiosk) are always considered verified so
-            // they are never blocked by this check.
-            if (!user.isAnonymous && !(user.emailVerified)) {
-              return EmailVerificationGatePage(role: role);
-            }
-
-            switch (role) {
-              case 'teacher':
-                return const TeacherDashboardPage();
-              case 'parent':
-                return const ParentsDashboardPage();
-              default:
-                if (!user.isAnonymous) {
-                  Future.microtask(() => FirebaseAuth.instance.signOut());
-                }
-                return const ChildPortalPage();
-            }
+            return _buildForRole(user, roleSnap.data);
           },
         );
       },
+    );
+  }
+}
+
+// ── Retries role resolution after a transient Firestore error ─────────────────
+
+class _RoleResolutionRetry extends StatefulWidget {
+  const _RoleResolutionRetry({required this.user});
+  final User user;
+
+  @override
+  State<_RoleResolutionRetry> createState() => _RoleResolutionRetryState();
+}
+
+class _RoleResolutionRetryState extends State<_RoleResolutionRetry> {
+  static const _backoffs = [
+    Duration(milliseconds: 800),
+    Duration(milliseconds: 1600),
+    Duration(milliseconds: 3200),
+  ];
+
+  late Future<String?> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _retry();
+  }
+
+  Future<String?> _retry() async {
+    Object? lastError;
+    for (final backoff in _backoffs) {
+      await Future.delayed(backoff);
+      try {
+        return await AuthGate._resolveRole(widget.user.uid);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError!;
+  }
+
+  void _manualRetry() => setState(() => _future = _retry());
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String?>(
+      future: _future,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const _SplashLoader();
+        }
+        if (snap.hasError) {
+          return _RoleResolutionErrorScreen(onRetry: _manualRetry);
+        }
+        return AuthGate._buildForRole(widget.user, snap.data);
+      },
+    );
+  }
+}
+
+class _RoleResolutionErrorScreen extends StatelessWidget {
+  const _RoleResolutionErrorScreen({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F7FF),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off_rounded,
+                  size: 48, color: Color(0xFF1E1B6A)),
+              const SizedBox(height: 16),
+              const Text(
+                'No pudimos verificar tu sesión.\nRevisa tu conexión e intenta de nuevo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Color(0xFF1E1B6A), fontSize: 15),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: onRetry,
+                child: const Text('Reintentar'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
