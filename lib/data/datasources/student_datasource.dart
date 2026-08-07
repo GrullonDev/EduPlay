@@ -219,4 +219,61 @@ class StudentDatasource {
   String _dateKey(DateTime date) => '${date.year.toString().padLeft(4, '0')}-'
       '${date.month.toString().padLeft(2, '0')}-'
       '${date.day.toString().padLeft(2, '0')}';
+
+  /// Atomically spends [cost] points on [itemId], guarding against
+  /// insufficient balance and duplicate purchases. Modeled on [recordScore]'s
+  /// transaction, but — unlike the rest of this file — deliberately does not
+  /// swallow the outcome: the Tienda UI needs to know *why* a purchase failed.
+  Future<PurchaseResult> purchaseItem({
+    required String studentId,
+    required String itemId,
+    required int cost,
+  }) async {
+    final doc = _students.doc(studentId);
+    try {
+      return await _firestore.runTransaction((tx) async {
+        final data = (await tx.get(doc)).data();
+        final owned = List<String>.from(data?['ownedItemIds'] as List? ?? []);
+        if (owned.contains(itemId)) return PurchaseResult.alreadyOwned;
+
+        final points = (data?['points'] as num?)?.toInt() ?? 0;
+        if (points < cost) return PurchaseResult.insufficientPoints;
+
+        tx.set(
+          doc,
+          {
+            'points': FieldValue.increment(-cost),
+            'ownedItemIds': FieldValue.arrayUnion([itemId]),
+          },
+          SetOptions(merge: true),
+        );
+        return PurchaseResult.success;
+      });
+    } catch (e) {
+      debugPrint('StudentDatasource.purchaseItem error: $e');
+      return PurchaseResult.error;
+    }
+  }
+
+  /// Equips a purchased avatar color and/or icon. Only the provided fields
+  /// are written, so equipping a color doesn't clear an equipped icon.
+  Future<void> equipAvatar({
+    required String studentId,
+    String? colorHex,
+    String? iconId,
+  }) async {
+    try {
+      await _students.doc(studentId).set(
+        {
+          if (colorHex != null) 'equippedAvatarColorHex': colorHex,
+          if (iconId != null) 'equippedAvatarIcon': iconId,
+        },
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('StudentDatasource.equipAvatar error: $e');
+    }
+  }
 }
+
+enum PurchaseResult { success, alreadyOwned, insufficientPoints, error }

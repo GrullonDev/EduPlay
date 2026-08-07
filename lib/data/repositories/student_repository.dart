@@ -78,6 +78,21 @@ class StudentRepository {
   Future<Map<String, dynamic>?> getStudentProfile(String studentId) =>
       _datasource.getProfile(studentId);
 
+  /// Spends [cost] points on [itemId] for the given student. See
+  /// [PurchaseResult] for how the Tienda UI should react to each outcome.
+  Future<PurchaseResult> purchaseItem({
+    required String studentId,
+    required String itemId,
+    required int cost,
+  }) =>
+      _datasource.purchaseItem(studentId: studentId, itemId: itemId, cost: cost);
+
+  Future<void> equipAvatarColor(String studentId, String colorHex) =>
+      _datasource.equipAvatar(studentId: studentId, colorHex: colorHex);
+
+  Future<void> equipAvatarIcon(String studentId, String iconId) =>
+      _datasource.equipAvatar(studentId: studentId, iconId: iconId);
+
   Future<void> recordScore({
     required String subjectKey,
     required String gameTitle,
