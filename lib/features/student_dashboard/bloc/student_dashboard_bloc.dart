@@ -31,7 +31,7 @@ class StudentDashboardBloc extends ChangeNotifier {
   Map<String, dynamic>? profile;
   List<Map<String, dynamic>> challenges = [];
   List<Map<String, dynamic>> leaderboard = [];
-  List<String> unlockedStickerIds = [];
+  List<String> _achievementUnlockedStickerIds = [];
   String myStudentId = '';
 
   String get displayName =>
@@ -53,9 +53,23 @@ class StudentDashboardBloc extends ChangeNotifier {
   Map<String, dynamic>? get missionOfTheDay =>
       activeChallenges.isEmpty ? null : activeChallenges.first;
 
+  /// Stickers earned via achievements (local) plus stickers bought in the
+  /// Tienda (Firestore `ownedItemIds` — sticker item ids match `Sticker.id`,
+  /// avatar item ids are namespaced so they never collide here).
+  Set<String> get unlockedStickerIds =>
+      {..._achievementUnlockedStickerIds, ...ownedItemIds};
+
   int get unlockedStickerCount => unlockedStickerIds.length;
 
   int get totalStickerCount => allStickers.length;
+
+  Set<String> get ownedItemIds =>
+      Set<String>.from(profile?['ownedItemIds'] as List? ?? const []);
+
+  String? get equippedAvatarColorHex =>
+      profile?['equippedAvatarColorHex'] as String?;
+
+  String? get equippedAvatarIcon => profile?['equippedAvatarIcon'] as String?;
 
   Future<void> _load() async {
     isLoading = true;
@@ -85,7 +99,7 @@ class StudentDashboardBloc extends ChangeNotifier {
 
       profile = results[0] as Map<String, dynamic>?;
       leaderboard = results[1] as List<Map<String, dynamic>>;
-      unlockedStickerIds = results[2] as List<String>;
+      _achievementUnlockedStickerIds = results[2] as List<String>;
       myStudentId = results[3] as String;
       challenges = (await ClassroomChallengesService.getChallengesForStudent(
         myStudentId,

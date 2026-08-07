@@ -9,6 +9,8 @@ import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/menu/models/game.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
+import 'package:edu_play/features/store/models/store_item.dart';
+import 'package:edu_play/features/store/widgets/tienda_view.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
 import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
@@ -38,12 +40,15 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   int _tab = 0;
 
   Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s) {
-    switch (_tab) {
-      case 1:
+    switch (_sideNavItems[_tab].id) {
+      case _TabId.games:
         return _GamesHubView(bloc: bloc, s: s);
-      case 2:
+      case _TabId.achievements:
         return _AchievementsView(s: s);
-      default:
+      case _TabId.store:
+        return TiendaView(bloc: bloc, s: s);
+      case _TabId.home:
+      case _TabId.friends:
         return _HomeView(
           bloc: bloc,
           s: s,
@@ -269,16 +274,27 @@ class _TopNavBar extends StatelessWidget {
           // Avatar + name
           CircleAvatar(
             radius: 16,
-            backgroundColor: _kNavy,
-            child: Text(
-              bloc.displayName.isNotEmpty
-                  ? bloc.displayName[0].toUpperCase()
-                  : 'E',
-              style: GoogleFonts.fredoka(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14),
-            ),
+            backgroundColor: bloc.equippedAvatarColorHex != null
+                ? Color(
+                    int.parse('0xFF${bloc.equippedAvatarColorHex}'),
+                  )
+                : _kNavy,
+            child: bloc.equippedAvatarIcon != null &&
+                    avatarIconsById.containsKey(bloc.equippedAvatarIcon)
+                ? Icon(
+                    avatarIconsById[bloc.equippedAvatarIcon],
+                    color: Colors.white,
+                    size: 16,
+                  )
+                : Text(
+                    bloc.displayName.isNotEmpty
+                        ? bloc.displayName[0].toUpperCase()
+                        : 'E',
+                    style: GoogleFonts.fredoka(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
           ),
           const SizedBox(width: 8),
           Text(
@@ -328,18 +344,36 @@ class _PointsBadge extends StatelessWidget {
 // Sidebar
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Stable identity for each sidebar entry, resolved to actual content in
+/// `_buildContent`. `_sideNavItems` below has conditionally-included entries
+/// (feature flags), so matching content by raw list position is fragile —
+/// two independently-toggleable flags can shift everything after them.
+enum _TabId { home, games, achievements, friends, store }
+
 const _sideNavItems = [
-  _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
-  _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
-  _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
+  _SideItem(
+      id: _TabId.home,
+      icon: Icons.dashboard_rounded,
+      label: 'Panel de Control'),
+  _SideItem(
+      id: _TabId.games,
+      icon: Icons.videogame_asset_rounded,
+      label: 'Mis Juegos'),
+  _SideItem(
+      id: _TabId.achievements,
+      icon: Icons.emoji_events_rounded,
+      label: 'Logros'),
   if (ReleaseFlags.studentExtraTabsEnabled)
-    _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
-  if (ReleaseFlags.studentExtraTabsEnabled)
-    _SideItem(icon: Icons.storefront_rounded, label: 'Tienda'),
+    _SideItem(
+        id: _TabId.friends, icon: Icons.people_alt_rounded, label: 'Amigos'),
+  if (ReleaseFlags.storeEnabled)
+    _SideItem(
+        id: _TabId.store, icon: Icons.storefront_rounded, label: 'Tienda'),
 ];
 
 class _SideItem {
-  const _SideItem({required this.icon, required this.label});
+  const _SideItem({required this.id, required this.icon, required this.label});
+  final _TabId id;
   final IconData icon;
   final String label;
 }
@@ -618,7 +652,7 @@ class _HomeView extends StatelessWidget {
 
           // Sticker album
           _StickerAlbumSection(
-            unlockedIds: bloc.unlockedStickerIds,
+            unlockedIds: bloc.unlockedStickerIds.toList(),
             total: bloc.totalStickerCount,
             s: s,
           ),
@@ -2257,10 +2291,13 @@ class _AchievementsView extends StatelessWidget {
             ),
           ),
         ),
-        const SliverPadding(
-          padding: EdgeInsets.all(16),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
           sliver: SliverToBoxAdapter(
-            child: StickerAlbumGrid(padding: EdgeInsets.zero),
+            child: StickerAlbumGrid(
+              padding: EdgeInsets.zero,
+              extraUnlockedIds: bloc.unlockedStickerIds,
+            ),
           ),
         ),
       ],
