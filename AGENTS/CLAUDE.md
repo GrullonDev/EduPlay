@@ -25,15 +25,40 @@ roles, ~15 mini-games, guest mode, subscriptions (Stripe), and a Firebase backen
 - `functions/index.js` — 3 Cloud Functions: `createStripeCheckoutSession`,
   `stripeWebhook`, `onSessionComplete` (Firestore trigger).
 - `firestore.rules`, `firestore.indexes.json` at repo root.
-- `test/{models,services,utils}` — unit tests only, no widget/integration tests beyond
-  a trivial smoke test.
+- `test/{models,services,utils}` on `main`/`develop`/`feature/store` — unit tests only,
+  no widget/integration tests beyond a trivial smoke test. `feature/friends-system` adds
+  `test/data` and `test/widgets` too (see "Branch state" below).
 
-## What's incomplete (last analyzed 2026-08-06)
+## Branch state (last analyzed 2026-08-07)
+
+`main`/`develop` only have the stabilization work through `a8f3589`. Two feature
+branches built on top of that, in parallel, and **neither is merged yet**:
+
+- **`feature/friends-system`** — cross-role **Amigos (Friends)** feature for students,
+  parents and teachers (`cb92793`), plus a security/fragility follow-up
+  (`bcc4007`), plus test coverage (`bbe4e21`, merged in via PR #1 `7fa9a4b`), plus
+  two nav fixes (`96bcca7`, `33aaa5e`). Gated behind
+  `ReleaseFlags.studentExtraTabsEnabled` (currently `false`).
+- **`feature/store`** — **Tienda (Store)** feature: students spend their gamification
+  `points` on avatar cosmetics and exclusive stickers (`91523a9`, `e01b189`), plus a
+  repo-hygiene fix (`7dcd012`, see below). Gated behind `ReleaseFlags.storeEnabled`
+  (currently `false`). Branched from `develop` before the friends-system test coverage
+  landed, so it does **not** have those test files yet.
+
+Both tabs used to render `PlaceholderSection`
+(`lib/shared/widgets/placeholder_section.dart`) — that's no longer true on their
+respective branches, but still true on `main`/`develop` until one of them merges.
+
+**Fixed on `feature/friends-system` (`33aaa5e`)**: mini-games routing their "Inicio"
+button through `RouterPaths.childPortal` with a full stack reset instead of a plain
+`Navigator.pop(context)` — this caused an infinite back-navigation loop on
+`ChildPortalPage` and made completed-game points look like they hadn't saved (they
+had; only the return navigation was broken). Affected
+`sports_challenge`, `time_travel`, `math_adventure`, `magic_words`, `fun_english`.
+
+## What's incomplete
 
 **Unfinished features (functional gaps, not just polish):**
-- Student dashboard **"Amigos" (Friends)** and **"Tienda" (Store)** tabs render
-  `PlaceholderSection` (`lib/shared/widgets/placeholder_section.dart`) — UI-scaffolded,
-  no real functionality. See `lib/features/student_dashboard/pages/student_dashboard_layout.dart:47,53`.
 - Analytics is a no-op stub: `lib/core/analytics/analytics_service.dart:27,41` has TODOs
   to wire up real Firebase Analytics.
 - `lib/features/fun_english/pages/fun_english_page.dart:25` uses a hardcoded
@@ -44,13 +69,21 @@ roles, ~15 mini-games, guest mode, subscriptions (Stripe), and a Firebase backen
   commented-out import in `lib/utils/injection_container.dart:6`) — safe to delete or
   wire up/remove.
 
-**Test coverage is the biggest gap.** Only 4 real test files exist:
-`test/models/child_profile_test.dart`, `test/services/subscription_logic_test.dart`,
-`test/utils/router_paths_test.dart`, and a trivial `test/widget_test.dart`. **Zero
-tests** exist for: auth/login/register flows, teacher_dashboard, parents_dashboard,
-student_dashboard, child_portal, and every single mini-game feature. Given the CI gate
-runs `flutter test`, this is currently more a coverage gap than a CI risk, but any
-regression in auth, dashboards, or games would go undetected.
+**Test coverage improved but is uneven across branches.** `main`/`develop`/`feature/store`
+still only have the original 4 files (`test/models/child_profile_test.dart`,
+`test/services/subscription_logic_test.dart`, `test/utils/router_paths_test.dart`,
+`test/widget_test.dart`). `feature/friends-system` has 5 more on top of those
+(`test/data/subject_catalog_test.dart`, `test/models/practice_session_test.dart`,
+`test/models/teacher_class_test.dart`,
+`test/services/student_repository_gamification_test.dart`,
+`test/widgets/placeholder_section_test.dart`) — these will need re-adding/rebasing
+wherever `feature/store` and `feature/friends-system` eventually merge, since they
+diverged from a common ancestor before either landed. **Zero tests** still exist for:
+auth/login/register flows, teacher_dashboard, parents_dashboard, student_dashboard,
+child_portal, and every mini-game's UI (the new gamification-math/practice-session
+tests cover logic, not widgets). Given the CI gate runs `flutter test`, this is
+currently more a coverage gap than a CI risk, but any regression in auth, dashboards,
+or game UI would go undetected.
 
 **Backend (`functions/`) looks complete for its current scope** — Stripe checkout +
 webhook + post-payment Firestore update, no TODOs found. Worth double-checking whether
@@ -61,14 +94,13 @@ isn't visibly used in the 3 exports.
 out of date — it claims no tests exist and no `firestore.rules` file exists; both are
 now false. Treat it as historical, not current.
 
-**Signal from git history**: the last 3 commits before this analysis were pure
-stabilization (`fix: resolve teacher dashboard analyzer issues`,
-`fix: clean async guards and analyzer warnings`, `chore: fix analyzer config and web
-dependency`), after a long run of feature commits (auth, subscription/Stripe, teacher
-dashboard, admin, onboarding, guest flow, parent-guide, legal pages). The project is in
-a post-feature-push stabilization phase — the two clearest remaining blockers to calling
-it "complete" are: (1) building out Friends/Store, and (2) adding test coverage for the
-untested feature areas above.
+**Repo hygiene**: `.gitignore` was fixed on `feature/store` (`7dcd012`) — it had ~10,000
+duplicate lines (present on `main`/`develop` too, still unfixed there) and `windows/`,
+`linux/`, `macos/` were tracked despite the project being web-only; both are now
+untracked and ignored on `feature/store`. `feature/friends-system` independently fixed
+the same platform-folder issue plus untracked `pubspec.lock` (`95a9fed`) —
+`feature/store` has **not** untracked `pubspec.lock`, so that inconsistency needs
+resolving when the branches merge.
 
 ## Conventions
 - `analysis_options.yaml`: standard `flutter_lints` plus `prefer_single_quotes`,
