@@ -23,9 +23,14 @@ class StickerAlbumPage extends StatelessWidget {
 /// Extracted so it can be embedded directly inside the student dashboard's
 /// "Logros" section as well as shown as its own page.
 class StickerAlbumGrid extends StatefulWidget {
-  const StickerAlbumGrid({super.key, this.padding});
+  const StickerAlbumGrid({super.key, this.padding, this.extraUnlockedIds});
 
   final EdgeInsetsGeometry? padding;
+
+  /// Extra unlocked ids from outside the local achievement store — e.g. the
+  /// Tienda's purchased sticker inventory (Firestore-backed, per-student),
+  /// merged with this widget's own local `unlocked_stickers` prefs on top.
+  final Set<String>? extraUnlockedIds;
 
   @override
   State<StickerAlbumGrid> createState() => _StickerAlbumGridState();
@@ -99,7 +104,8 @@ class _StickerAlbumGridState extends State<StickerAlbumGrid> {
           itemCount: allStickers.length,
           itemBuilder: (context, index) {
             final sticker = allStickers[index];
-            final isUnlocked = _unlockedIds.contains(sticker.id);
+            final isUnlocked = _unlockedIds.contains(sticker.id) ||
+                (widget.extraUnlockedIds?.contains(sticker.id) ?? false);
 
             return GestureDetector(
               onTap: isUnlocked ? () => _showDetail(sticker) : null,

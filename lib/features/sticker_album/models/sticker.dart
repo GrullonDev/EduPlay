@@ -7,12 +7,17 @@ class Sticker {
     required this.icon,
     required this.color,
     required this.description,
+    this.isPremium = false,
   });
   final String id;
   final String name;
   final IconData icon;
   final Color color;
   final String description;
+
+  /// True for store-exclusive stickers (only obtainable via a Tienda
+  /// purchase, id matches the corresponding StoreItem.id).
+  final bool isPremium;
 }
 
 // Static list of all available stickers
@@ -65,4 +70,33 @@ final List<Sticker> allStickers = [
       icon: Icons.menu_book,
       color: Colors.brown,
       description: 'Lector experto'),
+  // ── Premium (Tienda-only) ──────────────────────────────────────────────
+  const Sticker(
+      id: 'unicorn',
+      name: 'Unicornio Mágico',
+      icon: Icons.auto_awesome_rounded,
+      color: Colors.pinkAccent,
+      description: 'Brilla con magia',
+      isPremium: true),
+  const Sticker(
+      id: 'diamond',
+      name: 'Diamante Brillante',
+      icon: Icons.diamond_rounded,
+      color: Colors.cyan,
+      description: 'El tesoro más raro',
+      isPremium: true),
+  const Sticker(
+      id: 'crown',
+      name: 'Corona Real',
+      icon: Icons.workspace_premium_rounded,
+      color: Colors.amber,
+      description: 'Para todo un campeón',
+      isPremium: true),
+  const Sticker(
+      id: 'dragon',
+      name: 'Dragón de Fuego',
+      icon: Icons.local_fire_department_rounded,
+      color: Colors.deepOrange,
+      description: 'Guardián legendario',
+      isPremium: true),
 ];
