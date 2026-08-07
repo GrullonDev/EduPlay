@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/features/subscription/models/subscription.dart';
@@ -146,40 +147,58 @@ class _OverviewBody extends StatefulWidget {
 }
 
 class _OverviewBodyState extends State<_OverviewBody> {
-  List<PracticeSession> _allSessions = [];
-  bool _sessionsLoaded = false;
+  Map<String, ChildGameplayStats> _stats = {};
+  bool _statsLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSessions();
+    _loadStats();
   }
 
-  Future<void> _loadSessions() async {
-    final sessions = await PracticeSessionsService.getAllSessions();
+  Future<void> _loadStats() async {
+    final stats =
+        await ParentChildStatsService.loadStatsForProfiles(widget.profiles);
     if (mounted) {
       setState(() {
-        _allSessions = sessions;
-        _sessionsLoaded = true;
+        _stats = stats;
+        _statsLoaded = true;
       });
     }
   }
 
-  /// Total completed games × 5 min estimate for this week.
+  /// Real games played in the last 7 days across all children × 5 min
+  /// estimate, sourced from `students/{id}/scores` (actual gameplay), not
+  /// the parent-initiated kiosk sessions.
   int get _totalMinutes {
-    if (!_sessionsLoaded || widget.profiles.isEmpty) return 0;
+    if (!_statsLoaded || widget.profiles.isEmpty) return 0;
     final weekAgo = DateTime.now().subtract(const Duration(days: 7));
-    final weekSessions =
-        _allSessions.where((s) => s.createdAt.isAfter(weekAgo)).toList();
-    final completedGames = weekSessions.fold<int>(
+    final gamesThisWeek = _stats.values.fold<int>(
       0,
-      (runningTotal, s) => runningTotal + s.completedCount,
+      (total, stats) =>
+          total + stats.recentScores.where((e) => e.date.isAfter(weekAgo)).length,
     );
-    return completedGames * 5; // ~5 min per game
+    return gamesThisWeek * 5; // ~5 min per game
   }
 
-  String get _topSubject =>
-      widget.profiles.isEmpty ? '—' : widget.profiles.first.focusSubject;
+  /// Subject with the most points scored this week across all children.
+  /// Falls back to the first profile's static onboarding subject only when
+  /// there's no real gameplay data yet.
+  String get _topSubject {
+    if (widget.profiles.isEmpty) return '—';
+    if (!_statsLoaded) return widget.profiles.first.focusSubject;
+
+    final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+    final totals = <String, int>{};
+    for (final stats in _stats.values) {
+      for (final entry in stats.recentScores) {
+        if (entry.date.isBefore(weekAgo)) continue;
+        totals[entry.subjectLabel] = (totals[entry.subjectLabel] ?? 0) + entry.score;
+      }
+    }
+    if (totals.isEmpty) return widget.profiles.first.focusSubject;
+    return totals.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -276,6 +295,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
             ? _EmptyProfiles(onAdd: widget.onAddProfile)
             : _ChildProfilesGrid(
                 profiles: widget.profiles,
+                stats: _stats,
                 onDelete: widget.onDeleteProfile,
               ),
 
@@ -298,7 +318,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                     Expanded(
                       flex: 4,
                       child: _AchievementCard(
-                          profiles: widget.profiles, sessions: _allSessions),
+                          profiles: widget.profiles, stats: _stats),
                     ),
                     const SizedBox(width: 20),
                     const Expanded(
@@ -311,7 +331,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
             : Column(
                 children: [
                   _AchievementCard(
-                      profiles: widget.profiles, sessions: _allSessions),
+                      profiles: widget.profiles, stats: _stats),
                   const SizedBox(height: 20),
                   const _ChallengesCard(),
                 ],
@@ -366,10 +386,12 @@ class _OverviewBodyState extends State<_OverviewBody> {
 class _ChildProfilesGrid extends StatelessWidget {
   const _ChildProfilesGrid({
     required this.profiles,
+    required this.stats,
     required this.onDelete,
   });
 
   final List<ChildProfile> profiles;
+  final Map<String, ChildGameplayStats> stats;
   final ValueChanged<ChildProfile> onDelete;
 
   @override
@@ -391,6 +413,7 @@ class _ChildProfilesGrid extends StatelessWidget {
       itemCount: profiles.length,
       itemBuilder: (_, i) => _ChildCard(
         profile: profiles[i],
+        stats: stats[profiles[i].id],
         onDelete: () => onDelete(profiles[i]),
       ),
     );
@@ -398,10 +421,19 @@ class _ChildProfilesGrid extends StatelessWidget {
 }
 
 class _ChildCard extends StatelessWidget {
-  const _ChildCard({required this.profile, required this.onDelete});
+  const _ChildCard({required this.profile, required this.stats, required this.onDelete});
 
   final ChildProfile profile;
+  final ChildGameplayStats? stats;
   final VoidCallback onDelete;
+
+  /// Live level/progress computed from real points when available, falling
+  /// back to the profile's static onboarding seed while stats are loading.
+  int get _level => stats?.level ?? profile.level;
+
+  double get _levelProgress => stats?.levelProgress ?? profile.levelProgress;
+
+  String get _levelLabel => 'Nivel ${_level.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -447,7 +479,7 @@ class _ChildCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    profile.levelLabel,
+                    _levelLabel,
                     style: GoogleFonts.nunito(
                       fontSize: 7,
                       fontWeight: FontWeight.w800,
@@ -540,7 +572,7 @@ class _ChildCard extends StatelessWidget {
                                     fontSize: 10, color: Colors.grey[500]),
                               ),
                               Text(
-                                '${(profile.levelProgress * 100).toInt()}%',
+                                '${(_levelProgress * 100).toInt()}%',
                                 style: GoogleFonts.nunito(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -553,7 +585,7 @@ class _ChildCard extends StatelessWidget {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
-                              value: profile.levelProgress,
+                              value: _levelProgress,
                               minHeight: 5,
                               backgroundColor: const Color(0xFFF3F4F6),
                               color: const Color(0xFFFFD700),
@@ -668,7 +700,7 @@ class _ChildCard extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ChildActivitySheet(profile: profile),
+      builder: (_) => _ChildActivitySheet(profile: profile, stats: stats),
     );
   }
 
@@ -1312,58 +1344,52 @@ class _SessionRow extends StatelessWidget {
 // ── Achievement card ──────────────────────────────────────────────────────────
 
 class _AchievementCard extends StatelessWidget {
-  const _AchievementCard({required this.profiles, required this.sessions});
+  const _AchievementCard({required this.profiles, required this.stats});
   final List<ChildProfile> profiles;
-  final List<PracticeSession> sessions;
+  final Map<String, ChildGameplayStats> stats;
 
-  /// Derive achievement title + description from real session data.
+  /// Derive achievement title + description from real gameplay data
+  /// (`students/{id}` points/scores), not kiosk sessions.
   ({String title, String description, String achiever}) get _achievement {
-    if (profiles.isEmpty || sessions.isEmpty) {
+    final total = stats.values
+        .fold<int>(0, (runningTotal, s) => runningTotal + s.gamesPlayedCount);
+
+    if (profiles.isEmpty || total == 0) {
       return (
         title: 'Sin logros aún',
-        description: 'Los logros aparecerán cuando tu hijo complete misiones.',
+        description: 'Los logros aparecerán cuando tu hijo juegue y gane puntos.',
         achiever: 'Tu hijo',
       );
     }
 
-    final achiever = profiles.first.name;
-
-    // Find session with most completions
-    final best =
-        sessions.reduce((a, b) => a.completedCount >= b.completedCount ? a : b);
-    final count = best.completedCount;
-
-    if (count == 0) {
-      return (
-        title: '¡Comenzando!',
-        description: '$achiever ha iniciado su primera sesión. ¡Sigue así!',
-        achiever: achiever,
-      );
+    // Child with the most games played recently is the achiever.
+    var achiever = profiles.first.name;
+    var bestCount = -1;
+    for (final p in profiles) {
+      final count = stats[p.id]?.gamesPlayedCount ?? 0;
+      if (count > bestCount) {
+        bestCount = count;
+        achiever = p.name;
+      }
     }
-
-    // Compute total completed across all sessions
-    final total = sessions.fold<int>(
-      0,
-      (runningTotal, s) => runningTotal + s.completedCount,
-    );
 
     if (total >= 10) {
       return (
         title: '¡Explorador Galáctico!',
         description:
-            '$achiever completó $total misiones en total. ¡Impresionante!',
+            '$achiever completó $total juegos en total. ¡Impresionante!',
         achiever: achiever,
       );
     } else if (total >= 5) {
       return (
         title: '¡Aprendiz Estelar!',
-        description: '$achiever completó $total misiones. ¡Va por buen camino!',
+        description: '$achiever completó $total juegos. ¡Va por buen camino!',
         achiever: achiever,
       );
     } else {
       return (
         title: '¡Primer Logro!',
-        description: '$achiever completó su primera misión. ¡Felicitaciones!',
+        description: '$achiever completó su primer juego. ¡Felicitaciones!',
         achiever: achiever,
       );
     }
@@ -2496,10 +2522,17 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
 // Displays real-time session data pulled from Firestore.
 
 class _ChildActivitySheet extends StatelessWidget {
-  const _ChildActivitySheet({required this.profile});
+  const _ChildActivitySheet({required this.profile, required this.stats});
   final ChildProfile profile;
+  final ChildGameplayStats? stats;
 
   static const _kAmber = Color(0xFFD97706);
+
+  int get _level => stats?.level ?? profile.level;
+
+  double get _levelProgress => stats?.levelProgress ?? profile.levelProgress;
+
+  String get _levelLabel => 'Nivel ${_level.toString().padLeft(2, '0')}';
 
   @override
   Widget build(BuildContext context) {
@@ -2519,16 +2552,6 @@ class _ChildActivitySheet extends StatelessWidget {
             builder: (context, snap) {
               final sessions = snap.data ?? [];
               final activeSessions = sessions.where((s) => s.isActive).toList();
-              final completedSessions =
-                  sessions.where((s) => s.isCompleted).toList();
-              final allCompletedGames =
-                  sessions.expand((s) => s.completedGameIds).toSet().length;
-              final allScores =
-                  sessions.expand((s) => s.scoreMap.values).toList();
-              final avgScore = allScores.isEmpty
-                  ? 0
-                  : (allScores.reduce((a, b) => a + b) / allScores.length)
-                      .round();
 
               return ListView(
                 controller: scrollCtrl,
@@ -2587,7 +2610,7 @@ class _ChildActivitySheet extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    '${profile.focusSubject}  ·  ${profile.levelLabel}',
+                                    '${profile.focusSubject}  ·  $_levelLabel',
                                     style: GoogleFonts.nunito(
                                       fontSize: 13,
                                       color:
@@ -2621,7 +2644,7 @@ class _ChildActivitySheet extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${(profile.levelProgress * 100).toInt()}%',
+                                  '${(_levelProgress * 100).toInt()}%',
                                   style: GoogleFonts.nunito(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
@@ -2634,7 +2657,7 @@ class _ChildActivitySheet extends StatelessWidget {
                             ClipRRect(
                               borderRadius: BorderRadius.circular(6),
                               child: LinearProgressIndicator(
-                                value: profile.levelProgress,
+                                value: _levelProgress,
                                 minHeight: 8,
                                 backgroundColor:
                                     Colors.white.withValues(alpha: 0.15),
@@ -2668,22 +2691,24 @@ class _ChildActivitySheet extends StatelessWidget {
                         Row(
                           children: [
                             _ActivityStat(
-                              icon: Icons.assignment_turned_in_rounded,
-                              value: '${completedSessions.length}',
-                              label: 'Sesiones\ncompletadas',
+                              icon: Icons.local_fire_department_rounded,
+                              value: '${stats?.streak ?? 0}',
+                              label: 'Racha\n(días)',
                               color: const Color(0xFF10B981),
                             ),
                             const SizedBox(width: 12),
                             _ActivityStat(
                               icon: Icons.sports_esports_rounded,
-                              value: '$allCompletedGames',
+                              value: '${stats?.gamesPlayedCount ?? 0}',
                               label: 'Juegos\njugados',
                               color: const Color(0xFF6366F1),
                             ),
                             const SizedBox(width: 12),
                             _ActivityStat(
                               icon: Icons.star_rounded,
-                              value: allScores.isEmpty ? '—' : '$avgScore',
+                              value: (stats?.gamesPlayedCount ?? 0) == 0
+                                  ? '—'
+                                  : '${stats!.recentAverage.round()}',
                               label: 'Puntuación\npromedio',
                               color: const Color(0xFFF59E0B),
                             ),
@@ -2701,6 +2726,56 @@ class _ChildActivitySheet extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // ── Recent activity (real gameplay) ──────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                    child: Text(
+                      'ACTIVIDAD RECIENTE',
+                      style: GoogleFonts.nunito(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.3,
+                        color: _kAmber,
+                      ),
+                    ),
+                  ),
+                  if (stats == null || stats!.recentScores.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: Text(
+                        'Aún no ha jugado ningún juego.',
+                        style: GoogleFonts.nunito(
+                            fontSize: 13, color: Colors.grey[400]),
+                      ),
+                    )
+                  else
+                    ...stats!.recentScores.take(5).map(
+                          (e) => Padding(
+                            padding:
+                                const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    e.gameTitle,
+                                    style: GoogleFonts.nunito(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: _kNavy),
+                                  ),
+                                ),
+                                Text('${e.score} pts',
+                                    style: GoogleFonts.nunito(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.grey[600])),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                  const SizedBox(height: 12),
 
                   // ── Active sessions ─────────────────────────────────
                   if (activeSessions.isNotEmpty) ...[

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
@@ -26,23 +27,39 @@ class ProgressReportsPage extends StatefulWidget {
 class _ProgressReportsPageState extends State<ProgressReportsPage> {
   List<ChildProfile> _profiles = [];
   List<PracticeSession> _sessions = [];
+  Map<String, ChildGameplayStats> _stats = {};
+  String _parentName = 'Mamá';
   int _selectedChild = 0; // index into _profiles; -1 = all children
   bool _loadingProfiles = true;
   bool _loadingSessions = true;
+  bool _loadingStats = true;
 
   @override
   void initState() {
     super.initState();
-    _loadProfiles();
+    _loadProfilesThenStats();
     _loadSessions();
+    _loadParentName();
   }
 
-  Future<void> _loadProfiles() async {
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
+  }
+
+  Future<void> _loadProfilesThenStats() async {
     final profiles = await ChildProfilesService.getProfiles();
     if (!mounted) return;
     setState(() {
       _profiles = profiles;
       _loadingProfiles = false;
+    });
+    final stats = await ParentChildStatsService.loadStatsForProfiles(profiles);
+    if (!mounted) return;
+    setState(() {
+      _stats = stats;
+      _loadingStats = false;
     });
   }
 
@@ -63,7 +80,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
   String get _selectedProfileId =>
       _profiles.isEmpty ? '' : _profiles[_selectedChild].id;
 
-  /// Sessions filtered by the selected child profile.
+  /// Kiosk (PIN) sessions filtered by the selected child profile.
   List<PracticeSession> get _filtered {
     if (_profiles.isEmpty) return _sessions;
     return _sessions
@@ -71,45 +88,50 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
         .toList();
   }
 
-  int get _totalSessions => _filtered.length;
+  /// Real gameplay stats for the selected child (or aggregated across all
+  /// children when none is selected), sourced from `students/{id}`.
+  List<ChildGameplayStats> get _selectedStats {
+    if (_profiles.isEmpty) return const [];
+    return [_stats[_selectedProfileId] ?? ChildGameplayStats.empty];
+  }
 
-  int get _completedSessions => _filtered.where((s) => s.isCompleted).length;
+  List<ChildScoreEntry> get _recentScores =>
+      _selectedStats.expand((s) => s.recentScores).toList()
+        ..sort((a, b) => b.date.compareTo(a.date));
 
-  int get _totalGamesPlayed =>
-      _filtered.fold(0, (sum, s) => sum + s.completedCount);
+  int get _totalGamesPlayed => _recentScores.length;
 
-  int get _totalScore => _filtered.fold(
-      0, (sum, s) => s.scoreMap.values.fold(sum, (a, b) => a + b));
+  int get _totalScore =>
+      _recentScores.fold(0, (sum, e) => sum + e.score);
 
-  /// Map of gameId → total score across all sessions.
+  int get _streak =>
+      _selectedStats.isEmpty ? 0 : _selectedStats.first.streak;
+
+  /// Map of gameTitle → total score across recent scores.
   Map<String, int> get _gameScores {
     final map = <String, int>{};
-    for (final s in _filtered) {
-      for (final entry in s.scoreMap.entries) {
-        map[entry.key] = (map[entry.key] ?? 0) + entry.value;
-      }
+    for (final entry in _recentScores) {
+      map[entry.gameTitle] = (map[entry.gameTitle] ?? 0) + entry.score;
     }
     return map;
   }
 
-  /// Average score per session (only sessions with at least one game).
+  /// Average score per completed game.
   double get _avgScore {
-    final played = _filtered.where((s) => s.scoreMap.isNotEmpty).toList();
-    if (played.isEmpty) return 0;
-    final total = played.fold(
-        0, (sum, s) => sum + s.scoreMap.values.fold(0, (a, b) => a + b));
-    return total / played.length;
+    if (_recentScores.isEmpty) return 0;
+    return _totalScore / _recentScores.length;
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = _loadingProfiles || _loadingSessions;
+    final isLoading = _loadingProfiles || _loadingSessions || _loadingStats;
 
     return Scaffold(
       backgroundColor: _kBg,
       body: Column(
         children: [
-          const EduPlayNavBar.parent(activeParentTab: ParentTab.progreso),
+          EduPlayNavBar.parent(
+              activeParentTab: ParentTab.progreso, parentName: _parentName),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -141,7 +163,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                                         ),
                                       ),
                                       Text(
-                                        'Actividad real registrada en sesiones de práctica.',
+                                        'Actividad real de juego de tus hijos.',
                                         style: GoogleFonts.nunito(
                                             fontSize: 13,
                                             color: Colors.grey[500]),
@@ -151,7 +173,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                                 ),
                                 OutlinedButton.icon(
                                   onPressed: () {
-                                    _loadProfiles();
+                                    _loadProfilesThenStats();
                                     _loadSessions();
                                   },
                                   icon: const Icon(Icons.refresh_rounded,
@@ -186,9 +208,8 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
 
                             // ── Summary stats ──────────────────────────────────
                             _StatRow(
-                              sessions: _totalSessions,
-                              completed: _completedSessions,
                               gamesPlayed: _totalGamesPlayed,
+                              streak: _streak,
                               totalScore: _totalScore,
                               avgScore: _avgScore,
                             ),
@@ -202,9 +223,18 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                               const SizedBox(height: 28),
                             ],
 
-                            // ── Session history ────────────────────────────────
+                            // ── Recent activity ────────────────────────────────
                             _SectionLabel(
-                                'Historial de sesiones — $_selectedName'),
+                                'Actividad reciente — $_selectedName'),
+                            const SizedBox(height: 16),
+                            _recentScores.isEmpty
+                                ? const _EmptyActivityState()
+                                : _RecentActivityList(entries: _recentScores),
+                            const SizedBox(height: 28),
+
+                            // ── Kiosk (PIN) session history ────────────────────
+                            _SectionLabel(
+                                'Historial de sesiones con PIN — $_selectedName'),
                             const SizedBox(height: 16),
                             _filtered.isEmpty
                                 ? _EmptyState()
@@ -304,16 +334,14 @@ class _ChildSelector extends StatelessWidget {
 
 class _StatRow extends StatelessWidget {
   const _StatRow({
-    required this.sessions,
-    required this.completed,
     required this.gamesPlayed,
+    required this.streak,
     required this.totalScore,
     required this.avgScore,
   });
 
-  final int sessions;
-  final int completed;
   final int gamesPlayed;
+  final int streak;
   final int totalScore;
   final double avgScore;
 
@@ -324,25 +352,25 @@ class _StatRow extends StatelessWidget {
       runSpacing: 16,
       children: [
         _StatCard(
-          icon: Icons.play_circle_outline_rounded,
-          label: 'Sesiones',
-          value: '$sessions',
-          sub: '$completed completadas',
-          color: _kNavy,
-        ),
-        _StatCard(
           icon: Icons.videogame_asset_rounded,
           label: 'Juegos jugados',
           value: '$gamesPlayed',
-          sub: 'en todas las sesiones',
+          sub: 'últimos 28 días',
           color: const Color(0xFF9B59B6),
+        ),
+        _StatCard(
+          icon: Icons.local_fire_department_rounded,
+          label: 'Racha',
+          value: streak == 1 ? '1 día' : '$streak días',
+          sub: streak > 0 ? 'seguidos jugando' : 'Sin racha activa',
+          color: const Color(0xFFF39C12),
         ),
         _StatCard(
           icon: Icons.stars_rounded,
           label: 'Puntuación total',
           value: '$totalScore pts',
           sub: avgScore > 0
-              ? '~${avgScore.toStringAsFixed(0)} por sesión'
+              ? '~${avgScore.toStringAsFixed(0)} por juego'
               : 'Sin datos aún',
           color: _kCoral,
         ),
@@ -422,19 +450,6 @@ class _GameScoreChart extends StatelessWidget {
   const _GameScoreChart({required this.scores});
   final Map<String, int> scores;
 
-  static const _labels = {
-    'math-adventure': 'Aventura Matemática',
-    'magic-words': 'Palabras Mágicas',
-    'fun-english': 'Inglés Divertido',
-    'nature-explorers': 'Exploradores Naturales',
-    'time-travel': 'Viaje en el Tiempo',
-    'treasure-map': 'Mapa del Tesoro',
-    'artists-in-action': 'Artistas en Acción',
-    'color-concert': 'Concierto de Colores',
-    'sports-challenge': 'Reto Deportivo',
-    'sticker-album': 'Álbum de Pegatinas',
-  };
-
   static const _colors = [
     Color(0xFF1E1B6A),
     Color(0xFFFF6E6C),
@@ -473,7 +488,7 @@ class _GameScoreChart extends StatelessWidget {
           final i = e.key;
           final entry = e.value;
           final fraction = maxScore > 0 ? entry.value / maxScore : 0.0;
-          final label = _labels[entry.key] ?? entry.key;
+          final label = entry.key;
           final color = _colors[i % _colors.length];
 
           return Padding(
@@ -661,7 +676,130 @@ class _SessionHistoryTile extends StatelessWidget {
   }
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
+// ── Recent activity (real gameplay) ─────────────────────────────────────────
+
+class _RecentActivityList extends StatelessWidget {
+  const _RecentActivityList({required this.entries});
+  final List<ChildScoreEntry> entries;
+
+  String _formatDate(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inDays == 0) return 'Hoy';
+    if (diff.inDays == 1) return 'Ayer';
+    if (diff.inDays < 7) return 'Hace ${diff.inDays} días';
+    return DateFormat('d MMM yyyy', 'es').format(dt);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: entries.take(10).toList().asMap().entries.map((e) {
+          final i = e.key;
+          final entry = e.value;
+          return Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: _kNavy.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.videogame_asset_rounded,
+                          size: 16, color: _kNavy),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(entry.gameTitle,
+                              style: GoogleFonts.nunito(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _kNavy,
+                              )),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${entry.subjectLabel} · ${_formatDate(entry.date)}',
+                            style: GoogleFonts.nunito(
+                                fontSize: 11, color: Colors.grey[400]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text('${entry.score} pts',
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _kNavy,
+                        )),
+                  ],
+                ),
+              ),
+              if (i < entries.take(10).length - 1)
+                const Divider(height: 1, color: Color(0xFFF3F4F6)),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _EmptyActivityState extends StatelessWidget {
+  const _EmptyActivityState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(40),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.videogame_asset_outlined,
+              size: 56, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text('Sin actividad de juego aún',
+              style:
+                  GoogleFonts.fredoka(fontSize: 18, color: Colors.grey[400])),
+          const SizedBox(height: 8),
+          Text(
+            'Cuando tu hijo juegue y gane puntos,\nsu actividad aparecerá aquí.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(
+                fontSize: 13, color: Colors.grey[400], height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty state (kiosk sessions) ────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   @override
@@ -677,12 +815,12 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.bar_chart_rounded, size: 56, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text('Sin sesiones registradas aún',
+          Text('Sin sesiones con PIN registradas aún',
               style:
                   GoogleFonts.fredoka(fontSize: 18, color: Colors.grey[400])),
           const SizedBox(height: 8),
           Text(
-            'Cuando tu hijo complete una sesión de práctica,\nel progreso aparecerá aquí.',
+            'Cuando tu hijo complete una sesión con PIN,\nsu historial aparecerá aquí.',
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
                 fontSize: 13, color: Colors.grey[400], height: 1.5),
