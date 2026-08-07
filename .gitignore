@@ -10017,3 +10017,5 @@ ios/Flutter/ephemeral/
 /windows/
 /linux/
 /macos/
+
+pubspec.lock
