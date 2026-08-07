@@ -17,7 +17,14 @@ import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page
 ///   • UID exists in `teachers/{uid}` → [TeacherDashboardPage]
 ///   • Unknown role                 → [ChildPortalPage] (guest)
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
+  /// [auth]/[firestore] default to the app's singletons; tests inject
+  /// [firebase_auth_mocks]/[fake_cloud_firestore] fakes instead.
+  AuthGate({super.key, FirebaseAuth? auth, FirebaseFirestore? firestore})
+      : auth = auth ?? FirebaseAuth.instance,
+        firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseAuth auth;
+  final FirebaseFirestore firestore;
 
   /// Caches only successful role lookups, keyed by uid, so redundant
   /// `authStateChanges()` emissions for an already-resolved session (e.g. a
@@ -26,19 +33,23 @@ class AuthGate extends StatelessWidget {
   /// never cached, so they're always re-checked.
   static final Map<String, String> _roleCache = {};
 
-  static Future<String?> _resolveRole(String uid) async {
+  @visibleForTesting
+  static void resetCacheForTest() => _roleCache.clear();
+
+  @visibleForTesting
+  Future<String?> resolveRoleForTest(String uid) => _resolveRole(uid);
+
+  Future<String?> _resolveRole(String uid) async {
     final cached = _roleCache[uid];
     if (cached != null) return cached;
 
-    final db = FirebaseFirestore.instance;
-
-    final parentDoc = await db.collection('parents').doc(uid).get();
+    final parentDoc = await firestore.collection('parents').doc(uid).get();
     if (parentDoc.exists) {
       _roleCache[uid] = 'parent';
       return 'parent';
     }
 
-    final teacherDoc = await db.collection('teachers').doc(uid).get();
+    final teacherDoc = await firestore.collection('teachers').doc(uid).get();
     if (teacherDoc.exists) {
       _roleCache[uid] = 'teacher';
       return 'teacher';
@@ -50,12 +61,12 @@ class AuthGate extends StatelessWidget {
   /// Renders the destination for a *successfully resolved* role (or a
   /// genuine "no role" result). Shared by the happy path and by
   /// [_RoleResolutionRetry] once its retry succeeds.
-  static Widget _buildForRole(User user, String? role) {
+  Widget _buildForRole(User user, String? role) {
     // Unknown role — sign out to avoid an infinite loop.
     if (role == null) {
       // Anonymous sign-in is used by the child portal — leave it alone.
       if (user.isAnonymous) return const _SplashLoader();
-      Future.microtask(() => FirebaseAuth.instance.signOut());
+      Future.microtask(() => auth.signOut());
       return const ChildPortalPage();
     }
 
@@ -73,7 +84,7 @@ class AuthGate extends StatelessWidget {
         return const ParentsDashboardPage();
       default:
         if (!user.isAnonymous) {
-          Future.microtask(() => FirebaseAuth.instance.signOut());
+          Future.microtask(() => auth.signOut());
         }
         return const ChildPortalPage();
     }
@@ -86,9 +97,9 @@ class AuthGate extends StatelessWidget {
       // on token refresh); collapsing those avoids re-running role
       // resolution — and hitting the transient-error race — more than
       // necessary.
-      stream: FirebaseAuth.instance
-          .authStateChanges()
-          .distinct((prev, next) => prev?.uid == next?.uid),
+      stream: auth.authStateChanges().distinct(
+            (prev, next) => prev?.uid == next?.uid,
+          ),
       builder: (context, authSnap) {
         // Still waiting for Firebase to restore the session
         if (authSnap.connectionState == ConnectionState.waiting) {
@@ -114,7 +125,7 @@ class AuthGate extends StatelessWidget {
             // used to trigger a real, silent FirebaseAuth.signOut() here —
             // retry instead.
             if (roleSnap.hasError) {
-              return _RoleResolutionRetry(user: user);
+              return _RoleResolutionRetry(gate: this, user: user);
             }
 
             return _buildForRole(user, roleSnap.data);
@@ -128,7 +139,8 @@ class AuthGate extends StatelessWidget {
 // ── Retries role resolution after a transient Firestore error ─────────────────
 
 class _RoleResolutionRetry extends StatefulWidget {
-  const _RoleResolutionRetry({required this.user});
+  const _RoleResolutionRetry({required this.gate, required this.user});
+  final AuthGate gate;
   final User user;
 
   @override
@@ -155,7 +167,7 @@ class _RoleResolutionRetryState extends State<_RoleResolutionRetry> {
     for (final backoff in _backoffs) {
       await Future.delayed(backoff);
       try {
-        return await AuthGate._resolveRole(widget.user.uid);
+        return await widget.gate._resolveRole(widget.user.uid);
       } catch (e) {
         lastError = e;
       }
@@ -176,7 +188,7 @@ class _RoleResolutionRetryState extends State<_RoleResolutionRetry> {
         if (snap.hasError) {
           return _RoleResolutionErrorScreen(onRetry: _manualRetry);
         }
-        return AuthGate._buildForRole(widget.user, snap.data);
+        return widget.gate._buildForRole(widget.user, snap.data);
       },
     );
   }
