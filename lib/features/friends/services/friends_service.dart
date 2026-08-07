@@ -79,7 +79,11 @@ class FriendsService {
     final toChildId = data['childId'] as String?;
     final toRole = data['role'] as String? ?? 'parent';
     final toName = data['displayName'] as String? ?? 'Usuario';
-    final toKey = toChildId == null ? toUid : '${toUid}_$toChildId';
+    final toKey = FriendIdentity.keyFor(
+      uid: toUid,
+      role: toRole,
+      childId: toChildId,
+    );
 
     if (toKey == me.key) {
       throw Exception('No puedes agregarte a ti mismo.');
@@ -110,6 +114,7 @@ class FriendsService {
       toName: toName,
       status: 'pending',
       createdAt: DateTime.now(),
+      viaCode: normalized,
     );
     await _requests.add(request.toMap());
   }

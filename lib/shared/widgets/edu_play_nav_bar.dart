@@ -1,3 +1,4 @@
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -63,11 +64,12 @@ class EduPlayNavBar extends StatelessWidget {
       tab: ParentTab.recursos,
       route: RouterPaths.parentGuide
     ),
-    (
-      label: 'Amigos',
-      tab: ParentTab.amigos,
-      route: RouterPaths.friends
-    ),
+    if (ReleaseFlags.friendsEnabled)
+      (
+        label: 'Amigos',
+        tab: ParentTab.amigos,
+        route: RouterPaths.friends
+      ),
     (
       label: 'Configuración',
       tab: ParentTab.configuracion,

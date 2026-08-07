@@ -184,14 +184,39 @@ class _IncomingRequestsSection extends StatelessWidget {
   }
 }
 
-class _RequestRow extends StatelessWidget {
+class _RequestRow extends StatefulWidget {
   const _RequestRow({required this.request, required this.myKey});
   final FriendRequestModel request;
   final String myKey;
 
   @override
+  State<_RequestRow> createState() => _RequestRowState();
+}
+
+class _RequestRowState extends State<_RequestRow> {
+  bool _busy = false;
+
+  Future<void> _respond(bool accept) async {
+    setState(() => _busy = true);
+    try {
+      await FriendsService.respondToRequest(widget.request.id, accept: accept);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(accept
+              ? 'No se pudo aceptar la solicitud. Intenta de nuevo.'
+              : 'No se pudo rechazar la solicitud. Intenta de nuevo.'),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final other = request.other(myKey);
+    final other = widget.request.other(widget.myKey);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -213,16 +238,27 @@ class _RequestRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A)),
-            tooltip: 'Aceptar',
-            onPressed: () => FriendsService.respondToRequest(request.id, accept: true),
-          ),
-          IconButton(
-            icon: Icon(Icons.cancel_rounded, color: Colors.red.shade400),
-            tooltip: 'Rechazar',
-            onPressed: () => FriendsService.respondToRequest(request.id, accept: false),
-          ),
+          if (_busy)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else ...[
+            IconButton(
+              icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A)),
+              tooltip: 'Aceptar',
+              onPressed: () => _respond(true),
+            ),
+            IconButton(
+              icon: Icon(Icons.cancel_rounded, color: Colors.red.shade400),
+              tooltip: 'Rechazar',
+              onPressed: () => _respond(false),
+            ),
+          ],
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
@@ -40,7 +41,8 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
     _NavItem(icon: Icons.emoji_events_rounded, label: 'Retos'),
     _NavItem(icon: Icons.bar_chart_rounded, label: 'Rendimiento'),
     _NavItem(icon: Icons.description_rounded, label: 'Informes'),
-    _NavItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
+    if (ReleaseFlags.friendsEnabled)
+      _NavItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
   ];
 
   @override
@@ -118,8 +120,11 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
         return RendimientoPanel(bloc: bloc);
       case 4:
         return InformesPanel(bloc: bloc);
+      case 5:
+        if (ReleaseFlags.friendsEnabled) return FriendsPanel(bloc: bloc);
+        return _OverviewPanel(bloc: bloc);
       default:
-        return FriendsPanel(bloc: bloc);
+        return _OverviewPanel(bloc: bloc);
     }
   }
 }

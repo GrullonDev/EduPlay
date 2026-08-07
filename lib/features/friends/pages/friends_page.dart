@@ -25,7 +25,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _load() async {
-    final name = await ChildProfilesService.getParentName();
+    String name = _parentName;
+    try {
+      name = await ChildProfilesService.getParentName();
+    } catch (_) {
+      // Keep the fallback name — Friends still works without it.
+    }
     if (!mounted) return;
     setState(() {
       _parentName = name;

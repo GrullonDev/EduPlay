@@ -49,6 +49,13 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
       case 2:
         return _AchievementsView(s: s);
       case 3:
+        if (!ReleaseFlags.friendsEnabled) {
+          return _HomeView(
+            bloc: bloc,
+            s: s,
+            onTabChange: (t) => setState(() => _tab = t),
+          );
+        }
         return FriendsView(
           identity: studentIdentity(
             displayName: bloc.displayName,
@@ -1667,6 +1674,8 @@ class _AmigosEnLineaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!ReleaseFlags.friendsEnabled) return const SizedBox.shrink();
+
     final identity = studentIdentity(
       displayName: bloc.displayName,
       childId: bloc.childProfile?.id,
@@ -1733,6 +1742,13 @@ class _AmigosEnLineaCard extends StatelessWidget {
                 StreamBuilder<List<FriendRequestModel>>(
                   stream: FriendsService.watchFriends(identity),
                   builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
                     final friends = snapshot.data ?? const <FriendRequestModel>[];
                     return Row(
                       mainAxisSize: MainAxisSize.min,

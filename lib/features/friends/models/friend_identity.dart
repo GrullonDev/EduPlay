@@ -18,5 +18,19 @@ class FriendIdentity {
   final String name;
 
   /// Stable key used to match "me" against a request's from/to side.
-  String get key => childId == null ? uid : '${uid}_$childId';
+  ///
+  /// Includes [role] because a parent account and that same account viewed
+  /// in "student" mode with no active child profile (childId == null) would
+  /// otherwise share an identical uid-only key — merging two distinct
+  /// friend graphs onto one identity.
+  String get key => keyFor(uid: uid, role: role, childId: childId);
+
+  static String keyFor({
+    required String uid,
+    required String role,
+    String? childId,
+  }) {
+    final base = childId == null ? uid : '${uid}_$childId';
+    return '$role:$base';
+  }
 }

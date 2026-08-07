@@ -203,9 +203,15 @@ service cloud.firestore {
 
     // ── Friend requests / connections ────────────────────────────────────────
     // Both sides of a request are stored in participantUids so either party
-    // can read, respond to, or remove it. Only the status/respondedAt fields
-    // may change after creation (accept/reject) — nobody may rewrite who the
-    // request is between.
+    // can read or remove it. Creation must be backed by a real friend_codes
+    // lookup (viaCode) that actually resolves to the named recipient — a
+    // client can't just target an arbitrary uid/childId. Only the recipient
+    // may accept; the sender may only cancel (reject) their own outgoing
+    // request — nobody can self-accept a request they sent.
+    function friendCode(code) {
+      return get(/databases/$(database)/documents/friend_codes/$(code)).data;
+    }
+
     match /friend_requests/{requestId} {
       allow read: if request.auth != null
         && request.auth.uid in resource.data.participantUids;
@@ -213,13 +219,26 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.fromUid
         && request.auth.uid in request.resource.data.participantUids
-        && request.resource.data.status == 'pending';
+        && request.resource.data.status == 'pending'
+        && !(request.resource.data.fromUid == request.resource.data.toUid
+             && request.resource.data.fromChildId == request.resource.data.toChildId)
+        && request.resource.data.viaCode is string
+        && friendCode(request.resource.data.viaCode).ownerUid
+             == request.resource.data.toUid
+        && friendCode(request.resource.data.viaCode).childId
+             == request.resource.data.toChildId;
 
       allow update: if request.auth != null
-        && request.auth.uid in resource.data.participantUids
         && request.resource.data.diff(resource.data)
              .affectedKeys()
-             .hasOnly(['status', 'respondedAt']);
+             .hasOnly(['status', 'respondedAt'])
+        && (
+          (request.auth.uid == resource.data.toUid
+            && request.resource.data.status in ['accepted', 'rejected'])
+          ||
+          (request.auth.uid == resource.data.fromUid
+            && request.resource.data.status == 'rejected')
+        );
 
       allow delete: if request.auth != null
         && request.auth.uid in resource.data.participantUids;
