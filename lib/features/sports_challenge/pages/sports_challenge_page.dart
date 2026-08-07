@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -304,12 +303,8 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                RouterPaths.childPortal,
-                                (route) => false,
-                              );
+                              Navigator.pop(ctx); // dismiss game-over dialog
+                              Navigator.pop(context); // back to caller
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF1E1B6A),

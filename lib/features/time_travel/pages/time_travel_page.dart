@@ -1,6 +1,5 @@
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -124,11 +123,7 @@ class _TimeTravelPageState extends State<TimeTravelPage>
   }
 
   void _goHome() {
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      RouterPaths.childPortal,
-      (route) => false,
-    );
+    Navigator.pop(context); // back to caller
   }
 
   @override

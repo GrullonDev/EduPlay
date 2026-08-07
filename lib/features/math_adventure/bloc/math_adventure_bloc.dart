@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
 class MathAdventureProvider with ChangeNotifier {
@@ -175,11 +174,10 @@ class MathAdventureProvider with ChangeNotifier {
         content: 'Puntuación final: $finalScore pts\n¡Sigue practicando!',
         buttonText: 'Volver al inicio',
         type: DialogType.gameOver,
-        onButtonPressed: () => Navigator.pushNamedAndRemoveUntil(
-          context,
-          RouterPaths.childPortal,
-          (route) => false,
-        ),
+        onButtonPressed: () {
+          Navigator.pop(context); // dismiss game-over dialog
+          Navigator.pop(context); // back to caller
+        },
       ),
     );
   }

@@ -1,6 +1,4 @@
-import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
 import 'package:edu_play/utils/points_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -375,41 +373,13 @@ class _TopBarState extends State<_TopBar> {
                     },
                   ),
                 ),
-                // Salón → child portal
-                Padding(
-                  padding: const EdgeInsets.only(right: 24),
-                  child: _NavTab(
-                    label: 'Salón',
-                    selected: false,
-                    onTap: () =>
-                        Navigator.pushNamed(context, RouterPaths.childPortal),
-                  ),
-                ),
-                // Amigos → student dashboard, opened straight on the Amigos
-                // tab. Progress Reports is a parent-only, multi-child view
-                // (reads every sibling's sessions) so it's intentionally not
-                // reachable from here.
-                if (ReleaseFlags.friendsEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: _NavTab(
-                      label: 'Amigos',
-                      selected: false,
-                      onTap: () {
-                        final p = widget.childProfile;
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => StudentDashboardPage(
-                              username: p?.name,
-                              childProfile: p,
-                              initialTab: 3,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                // Salón and Amigos intentionally omitted here: this is the
+                // child's nav surface, and both "Salón" (parent/session
+                // picker) and "Amigos" already live one tap away inside
+                // "Aprender" → student dashboard sidebar, correctly scoped
+                // to this child. Keeping only Juegos + Aprender here avoids
+                // duplicate entry points and keeps the child's navigation
+                // surface small and predictable.
               ],
               const SizedBox(width: 16),
               if (isDesktop)

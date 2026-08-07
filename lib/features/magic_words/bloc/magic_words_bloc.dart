@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 
 class MagicWordsProvider with ChangeNotifier {
@@ -190,12 +189,8 @@ class MagicWordsProvider with ChangeNotifier {
         buttonText: 'Volver al inicio',
         type: DialogType.gameOver,
         onButtonPressed: () {
-          Navigator.of(context).pop();
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            RouterPaths.childPortal,
-            (route) => false,
-          );
+          Navigator.of(context).pop(); // dismiss game-over dialog
+          Navigator.of(context).pop(); // back to caller
         },
       ),
     );
