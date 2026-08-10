@@ -70,7 +70,8 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
     });
   }
 
-  void _showLevelUpCelebration(BuildContext context, StudentDashboardBloc bloc) {
+  void _showLevelUpCelebration(
+      BuildContext context, StudentDashboardBloc bloc) {
     SoundManager().playWin();
     final newStickers = bloc.newlyUnlockedStickers;
     final content = newStickers.isEmpty
@@ -278,47 +279,6 @@ class _TopNavBar extends StatelessWidget {
                 fontSize: 22, fontWeight: FontWeight.w700, color: _kNavy),
           ),
           const SizedBox(width: 32),
-
-          if (s.isDesktop)
-            Row(
-              children: [
-                for (final item in _visibleNavItems(bloc.isYoungChild))
-                  Padding(
-                    padding: const EdgeInsets.only(right: 24),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => onSelect(item.tab),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            item.label,
-                            style: GoogleFonts.nunito(
-                              fontSize: 14,
-                              fontWeight: item.tab == selectedTab
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: item.tab == selectedTab
-                                  ? _kNavy
-                                  : Colors.grey[500],
-                            ),
-                          ),
-                          if (item.tab == selectedTab)
-                            Container(
-                              margin: const EdgeInsets.only(top: 2),
-                              height: 2,
-                              width: 24,
-                              decoration: BoxDecoration(
-                                color: _kNavy,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
 
           const Spacer(),
 
@@ -2740,6 +2700,8 @@ class _AchievementsView extends StatelessWidget {
             child: StickerAlbumGrid(
               unlockedIds: bloc.unlockedStickerIds,
               padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
             ),
           ),
         ),
