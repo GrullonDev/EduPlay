@@ -153,7 +153,7 @@ class FunEnglishProvider with ChangeNotifier {
         type: DialogType.gameOver,
         onButtonPressed: () => Navigator.pushNamedAndRemoveUntil(
           context,
-          RouterPaths.childPortal,
+          RouterPaths.studentDashboard,
           (route) => false,
         ),
       ),

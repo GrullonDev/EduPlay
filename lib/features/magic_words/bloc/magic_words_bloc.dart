@@ -193,7 +193,7 @@ class MagicWordsProvider with ChangeNotifier {
           Navigator.of(context).pop();
           Navigator.pushNamedAndRemoveUntil(
             context,
-            RouterPaths.childPortal,
+            RouterPaths.studentDashboard,
             (route) => false,
           );
         },
