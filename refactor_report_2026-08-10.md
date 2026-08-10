@@ -271,3 +271,46 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Crear un `AccountSecurityRepository`/datasource para cambio de password, cierre de sesion y borrado de cuenta.
 - Extraer secciones de `settings_page.dart` a widgets dedicados para reducir el archivo monolitico.
 - Separar borrado de cuenta en un caso de uso transaccional o cloud function para evitar inconsistencias entre Auth y Firestore.
+
+## Fase 7 - Dashboard estudiante: navegacion, Logros y modularizacion (2026-08-10)
+
+### Bugs corregidos
+- Se elimino la duplicacion visual de opciones en desktop: la navegacion principal queda en el sidebar y el top bar queda como encabezado de estado/perfil.
+- Se corrigio la pantalla vacia de `Logros`: `StickerAlbumGrid` ahora soporta uso embebido con `shrinkWrap` y `physics`, evitando problemas al renderizar un `GridView` dentro de un `CustomScrollView`.
+
+### Cambios aplicados
+- Se extrajo la navegacion del dashboard estudiante a `lib/features/student_dashboard/widgets/student_dashboard_navigation.dart`:
+  - `StudentTopNavBar`
+  - `StudentSidebar`
+  - `StudentPointsBadge`
+- Se extrajo la vista de logros a `lib/features/student_dashboard/widgets/student_achievements_view.dart`.
+- `student_dashboard_layout.dart` queda enfocado en composicion de tabs y seleccion de contenido.
+- `StickerAlbumGrid` conserva comportamiento standalone y ahora tambien permite render no-scroll embebido desde secciones internas.
+
+### Estado de calidad
+- `student_dashboard_layout.dart` se redujo a 2279 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+
+### Deuda pendiente recomendada
+- Continuar extrayendo del dashboard estudiante: Home, Mis Juegos, sesiones/recomendaciones y tarjetas de album.
+- Migrar `PracticeSessionsService`, `ProgressRecommendationsService` y `ClassroomChallengesService` restantes en el bloc/layout hacia repositorios/casos de uso inyectados.
+- Agregar test/widget smoke para las tabs `Panel de Control`, `Mis Juegos` y `Logros`, validando que cada una renderiza contenido visible.
+
+## Fase 8 - Modularizacion profunda student_dashboard (2026-08-10)
+
+### Cambios aplicados
+- Se extrajo el hub completo de juegos a `lib/features/student_dashboard/widgets/student_games_hub_view.dart`.
+- Se extrajo la seccion de juegos del home y preview de album a `lib/features/student_dashboard/widgets/student_home_games_section.dart`.
+- Se extrajeron recomendaciones y sesiones activas a `lib/features/student_dashboard/widgets/student_practice_sections.dart`.
+- `StudentPracticeSessionsSection` ahora usa `PracticeSessionsRepository` inyectado, eliminando el consumo de `PracticeSessionsService` desde el layout del estudiante.
+- Se extrajeron banner de mision y tarjetas de estadisticas a `lib/features/student_dashboard/widgets/student_home_overview_widgets.dart`.
+
+### Estado de calidad
+- `student_dashboard_layout.dart` quedo en 649 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- El layout principal queda orientado a composicion de tabs y coordinacion de estado local minima.
+
+### Deuda pendiente recomendada
+- Extraer `HomeView` y `AmigosEnLineaCard` para cerrar la modularizacion del dashboard estudiante.
+- Desacoplar `ClassroomChallengesService` y `ProgressRecommendationsService` del `StudentDashboardBloc` mediante repositorios/casos de uso inyectados.
+- Agregar smoke tests de tabs para asegurar que `Panel de Control`, `Mis Juegos` y `Logros` renderizan contenido visible despues de la extraccion.
