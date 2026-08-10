@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
-import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/child_profiles_repository.dart';
-import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
 import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
@@ -18,13 +14,17 @@ import 'package:edu_play/features/subscription/models/subscription.dart';
 import 'package:edu_play/features/subscription/services/subscription_service.dart';
 import 'package:edu_play/features/onboarding/widgets/onboarding_wizard.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_active_sessions_card.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_challenges_card.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_quick_controls_card.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_session_history_card.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_weekly_summary_card.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
-const _kNavyDark = Color(0xFF14125A);
 const _kRed = Color(0xFFC0392B);
 const _kCoral = Color(0xFFFF6E6C);
 const _kBg = Color(0xFFF8F7FF);
@@ -80,8 +80,10 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Eliminar perfil',
-            style: GoogleFonts.fredoka(color: _kNavy, fontSize: 18)),
+        title: Text(
+          'Eliminar perfil',
+          style: GoogleFonts.fredoka(color: _kNavy, fontSize: 18),
+        ),
         content: Text(
           '¿Eliminar el perfil de ${p.name}? Esta acción no se puede deshacer.',
           style: GoogleFonts.nunito(fontSize: 14),
@@ -94,8 +96,10 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: _kRed),
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Eliminar',
-                style: GoogleFonts.nunito(color: Colors.white)),
+            child: Text(
+              'Eliminar',
+              style: GoogleFonts.nunito(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -162,8 +166,9 @@ class _OverviewBodyState extends State<_OverviewBody> {
   }
 
   Future<void> _loadStats() async {
-    final stats =
-        await ParentChildStatsService.loadStatsForProfiles(widget.profiles);
+    final stats = await ParentChildStatsService.loadStatsForProfiles(
+      widget.profiles,
+    );
     if (mounted) {
       setState(() {
         _stats = stats;
@@ -240,7 +245,9 @@ class _OverviewBodyState extends State<_OverviewBody> {
                         Text(
                           'Aquí tienes el resumen de hoy para tu familia.',
                           style: GoogleFonts.nunito(
-                              fontSize: 14, color: Colors.grey[500]),
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
                         ),
                         const SizedBox(width: 10),
                         _TierBadge(),
@@ -251,27 +258,28 @@ class _OverviewBodyState extends State<_OverviewBody> {
               ),
               // Start Session button
               Builder(
-                  builder: (ctx) => ElevatedButton.icon(
-                        onPressed: () => Navigator.of(ctx)
-                            .pushNamed(RouterPaths.createSession),
-                        icon: const Icon(Icons.play_circle_outline_rounded,
-                            size: 18),
-                        label: Text(
-                          'Start Session',
-                          style:
-                              GoogleFonts.nunito(fontWeight: FontWeight.w700),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _kCoral,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      )),
+                builder: (ctx) => ElevatedButton.icon(
+                  onPressed: () =>
+                      Navigator.of(ctx).pushNamed(RouterPaths.createSession),
+                  icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+                  label: Text(
+                    'Start Session',
+                    style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kCoral,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
               const SizedBox(width: 10),
               ElevatedButton.icon(
                 onPressed: widget.onAddProfile,
@@ -284,8 +292,10 @@ class _OverviewBodyState extends State<_OverviewBody> {
                   backgroundColor: _kNavy,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 13,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -325,13 +335,12 @@ class _OverviewBodyState extends State<_OverviewBody> {
                     Expanded(
                       flex: 4,
                       child: _AchievementCard(
-                          profiles: widget.profiles, stats: _stats),
+                        profiles: widget.profiles,
+                        stats: _stats,
+                      ),
                     ),
                     const SizedBox(width: 20),
-                    const Expanded(
-                      flex: 6,
-                      child: _ChallengesCard(),
-                    ),
+                    const Expanded(flex: 6, child: ParentChallengesCard()),
                   ],
                 ),
               )
@@ -339,7 +348,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                 children: [
                   _AchievementCard(profiles: widget.profiles, stats: _stats),
                   const SizedBox(height: 20),
-                  const _ChallengesCard(),
+                  const ParentChallengesCard(),
                 ],
               ),
         const SizedBox(height: 28),
@@ -349,14 +358,16 @@ class _OverviewBodyState extends State<_OverviewBody> {
     Widget sideCol = Column(
       children: [
         const SizedBox(height: 24),
-        _WeeklySummaryCard(
-            totalMinutes: _totalMinutes, topSubject: _topSubject),
+        ParentWeeklySummaryCard(
+          totalMinutes: _totalMinutes,
+          topSubject: _topSubject,
+        ),
         const SizedBox(height: 16),
-        const _QuickControlsCard(),
+        const ParentQuickControlsCard(),
         const SizedBox(height: 16),
-        const _ActiveSessionsCard(),
+        const ParentActiveSessionsCard(),
         const SizedBox(height: 16),
-        const _SessionHistoryCard(),
+        const ParentSessionHistoryCard(),
       ],
     );
 
@@ -376,13 +387,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          mainCol,
-          sideCol,
-          const SizedBox(height: 20),
-        ],
-      ),
+      child: Column(children: [mainCol, sideCol, const SizedBox(height: 20)]),
     );
   }
 }
@@ -427,8 +432,11 @@ class _ChildProfilesGrid extends StatelessWidget {
 }
 
 class _ChildCard extends StatelessWidget {
-  const _ChildCard(
-      {required this.profile, required this.stats, required this.onDelete});
+  const _ChildCard({
+    required this.profile,
+    required this.stats,
+    required this.onDelete,
+  });
 
   final ChildProfile profile;
   final ChildGameplayStats? stats;
@@ -479,8 +487,10 @@ class _ChildCard extends StatelessWidget {
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: _kNavy,
                     borderRadius: BorderRadius.circular(8),
@@ -533,7 +543,9 @@ class _ChildCard extends StatelessWidget {
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEEEDF8),
                         borderRadius: BorderRadius.circular(10),
@@ -576,7 +588,9 @@ class _ChildCard extends StatelessWidget {
                               Text(
                                 'Progreso de Nivel',
                                 style: GoogleFonts.nunito(
-                                    fontSize: 10, color: Colors.grey[500]),
+                                  fontSize: 10,
+                                  color: Colors.grey[500],
+                                ),
                               ),
                               Text(
                                 '${(_levelProgress * 100).toInt()}%',
@@ -615,8 +629,10 @@ class _ChildCard extends StatelessWidget {
               GestureDetector(
                 onTap: () => _showPinDialog(context),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _kNavy.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
@@ -624,8 +640,11 @@ class _ChildCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.pin_rounded,
-                          size: 12, color: _kNavy.withValues(alpha: 0.6)),
+                      Icon(
+                        Icons.pin_rounded,
+                        size: 12,
+                        color: _kNavy.withValues(alpha: 0.6),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'PIN',
@@ -645,8 +664,10 @@ class _ChildCard extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _kNavy,
                   side: BorderSide(color: Colors.grey.shade200),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -656,7 +677,9 @@ class _ChildCard extends StatelessWidget {
                 child: Text(
                   'Detalle de Actividad',
                   style: GoogleFonts.nunito(
-                      fontSize: 10, fontWeight: FontWeight.w700),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               if (ReleaseFlags.teacherExperienceEnabled) ...[
@@ -671,14 +694,18 @@ class _ChildCard extends StatelessWidget {
                   label: Text(
                     'Asignar Maestro',
                     style: GoogleFonts.nunito(
-                        fontSize: 10, fontWeight: FontWeight.w700),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _kCoral,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -691,8 +718,11 @@ class _ChildCard extends StatelessWidget {
           ),
           // Delete
           IconButton(
-            icon: Icon(Icons.more_vert_rounded,
-                size: 18, color: Colors.grey[400]),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              size: 18,
+              color: Colors.grey[400],
+            ),
             onPressed: () => _showOptions(context),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -731,19 +761,27 @@ class _ChildCard extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.pin_rounded, color: _kNavy),
-              title: Text('Ver PIN de acceso',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+              title: Text(
+                'Ver PIN de acceso',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _showPinDialog(context);
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.delete_outline_rounded, color: Colors.red),
-              title: Text('Eliminar perfil',
-                  style: GoogleFonts.nunito(
-                      fontWeight: FontWeight.w700, color: Colors.red)),
+              leading: const Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red,
+              ),
+              title: Text(
+                'Eliminar perfil',
+                style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 onDelete();
@@ -792,537 +830,6 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-// ── Weekly summary card ───────────────────────────────────────────────────────
-
-class _WeeklySummaryCard extends StatelessWidget {
-  const _WeeklySummaryCard({
-    required this.totalMinutes,
-    required this.topSubject,
-  });
-  final int totalMinutes;
-  final String topSubject;
-
-  String get _timeLabel {
-    final h = totalMinutes ~/ 60;
-    final m = totalMinutes % 60;
-    return '${h}h ${m}m';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _kNavyDark,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'RESUMEN SEMANAL',
-            style: GoogleFonts.nunito(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.4,
-              color: Colors.white.withValues(alpha: 0.55),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _SummaryRow(
-            icon: Icons.access_time_rounded,
-            label: 'Tiempo de Juego',
-            value: totalMinutes > 0 ? _timeLabel : '—',
-          ),
-          const SizedBox(height: 14),
-          _SummaryRow(
-            icon: Icons.menu_book_rounded,
-            label: 'Materia Top',
-            value: topSubject.isNotEmpty ? topSubject : '—',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryRow extends StatelessWidget {
-  const _SummaryRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.white.withValues(alpha: 0.6)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: GoogleFonts.nunito(
-              fontSize: 13,
-              color: Colors.white.withValues(alpha: 0.65),
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.fredoka(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Quick controls card ───────────────────────────────────────────────────────
-
-class _QuickControlsCard extends StatefulWidget {
-  const _QuickControlsCard();
-
-  @override
-  State<_QuickControlsCard> createState() => _QuickControlsCardState();
-}
-
-class _QuickControlsCardState extends State<_QuickControlsCard> {
-  final ParentDashboardRepository _repository = sl<ParentDashboardRepository>();
-
-  ParentQuickControls _controls = const ParentQuickControls();
-  bool _saving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadControls();
-  }
-
-  Future<void> _loadControls() async {
-    try {
-      final controls = await _repository.getQuickControls();
-      if (mounted) setState(() => _controls = controls);
-    } catch (_) {}
-  }
-
-  Future<void> _saveControls(ParentQuickControls controls) async {
-    setState(() {
-      _controls = controls;
-      _saving = true;
-    });
-    try {
-      await _repository.saveQuickControls(controls);
-    } catch (_) {
-    } finally {
-      if (mounted) setState(() => _saving = false);
-    }
-  }
-
-  String get _dailyLimitLabel {
-    final h = _controls.dailyLimitMinutes ~/ 60;
-    final m = _controls.dailyLimitMinutes % 60;
-    if (m == 0) return 'Activo · $h ${h == 1 ? 'hora' : 'horas'}';
-    return 'Activo · ${h}h ${m}m';
-  }
-
-  String get _bedtimeLabel =>
-      'Desde las ${_controls.bedtimeHour.toString().padLeft(2, '0')}:00';
-
-  Future<void> _pickDailyLimit() async {
-    final options = [
-      (label: '30 minutos', minutes: 30),
-      (label: '1 hora', minutes: 60),
-      (label: '1.5 horas', minutes: 90),
-      (label: '2 horas', minutes: 120),
-      (label: '3 horas', minutes: 180),
-    ];
-    final chosen = await showDialog<int>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text('Límite Diario',
-            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
-        children: options
-            .map((o) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, o.minutes),
-                  child: Text(o.label,
-                      style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          fontWeight: _controls.dailyLimitMinutes == o.minutes
-                              ? FontWeight.w800
-                              : FontWeight.w500)),
-                ))
-            .toList(),
-      ),
-    );
-    if (chosen != null && mounted) {
-      await _saveControls(_controls.copyWith(dailyLimitMinutes: chosen));
-    }
-  }
-
-  Future<void> _pickBedtimeHour() async {
-    final hours = [18, 19, 20, 21, 22];
-    final chosen = await showDialog<int>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text('Hora de Dormir',
-            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
-        children: hours
-            .map((h) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(ctx, h),
-                  child: Text('${h.toString().padLeft(2, '0')}:00',
-                      style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          fontWeight: _controls.bedtimeHour == h
-                              ? FontWeight.w800
-                              : FontWeight.w500)),
-                ))
-            .toList(),
-      ),
-    );
-    if (chosen != null && mounted) {
-      await _saveControls(_controls.copyWith(bedtimeHour: chosen));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _kNavyDark,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.people_alt_rounded,
-                  size: 16, color: Colors.white54),
-              const SizedBox(width: 8),
-              Text(
-                'CONTROLES RÁPIDOS',
-                style: GoogleFonts.nunito(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.4,
-                  color: Colors.white.withValues(alpha: 0.55),
-                ),
-              ),
-              if (_saving) ...[
-                const Spacer(),
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                      color: Colors.white54, strokeWidth: 1.5),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Daily limit
-          GestureDetector(
-            onTap: _pickDailyLimit,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Límite Diario',
-                          style: GoogleFonts.nunito(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          _dailyLimitLabel,
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.55),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right_rounded,
-                      color: Colors.white.withValues(alpha: 0.4)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Bedtime
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _controls.bedtimeEnabled ? _pickBedtimeHour : null,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Modo Dormir',
-                          style: GoogleFonts.nunito(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          _controls.bedtimeEnabled
-                              ? _bedtimeLabel
-                              : 'Desactivado',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            color: Colors.white.withValues(alpha: 0.55),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Switch(
-                  value: _controls.bedtimeEnabled,
-                  onChanged: (v) async {
-                    await _saveControls(_controls.copyWith(bedtimeEnabled: v));
-                  },
-                  activeThumbColor: const Color(0xFF2ECC71),
-                  inactiveTrackColor: Colors.white24,
-                  thumbColor: WidgetStateProperty.all(Colors.white),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Active Sessions card ──────────────────────────────────────────────────────
-
-class _ActiveSessionsCard extends StatelessWidget {
-  const _ActiveSessionsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<PracticeSession>>(
-      stream: PracticeSessionsService.watchActiveSessions(),
-      builder: (context, snapshot) {
-        final isLoading = snapshot.connectionState == ConnectionState.waiting;
-        final sessions = snapshot.data ?? [];
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: _kNavyDark,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                const Icon(Icons.play_circle_outline_rounded,
-                    size: 16, color: Colors.white54),
-                const SizedBox(width: 8),
-                Text('Active Sessions',
-                    style: GoogleFonts.fredoka(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600)),
-                const Spacer(),
-                // Live indicator — pulses while stream is connected
-                if (!isLoading)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF27AE60),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-              ]),
-              const SizedBox(height: 14),
-              if (isLoading)
-                const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white54),
-                  ),
-                )
-              else if (sessions.isEmpty)
-                Column(
-                  children: [
-                    const Text('🎮', style: TextStyle(fontSize: 28)),
-                    const SizedBox(height: 6),
-                    Text('No active sessions',
-                        style: GoogleFonts.nunito(
-                            color: Colors.white54, fontSize: 12)),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context)
-                            .pushNamed(RouterPaths.createSession),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: _kCoral),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: Text('Start Session',
-                            style: GoogleFonts.nunito(
-                                color: _kCoral,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13)),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                ...sessions.map(
-                  (s) => _SessionRow(
-                    session: s,
-                    onEnd: () => PracticeSessionsService.endSession(s.id),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SessionRow extends StatelessWidget {
-  const _SessionRow({required this.session, required this.onEnd});
-
-  final PracticeSession session;
-  final VoidCallback onEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Expanded(
-              child: Text(session.childName,
-                  style: GoogleFonts.fredoka(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600)),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFF27AE60).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text('Active',
-                  style: GoogleFonts.nunito(
-                      color: const Color(0xFF27AE60),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800)),
-            ),
-          ]),
-          const SizedBox(height: 4),
-          Text('PIN: ${session.pin}  •  ${session.totalCount} games',
-              style: GoogleFonts.nunito(color: Colors.white54, fontSize: 11)),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: session.progressFraction,
-              minHeight: 4,
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(_kCoral),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(children: [
-            Text(
-              '${session.completedCount}/${session.totalCount} done',
-              style: GoogleFonts.nunito(color: Colors.white38, fontSize: 10),
-            ),
-            const Spacer(),
-            // Share link button
-            GestureDetector(
-              onTap: () {
-                final url =
-                    'https://app.eduplay.com/practice-session?pin=${session.pin}';
-                Clipboard.setData(ClipboardData(text: url));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Enlace copiado al portapapeles',
-                        style: GoogleFonts.nunito()),
-                    behavior: SnackBarBehavior.floating,
-                    backgroundColor: const Color(0xFF1E1B6A),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              },
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                const Icon(Icons.share_rounded,
-                    size: 12, color: Color(0xFF27AE60)),
-                const SizedBox(width: 3),
-                Text('Compartir',
-                    style: GoogleFonts.nunito(
-                        color: const Color(0xFF27AE60),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700)),
-              ]),
-            ),
-            const SizedBox(width: 12),
-            GestureDetector(
-              onTap: onEnd,
-              child: Text('Finalizar',
-                  style: GoogleFonts.nunito(
-                      color: _kCoral,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700)),
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Achievement card ──────────────────────────────────────────────────────────
-
 class _AchievementCard extends StatelessWidget {
   const _AchievementCard({required this.profiles, required this.stats});
   final List<ChildProfile> profiles;
@@ -1331,8 +838,10 @@ class _AchievementCard extends StatelessWidget {
   /// Derive achievement title + description from real gameplay data
   /// (`students/{id}` points/scores), not kiosk sessions.
   ({String title, String description, String achiever}) get _achievement {
-    final total = stats.values
-        .fold<int>(0, (runningTotal, s) => runningTotal + s.gamesPlayedCount);
+    final total = stats.values.fold<int>(
+      0,
+      (runningTotal, s) => runningTotal + s.gamesPlayedCount,
+    );
 
     if (profiles.isEmpty || total == 0) {
       return (
@@ -1381,8 +890,10 @@ class _AchievementCard extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Enviar Felicitación',
-            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy)),
+        title: Text(
+          'Enviar Felicitación',
+          style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy),
+        ),
         content: Text(
           '¡Comparte el logro de $achiever con tu familia! 🎉\n\n"$achiever ha conseguido un nuevo logro en EduPlay. ¡Sigue aprendiendo!"',
           style: GoogleFonts.nunito(fontSize: 14, height: 1.5),
@@ -1390,22 +901,27 @@ class _AchievementCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cerrar',
-                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+            child: Text(
+              'Cerrar',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: _kRed,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             onPressed: () {
               Navigator.pop(ctx);
               // Clipboard copy for easy sharing
-              Clipboard.setData(ClipboardData(
-                text:
-                    '¡$achiever ha conseguido un nuevo logro en EduPlay! 🎉 #EduPlay',
-              ));
+              Clipboard.setData(
+                ClipboardData(
+                  text:
+                      '¡$achiever ha conseguido un nuevo logro en EduPlay! 🎉 #EduPlay',
+                ),
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -1417,9 +933,13 @@ class _AchievementCard extends StatelessWidget {
                 ),
               );
             },
-            child: Text('Copiar mensaje',
-                style: GoogleFonts.nunito(
-                    color: Colors.white, fontWeight: FontWeight.w700)),
+            child: Text(
+              'Copiar mensaje',
+              style: GoogleFonts.nunito(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
@@ -1504,7 +1024,9 @@ class _AchievementCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -1512,7 +1034,9 @@ class _AchievementCard extends StatelessWidget {
                   child: Text(
                     'Enviar Felicitación',
                     style: GoogleFonts.nunito(
-                        fontWeight: FontWeight.w700, fontSize: 12),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -1526,239 +1050,6 @@ class _AchievementCard extends StatelessWidget {
 
 // ── Challenges card ───────────────────────────────────────────────────────────
 
-class _ChallengesCard extends StatefulWidget {
-  const _ChallengesCard();
-
-  @override
-  State<_ChallengesCard> createState() => _ChallengesCardState();
-}
-
-class _ChallengesCardState extends State<_ChallengesCard> {
-  final ParentDashboardRepository _repository = sl<ParentDashboardRepository>();
-
-  List<ParentChallenge> _challenges = [];
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final challenges = await _repository.getChallenges();
-      if (mounted) {
-        setState(() {
-          _challenges = challenges;
-          _loaded = true;
-        });
-      }
-    } catch (_) {
-      if (mounted) setState(() => _loaded = true);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pendingCount = _challenges.length;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Próximos Desafíos',
-                style: GoogleFonts.fredoka(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _kNavy,
-                ),
-              ),
-              const Spacer(),
-              if (pendingCount > 0)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEEDF8),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '$pendingCount ${pendingCount == 1 ? 'Tarea Pendiente' : 'Tareas Pendientes'}',
-                    style: GoogleFonts.nunito(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: _kNavy,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          if (!_loaded)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else if (_challenges.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.assignment_outlined,
-                        size: 40, color: Colors.grey[300]),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No hay retos asignados',
-                      style: GoogleFonts.fredoka(
-                          fontSize: 15, color: Colors.grey[400]),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Los desafíos de maestros aparecerán aquí.',
-                      style: GoogleFonts.nunito(
-                          fontSize: 12, color: Colors.grey[400]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
-            for (final c in _challenges) ...[
-              _ChallengeTile(
-                icon: _iconForSubject(c.subject),
-                title: c.title,
-                subtitle: c.displaySubtitle,
-                tag: c.tag,
-                tagColor: _colorForTag(c.tag),
-              ),
-              const Divider(height: 1, color: Color(0xFFF3F4F6)),
-            ],
-        ],
-      ),
-    );
-  }
-
-  IconData _iconForSubject(String subject) {
-    switch (subject.toLowerCase()) {
-      case 'math':
-      case 'matemáticas':
-        return Icons.calculate_rounded;
-      case 'science':
-      case 'ciencias':
-        return Icons.eco_rounded;
-      case 'english':
-      case 'inglés':
-        return Icons.translate_rounded;
-      case 'history':
-      case 'historia':
-        return Icons.history_edu_rounded;
-      default:
-        return Icons.school_rounded;
-    }
-  }
-
-  Color _colorForTag(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'urgente':
-        return const Color(0xFFC0392B);
-      case 'recomendado':
-        return const Color(0xFF2ECC71);
-      default:
-        return const Color(0xFF95A5A6);
-    }
-  }
-}
-
-class _ChallengeTile extends StatelessWidget {
-  const _ChallengeTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.tag,
-    required this.tagColor,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String tag;
-  final Color tagColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEEDF8),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 20, color: _kNavy),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _kNavy,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style:
-                      GoogleFonts.nunito(fontSize: 11, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            tag,
-            style: GoogleFonts.nunito(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: tagColor,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey[300]),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Empty state when no children ──────────────────────────────────────────────
-
 class _EmptyProfiles extends StatelessWidget {
   const _EmptyProfiles({required this.onAdd});
   final VoidCallback onAdd;
@@ -1771,7 +1062,10 @@ class _EmptyProfiles extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: const Color(0xFFEEEDF8), width: 2, style: BorderStyle.solid),
+          color: const Color(0xFFEEEDF8),
+          width: 2,
+          style: BorderStyle.solid,
+        ),
       ),
       child: Column(
         children: [
@@ -1786,7 +1080,10 @@ class _EmptyProfiles extends StatelessWidget {
             'Añade un perfil para que tus hijos puedan\nacceder con su código PIN personal.',
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
-                fontSize: 13, color: Colors.grey[400], height: 1.5),
+              fontSize: 13,
+              color: Colors.grey[400],
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 20),
           ElevatedButton.icon(
@@ -1881,8 +1178,10 @@ class _AddProfileDialogState extends State<_AddProfileDialog> {
                 const SizedBox(height: 4),
                 Text(
                   'Se generará un PIN de acceso automáticamente.',
-                  style:
-                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 const _DialogLabel('Nombre del niño'),
@@ -1906,13 +1205,17 @@ class _AddProfileDialogState extends State<_AddProfileDialog> {
                           DropdownButtonFormField<int>(
                             initialValue: _age,
                             style: GoogleFonts.nunito(
-                                fontSize: 14, color: const Color(0xFF111827)),
+                              fontSize: 14,
+                              color: const Color(0xFF111827),
+                            ),
                             decoration: _inputDec(''),
                             items: List.generate(12, (i) => i + 5)
-                                .map((a) => DropdownMenuItem(
-                                      value: a,
-                                      child: Text('$a años'),
-                                    ))
+                                .map(
+                                  (a) => DropdownMenuItem(
+                                    value: a,
+                                    child: Text('$a años'),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (v) => setState(() => _age = v!),
                           ),
@@ -1929,13 +1232,17 @@ class _AddProfileDialogState extends State<_AddProfileDialog> {
                           DropdownButtonFormField<String>(
                             initialValue: _subject,
                             style: GoogleFonts.nunito(
-                                fontSize: 14, color: const Color(0xFF111827)),
+                              fontSize: 14,
+                              color: const Color(0xFF111827),
+                            ),
                             decoration: _inputDec(''),
                             items: _subjects
-                                .map((s) => DropdownMenuItem(
-                                      value: s,
-                                      child: Text(s),
-                                    ))
+                                .map(
+                                  (s) => DropdownMenuItem(
+                                    value: s,
+                                    child: Text(s),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (v) => setState(() => _subject = v!),
                           ),
@@ -1963,12 +1270,16 @@ class _AddProfileDialogState extends State<_AddProfileDialog> {
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2),
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
                         : Text(
                             'Crear perfil y generar PIN',
                             style: GoogleFonts.nunito(
-                                fontWeight: FontWeight.w700, fontSize: 15),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
                           ),
                   ),
                 ),
@@ -2066,13 +1377,18 @@ class _PinRevealDialog extends StatelessWidget {
                 'Comparte este código con ${profile.name}\npara que pueda acceder a su perfil.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.nunito(
-                    fontSize: 13, color: Colors.grey[500], height: 1.4),
+                  fontSize: 13,
+                  color: Colors.grey[500],
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 24),
               // PIN display
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEEEDF8),
                   borderRadius: BorderRadius.circular(16),
@@ -2119,8 +1435,10 @@ class _PinRevealDialog extends StatelessWidget {
                       Clipboard.setData(ClipboardData(text: profile.pin));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content:
-                              Text('PIN copiado', style: GoogleFonts.nunito()),
+                          content: Text(
+                            'PIN copiado',
+                            style: GoogleFonts.nunito(),
+                          ),
                           behavior: SnackBarBehavior.floating,
                           backgroundColor: _kNavy,
                           duration: const Duration(seconds: 2),
@@ -2136,18 +1454,22 @@ class _PinRevealDialog extends StatelessWidget {
                       foregroundColor: _kNavy,
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   OutlinedButton.icon(
                     onPressed: () {
                       Clipboard.setData(
-                          ClipboardData(text: childPortalUrl(profile)));
+                        ClipboardData(text: childPortalUrl(profile)),
+                      );
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Enlace copiado',
-                              style: GoogleFonts.nunito()),
+                          content: Text(
+                            'Enlace copiado',
+                            style: GoogleFonts.nunito(),
+                          ),
                           behavior: SnackBarBehavior.floating,
                           backgroundColor: _kNavy,
                           duration: const Duration(seconds: 2),
@@ -2163,7 +1485,8 @@ class _PinRevealDialog extends StatelessWidget {
                       foregroundColor: _kNavy,
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                   ),
                 ],
@@ -2186,112 +1509,6 @@ class _PinRevealDialog extends StatelessWidget {
     );
   }
 }
-
-// ── Session history card (completed sessions, real-time stream) ───────────────
-
-class _SessionHistoryCard extends StatelessWidget {
-  const _SessionHistoryCard();
-
-  String _relativeDate(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inDays == 0) return 'Hoy';
-    if (diff.inDays == 1) return 'Ayer';
-    if (diff.inDays < 7) return 'Hace ${diff.inDays}d';
-    return DateFormat('d MMM', 'es').format(dt);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<List<PracticeSession>>(
-      stream: PracticeSessionsService.watchCompletedSessions(),
-      builder: (context, snapshot) {
-        final sessions = (snapshot.data ?? []).take(5).toList();
-
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: _kNavyDark,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                const Icon(Icons.history_rounded,
-                    size: 16, color: Colors.white54),
-                const SizedBox(width: 8),
-                Text('Historial de Sesiones',
-                    style: GoogleFonts.fredoka(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600)),
-              ]),
-              const SizedBox(height: 14),
-              if (snapshot.connectionState == ConnectionState.waiting)
-                const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white54),
-                  ),
-                )
-              else if (sessions.isEmpty)
-                Text('Sin sesiones finalizadas aún.',
-                    style:
-                        GoogleFonts.nunito(color: Colors.white54, fontSize: 12))
-              else
-                ...sessions.map((s) {
-                  final total = s.scoreMap.values.fold(0, (a, b) => a + b);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(s.childName,
-                                style: GoogleFonts.nunito(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700)),
-                            Text(
-                              '${s.completedCount}/${s.totalCount} juegos  ·  $total pts',
-                              style: GoogleFonts.nunito(
-                                  color: Colors.white54, fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Text(_relativeDate(s.createdAt),
-                          style: GoogleFonts.nunito(
-                              color: Colors.white38, fontSize: 10)),
-                    ]),
-                  );
-                }),
-              if (sessions.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () => Navigator.of(context)
-                      .pushNamed(RouterPaths.progressReports),
-                  child: Text(
-                    'Ver informe completo →',
-                    style: GoogleFonts.nunito(
-                        color: _kCoral,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ── Tier badge ────────────────────────────────────────────────────────────────
 
 class _TierBadge extends StatelessWidget {
   @override
@@ -2361,8 +1578,9 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
   @override
   void initState() {
     super.initState();
-    _future =
-        ProgressRecommendationsService.getRecommendations(widget.profile.id);
+    _future = ProgressRecommendationsService.getRecommendations(
+      widget.profile.id,
+    );
   }
 
   @override
@@ -2396,8 +1614,11 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
                       color: const Color(0xFFFFF3E0),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.lightbulb_rounded,
-                        size: 18, color: Color(0xFFE65100)),
+                    child: const Icon(
+                      Icons.lightbulb_rounded,
+                      size: 18,
+                      color: Color(0xFFE65100),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -2415,7 +1636,9 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
                         Text(
                           'Basado en las sesiones completadas',
                           style: GoogleFonts.nunito(
-                              fontSize: 11, color: Colors.grey[500]),
+                            fontSize: 11,
+                            color: Colors.grey[500],
+                          ),
                         ),
                       ],
                     ),
@@ -2428,8 +1651,10 @@ class _RecommendationsCardState extends State<_RecommendationsCard> {
                 runSpacing: 8,
                 children: recs.map((rec) {
                   return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: rec.neverPlayed
                           ? const Color(0xFFEEEDF8)
@@ -2536,8 +1761,9 @@ class _ChildActivitySheet extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
                     child: Column(
@@ -2556,8 +1782,9 @@ class _ChildActivitySheet extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 28,
-                              backgroundColor:
-                                  profile.avatarColor.withValues(alpha: 0.25),
+                              backgroundColor: profile.avatarColor.withValues(
+                                alpha: 0.25,
+                              ),
                               child: Text(
                                 profile.name[0].toUpperCase(),
                                 style: GoogleFonts.fredoka(
@@ -2584,8 +1811,9 @@ class _ChildActivitySheet extends StatelessWidget {
                                     '${profile.focusSubject}  ·  $_levelLabel',
                                     style: GoogleFonts.nunito(
                                       fontSize: 13,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.7),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.7,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -2593,8 +1821,11 @@ class _ChildActivitySheet extends StatelessWidget {
                             ),
                             IconButton(
                               onPressed: () => Navigator.pop(context),
-                              icon: const Icon(Icons.close_rounded,
-                                  color: Colors.white70, size: 22),
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.white70,
+                                size: 22,
+                              ),
                             ),
                           ],
                         ),
@@ -2630,8 +1861,9 @@ class _ChildActivitySheet extends StatelessWidget {
                               child: LinearProgressIndicator(
                                 value: _levelProgress,
                                 minHeight: 8,
-                                backgroundColor:
-                                    Colors.white.withValues(alpha: 0.15),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.15,
+                                ),
                                 color: const Color(0xFFFFD700),
                               ),
                             ),
@@ -2717,7 +1949,9 @@ class _ChildActivitySheet extends StatelessWidget {
                       child: Text(
                         'Aún no ha jugado ningún juego.',
                         style: GoogleFonts.nunito(
-                            fontSize: 13, color: Colors.grey[400]),
+                          fontSize: 13,
+                          color: Colors.grey[400],
+                        ),
                       ),
                     )
                   else
@@ -2730,16 +1964,20 @@ class _ChildActivitySheet extends StatelessWidget {
                                   child: Text(
                                     e.gameTitle,
                                     style: GoogleFonts.nunito(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: _kNavy),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: _kNavy,
+                                    ),
                                   ),
                                 ),
-                                Text('${e.score} pts',
-                                    style: GoogleFonts.nunito(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.grey[600])),
+                                Text(
+                                  '${e.score} pts',
+                                  style: GoogleFonts.nunito(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -2790,15 +2028,19 @@ class _ChildActivitySheet extends StatelessWidget {
                     const Padding(
                       padding: EdgeInsets.all(32),
                       child: Center(
-                          child: CircularProgressIndicator(color: _kNavy)),
+                        child: CircularProgressIndicator(color: _kNavy),
+                      ),
                     )
                   else if (sessions.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(32),
                       child: Column(
                         children: [
-                          Icon(Icons.inbox_rounded,
-                              size: 48, color: Colors.grey[300]),
+                          Icon(
+                            Icons.inbox_rounded,
+                            size: 48,
+                            color: Colors.grey[300],
+                          ),
                           const SizedBox(height: 12),
                           Text(
                             'Aún no hay sesiones asignadas',
@@ -2949,8 +2191,10 @@ class _SessionDetailRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${session.completedCount} / ${session.totalCount} juegos completados',
-                  style:
-                      GoogleFonts.nunito(fontSize: 11, color: Colors.grey[500]),
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
                 ),
               ],
             ),
@@ -2984,8 +2228,10 @@ class _SessionDetailRow extends StatelessWidget {
               ),
               Text(
                 '${(session.progressFraction * 100).toInt()}%',
-                style:
-                    GoogleFonts.nunito(fontSize: 10, color: Colors.grey[400]),
+                style: GoogleFonts.nunito(
+                  fontSize: 10,
+                  color: Colors.grey[400],
+                ),
               ),
             ],
           ),
