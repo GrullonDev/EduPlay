@@ -5,11 +5,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/subscription/models/subscription.dart';
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
+import 'package:edu_play/features/settings/domain/entities/notification_preferences.dart';
+import 'package:edu_play/features/settings/domain/repositories/settings_repository.dart';
+import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/features/subscription/services/stripe_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -326,7 +329,10 @@ class _SectionBody extends StatelessWidget {
 // ── Profile section ───────────────────────────────────────────────────────────
 
 class _ProfileSection extends StatefulWidget {
-  const _ProfileSection();
+  const _ProfileSection({SettingsRepository? repository})
+      : _repository = repository;
+
+  final SettingsRepository? _repository;
 
   @override
   State<_ProfileSection> createState() => _ProfileSectionState();
@@ -352,6 +358,11 @@ class _ProfileSectionState extends State<_ProfileSection> {
   String? _pwError;
   String? _pwSuccess;
 
+  SettingsRepository get _repository {
+    init();
+    return widget._repository ?? sl<SettingsRepository>();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -359,21 +370,14 @@ class _ProfileSectionState extends State<_ProfileSection> {
   }
 
   Future<void> _loadProfile() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      setState(() => _loadingProfile = false);
-      return;
-    }
     try {
-      final doc =
-          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
-      final data = doc.data() ?? {};
-      _firstNameCtrl.text = (data['firstName'] as String?) ?? '';
-      _lastNameCtrl.text = (data['lastName'] as String?) ?? '';
-      _emailCtrl.text = (data['email'] as String?) ??
-          FirebaseAuth.instance.currentUser?.email ??
-          '';
-      _ageCtrl.text = (data['age'] as String?) ?? '';
+      final profile = await _repository.getParentProfile();
+      if (profile != null) {
+        _firstNameCtrl.text = profile.firstName;
+        _lastNameCtrl.text = profile.lastName;
+        _emailCtrl.text = profile.email;
+        _ageCtrl.text = profile.age;
+      }
     } catch (_) {}
     if (mounted) setState(() => _loadingProfile = false);
   }
@@ -382,26 +386,25 @@ class _ProfileSectionState extends State<_ProfileSection> {
       _firstNameCtrl.text.trim().isEmpty || _lastNameCtrl.text.trim().isEmpty;
 
   Future<void> _saveProfile() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
     setState(() {
       _savingProfile = true;
       _profileError = null;
       _profileSuccess = null;
     });
     try {
-      await FirebaseFirestore.instance.collection('parents').doc(uid).update({
-        'firstName': _firstNameCtrl.text.trim(),
-        'lastName': _lastNameCtrl.text.trim(),
-        'age': _ageCtrl.text.trim(),
-      });
+      await _repository.updateParentProfile(
+        firstName: _firstNameCtrl.text.trim(),
+        lastName: _lastNameCtrl.text.trim(),
+        age: _ageCtrl.text.trim(),
+      );
       if (mounted) {
         setState(() => _profileSuccess = 'Perfil actualizado correctamente.');
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(
-            () => _profileError = 'No se pudo guardar. Inténtalo de nuevo.');
+          () => _profileError = 'No se pudo guardar. Inténtalo de nuevo.',
+        );
       }
     } finally {
       if (mounted) setState(() => _savingProfile = false);
@@ -1012,12 +1015,18 @@ class _SettingsCard extends StatelessWidget {
 // ── Subscription section ──────────────────────────────────────────────────────
 
 class _SubscriptionSection extends StatelessWidget {
-  const _SubscriptionSection();
+  const _SubscriptionSection({SubscriptionRepository? repository})
+      : _repository = repository;
+
+  final SubscriptionRepository? _repository;
 
   @override
   Widget build(BuildContext context) {
+    init();
+    final repository = _repository ?? sl<SubscriptionRepository>();
+
     return StreamBuilder<Subscription>(
-      stream: SubscriptionService.watchSubscription(),
+      stream: repository.watchSubscription(),
       builder: (context, snap) {
         final sub = snap.data ?? Subscription.freeTier();
         final isPro = sub.isPro;
@@ -1350,7 +1359,10 @@ class _FooterLinks extends StatelessWidget {
 // ── Notifications section ─────────────────────────────────────────────────────
 
 class _NotificationsSection extends StatefulWidget {
-  const _NotificationsSection();
+  const _NotificationsSection({SettingsRepository? repository})
+      : _repository = repository;
+
+  final SettingsRepository? _repository;
 
   @override
   State<_NotificationsSection> createState() => _NotificationsSectionState();
@@ -1366,6 +1378,11 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
   bool _emailTips = false;
   bool _emailNewFeatures = true;
 
+  SettingsRepository get _repository {
+    init();
+    return widget._repository ?? sl<SettingsRepository>();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1373,40 +1390,29 @@ class _NotificationsSectionState extends State<_NotificationsSection> {
   }
 
   Future<void> _load() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      setState(() => _loading = false);
-      return;
-    }
     try {
-      final doc =
-          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
-      final prefs =
-          (doc.data()?['notificationPrefs'] as Map<String, dynamic>?) ?? {};
+      final prefs = await _repository.getNotificationPreferences();
       setState(() {
-        _emailSessionComplete =
-            (prefs['emailSessionComplete'] as bool?) ?? true;
-        _emailWeeklyDigest = (prefs['emailWeeklyDigest'] as bool?) ?? true;
-        _emailTips = (prefs['emailTips'] as bool?) ?? false;
-        _emailNewFeatures = (prefs['emailNewFeatures'] as bool?) ?? true;
+        _emailSessionComplete = prefs.emailSessionComplete;
+        _emailWeeklyDigest = prefs.emailWeeklyDigest;
+        _emailTips = prefs.emailTips;
+        _emailNewFeatures = prefs.emailNewFeatures;
       });
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
 
   Future<void> _save() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
     setState(() => _saving = true);
     try {
-      await FirebaseFirestore.instance.collection('parents').doc(uid).update({
-        'notificationPrefs': {
-          'emailSessionComplete': _emailSessionComplete,
-          'emailWeeklyDigest': _emailWeeklyDigest,
-          'emailTips': _emailTips,
-          'emailNewFeatures': _emailNewFeatures,
-        },
-      });
+      await _repository.updateNotificationPreferences(
+        NotificationPreferences(
+          emailSessionComplete: _emailSessionComplete,
+          emailWeeklyDigest: _emailWeeklyDigest,
+          emailTips: _emailTips,
+          emailNewFeatures: _emailNewFeatures,
+        ),
+      );
     } catch (_) {}
     if (mounted) setState(() => _saving = false);
   }

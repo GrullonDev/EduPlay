@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
-
 abstract class AuthDatasource {
   Future<User?> registerParent({
     required String email,
@@ -67,7 +65,7 @@ class ImplAuthDatasource implements AuthDatasource {
           },
         });
         // Seed subscription document (free tier).
-        await SubscriptionService.initSubscription(user.uid);
+        await _initSubscription(user.uid);
         // Send verification email immediately after account creation.
         // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
         // For better inbox placement, configure a custom sender domain in
@@ -83,6 +81,17 @@ class ImplAuthDatasource implements AuthDatasource {
       debugPrint('Error: $e');
       return null;
     }
+  }
+
+  Future<void> _initSubscription(String uid) async {
+    final now = DateTime.now();
+    final monthYear = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    await _firestore.collection('subscriptions').doc(uid).set({
+      'tier': 'free',
+      'sessionsThisMonth': 0,
+      'monthYear': monthYear,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
