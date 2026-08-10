@@ -406,3 +406,47 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Mover `TeacherClassesService` a su propio datasource/repositorio para eliminar la dependencia estatica restante dentro de `FirestoreClassroomChallengesRepository`.
 - Enriquecer `GameMetadata` con descripcion, nivel, etiqueta destacada y progreso inicial para eliminar duplicacion manual en `CatalogGame`.
 - Revisar la UX de filtros de edad: si el nino tiene 12+ anos, juegos nuevos clasificados como 6-8 no se muestran hasta activar ese filtro.
+
+## Fase 13 - Migracion completa de TeacherClassesService y cierre de fachadas docentes (2026-08-10)
+
+### Cambios aplicados
+- Se extrajeron entidades de dominio:
+  - `lib/features/teacher_dashboard/domain/entities/teacher_class.dart`
+  - `lib/features/teacher_dashboard/domain/entities/class_member.dart`
+- Se creo el contrato `TeacherClassesRepository` en `domain/repositories`.
+- Se creo `TeacherClassesDatasource` con implementacion `FirestoreTeacherClassesDatasource` en `data/datasources`.
+- Se creo `FirestoreTeacherClassesRepository` en `data/repositories`.
+- Se registraron `TeacherClassesDatasource` y `TeacherClassesRepository` en `get_it`.
+- `FirestoreClassroomChallengesRepository` ahora depende de `TeacherClassesRepository` para consultar inscripciones, eliminando el acoplamiento estatico a `TeacherClassesService`.
+- Se migraron consumidores a repositorios inyectados:
+  - `teacher_dashboard_bloc.dart`
+  - `student_dashboard_bloc.dart` para challenges
+  - `mis_clases_panel.dart`
+  - `browse_teachers_page.dart`
+  - `join_class_page.dart`
+- Se eliminaron las fachadas temporales:
+  - `lib/features/teacher_dashboard/services/teacher_classes_service.dart`
+  - `lib/features/teacher_dashboard/services/classroom_challenges_service.dart`
+- Se removio acceso directo a `FirebaseAuth` en `browse_teachers_page.dart` y `join_class_page.dart`, usando `AuthRepository.getCurrentUser()`.
+- Se agregaron a `.gitignore` los generados de iOS que aparecian como untracked:
+  - `ios/Flutter/flutter_export_environment.sh`
+  - `ios/Runner/GeneratedPluginRegistrant.h`
+  - `ios/Runner/GeneratedPluginRegistrant.m`
+
+### Estado de calidad
+- `fvm dart format` ejecutado sobre los archivos modificados.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- `rg "TeacherClassesService|ClassroomChallengesService" lib -n` ya no reporta consumidores; solo los archivos eliminados figuraban antes de borrar.
+- Los generados de iOS ya no aparecen en `git status --short --untracked-files=all`.
+
+### Accesos Firebase directos restantes detectados
+- Vistas/widgets compartidos con auth directo: `email_verification_banner.dart`, `edu_play_nav_bar.dart`, `email_verification_gate_page.dart`, `teacher_dashboard_layout.dart`.
+- Paginas con Firebase directo pendiente: `admin_dashboard_page.dart`, `teacher_registration_page.dart`, `session_entry_page.dart`, `student_dashboard_page.dart`, `onboarding_wizard.dart`, `login_layout.dart`.
+- Servicios infra aceptables por ahora: datasources de parents, practice_session, settings, subscription, teacher_dashboard.
+- `stripe_service.dart` sigue usando `FirebaseFunctions` directamente y debe migrarse a datasource/repositorio si se quiere cerrar subscription al 100%.
+
+### Deuda pendiente recomendada
+- Crear `EmailVerificationRepository` o ampliar `AuthRepository` para mover reload/send verification/signOut fuera de widgets compartidos y gates.
+- Extraer `AdminDashboardRepository` para sacar Firestore de `admin_dashboard_page.dart`.
+- Migrar `teacher_registration_page.dart` a datasource/repositorio de registro docente.
+- Revisar si `StudentDashboardPage._ensureAnonymousAuth()` debe vivir en un `StudentSessionRepository` para completar el desacoplamiento de Auth en estudiante.

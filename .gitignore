@@ -81,3 +81,7 @@ ios/Flutter/ephemeral/
 /macos/
 
 pubspec.lock
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
