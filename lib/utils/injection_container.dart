@@ -9,6 +9,9 @@ import 'package:edu_play/features/parents_dashboard/domain/repositories/child_pr
 import 'package:edu_play/features/parents_dashboard/data/datasources/parent_dashboard_datasource.dart';
 import 'package:edu_play/features/parents_dashboard/data/repositories/firestore_parent_dashboard_repository.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
+import 'package:edu_play/features/practice_session/data/datasources/practice_sessions_datasource.dart';
+import 'package:edu_play/features/practice_session/data/repositories/firestore_practice_sessions_repository.dart';
+import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 
 class InjectionContainer {}
 
@@ -24,6 +27,9 @@ void init() {
   sl.registerLazySingleton<ParentDashboardDatasource>(
     () => FirestoreParentDashboardDatasource(),
   );
+  sl.registerLazySingleton<PracticeSessionsDatasource>(
+    () => FirestorePracticeSessionsDatasource(),
+  );
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -37,5 +43,8 @@ void init() {
   );
   sl.registerLazySingleton<ParentDashboardRepository>(
     () => FirestoreParentDashboardRepository(datasource: sl()),
+  );
+  sl.registerLazySingleton<PracticeSessionsRepository>(
+    () => FirestorePracticeSessionsRepository(datasource: sl()),
   );
 }
