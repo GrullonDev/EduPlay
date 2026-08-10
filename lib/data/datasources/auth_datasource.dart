@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
-
 abstract class AuthDatasource {
   Future<User?> registerParent({
     required String email,
@@ -25,6 +23,16 @@ abstract class AuthDatasource {
   Future<void> logout();
 
   User? getCurrentUser();
+  String? getCurrentUserUid();
+  String? getCurrentUserEmail();
+  String? getCurrentUserDisplayName();
+  bool isCurrentUserAnonymous();
+  bool isCurrentUserEmailVerified();
+  Future<void> reloadCurrentUser();
+  Future<void> sendCurrentUserEmailVerification();
+  Future<bool> ensureAnonymousAuth({Duration timeout});
+  Future<void> setSessionPersistence({required bool rememberSession});
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class ImplAuthDatasource implements AuthDatasource {
@@ -67,7 +75,7 @@ class ImplAuthDatasource implements AuthDatasource {
           },
         });
         // Seed subscription document (free tier).
-        await SubscriptionService.initSubscription(user.uid);
+        await _initSubscription(user.uid);
         // Send verification email immediately after account creation.
         // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
         // For better inbox placement, configure a custom sender domain in
@@ -83,6 +91,17 @@ class ImplAuthDatasource implements AuthDatasource {
       debugPrint('Error: $e');
       return null;
     }
+  }
+
+  Future<void> _initSubscription(String uid) async {
+    final now = DateTime.now();
+    final monthYear = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+    await _firestore.collection('subscriptions').doc(uid).set({
+      'tier': 'free',
+      'sessionsThisMonth': 0,
+      'monthYear': monthYear,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
   }
 
   @override
@@ -138,5 +157,56 @@ class ImplAuthDatasource implements AuthDatasource {
   @override
   User? getCurrentUser() {
     return _firebaseAuth.currentUser;
+  }
+
+  @override
+  String? getCurrentUserUid() => _firebaseAuth.currentUser?.uid;
+
+  @override
+  String? getCurrentUserEmail() => _firebaseAuth.currentUser?.email;
+
+  @override
+  String? getCurrentUserDisplayName() => _firebaseAuth.currentUser?.displayName;
+
+  @override
+  bool isCurrentUserAnonymous() =>
+      _firebaseAuth.currentUser?.isAnonymous ?? false;
+
+  @override
+  bool isCurrentUserEmailVerified() =>
+      _firebaseAuth.currentUser?.emailVerified ?? false;
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    await _firebaseAuth.currentUser?.reload();
+  }
+
+  @override
+  Future<void> sendCurrentUserEmailVerification() async {
+    await _firebaseAuth.currentUser?.sendEmailVerification();
+  }
+
+  @override
+  Future<bool> ensureAnonymousAuth(
+      {Duration timeout = const Duration(seconds: 8)}) async {
+    if (_firebaseAuth.currentUser != null) return true;
+    try {
+      await _firebaseAuth.signInAnonymously().timeout(timeout);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> setSessionPersistence({required bool rememberSession}) {
+    return _firebaseAuth.setPersistence(
+      rememberSession ? Persistence.LOCAL : Persistence.SESSION,
+    );
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) {
+    return _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 }

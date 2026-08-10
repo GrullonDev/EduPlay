@@ -1,5 +1,5 @@
 import 'dart:math' show max;
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +12,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -253,7 +254,7 @@ class _Sidebar extends StatelessWidget {
                   icon: Icons.logout_rounded,
                   label: 'Cerrar Sesión',
                   onTap: () async {
-                    await FirebaseAuth.instance.signOut();
+                    await sl<AuthRepository>().logout();
                     if (!context.mounted) return;
                     Navigator.of(context)
                         .pushReplacementNamed(RouterPaths.root);
@@ -382,8 +383,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 4),
           _TopIcon(
             Icons.settings_outlined,
-            onPressed: () =>
-                Navigator.pushNamed(context, RouterPaths.settings),
+            onPressed: () => Navigator.pushNamed(context, RouterPaths.settings),
           ),
           const SizedBox(width: 12),
           // Avatar
@@ -543,8 +543,7 @@ class _GreetingRow extends StatelessWidget {
         const Spacer(),
         // Display-only date chip — no interaction until date-filtering is built.
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             border: Border.all(color: _kNavy, width: 1.5),
             borderRadius: BorderRadius.circular(12),
@@ -552,15 +551,12 @@ class _GreetingRow extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.calendar_today_rounded,
-                  size: 15, color: _kNavy),
+              const Icon(Icons.calendar_today_rounded, size: 15, color: _kNavy),
               const SizedBox(width: 8),
               Text(
                 dateLabel,
                 style: GoogleFonts.nunito(
-                    color: _kNavy,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13),
+                    color: _kNavy, fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ],
           ),

@@ -1,9 +1,10 @@
 import 'package:edu_play/utils/responsive.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 
@@ -205,8 +206,9 @@ class EduPlayNavBar extends StatelessWidget {
 
     // In student mode, parent-only routes require a real (non-anonymous) login.
     if (_mode == _Mode.student && _parentOnlyRoutes.contains(route)) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null || user.isAnonymous) {
+      final authRepository = sl<AuthRepository>();
+      if (authRepository.getCurrentUserUid() == null ||
+          authRepository.isCurrentUserAnonymous()) {
         Navigator.of(context).pushNamed(RouterPaths.login);
         return;
       }

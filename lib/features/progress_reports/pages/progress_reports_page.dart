@@ -101,11 +101,9 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
 
   int get _totalGamesPlayed => _recentScores.length;
 
-  int get _totalScore =>
-      _recentScores.fold(0, (sum, e) => sum + e.score);
+  int get _totalScore => _recentScores.fold(0, (sum, e) => sum + e.score);
 
-  int get _streak =>
-      _selectedStats.isEmpty ? 0 : _selectedStats.first.streak;
+  int get _streak => _selectedStats.isEmpty ? 0 : _selectedStats.first.streak;
 
   /// Map of gameTitle → total score across recent scores.
   Map<String, int> get _gameScores {
