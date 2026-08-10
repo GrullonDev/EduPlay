@@ -31,10 +31,14 @@ class StickerAlbumGrid extends StatelessWidget {
     super.key,
     required this.unlockedIds,
     this.padding,
+    this.shrinkWrap = false,
+    this.physics,
   });
 
   final List<String> unlockedIds;
   final EdgeInsetsGeometry? padding;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
 
   void _showDetail(BuildContext context, Sticker sticker) {
     SoundManager().playPop();
@@ -66,6 +70,8 @@ class StickerAlbumGrid extends StatelessWidget {
         final labelFontSize = s.isMobile ? 10.0 : 12.0;
 
         return GridView.builder(
+          shrinkWrap: shrinkWrap,
+          physics: physics,
           padding: padding ?? EdgeInsets.all(s.isMobile ? 12 : 16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: cols,
