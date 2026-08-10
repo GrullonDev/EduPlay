@@ -176,7 +176,8 @@ class _OverviewBodyState extends State<_OverviewBody> {
     final gamesThisWeek = _stats.values.fold<int>(
       0,
       (total, stats) =>
-          total + stats.recentScores.where((e) => e.date.isAfter(weekAgo)).length,
+          total +
+          stats.recentScores.where((e) => e.date.isAfter(weekAgo)).length,
     );
     return gamesThisWeek * 5; // ~5 min per game
   }
@@ -193,7 +194,8 @@ class _OverviewBodyState extends State<_OverviewBody> {
     for (final stats in _stats.values) {
       for (final entry in stats.recentScores) {
         if (entry.date.isBefore(weekAgo)) continue;
-        totals[entry.subjectLabel] = (totals[entry.subjectLabel] ?? 0) + entry.score;
+        totals[entry.subjectLabel] =
+            (totals[entry.subjectLabel] ?? 0) + entry.score;
       }
     }
     if (totals.isEmpty) return widget.profiles.first.focusSubject;
@@ -330,8 +332,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
               )
             : Column(
                 children: [
-                  _AchievementCard(
-                      profiles: widget.profiles, stats: _stats),
+                  _AchievementCard(profiles: widget.profiles, stats: _stats),
                   const SizedBox(height: 20),
                   const _ChallengesCard(),
                 ],
@@ -421,7 +422,8 @@ class _ChildProfilesGrid extends StatelessWidget {
 }
 
 class _ChildCard extends StatelessWidget {
-  const _ChildCard({required this.profile, required this.stats, required this.onDelete});
+  const _ChildCard(
+      {required this.profile, required this.stats, required this.onDelete});
 
   final ChildProfile profile;
   final ChildGameplayStats? stats;
@@ -1357,7 +1359,8 @@ class _AchievementCard extends StatelessWidget {
     if (profiles.isEmpty || total == 0) {
       return (
         title: 'Sin logros aún',
-        description: 'Los logros aparecerán cuando tu hijo juegue y gane puntos.',
+        description:
+            'Los logros aparecerán cuando tu hijo juegue y gane puntos.',
         achiever: 'Tu hijo',
       );
     }
@@ -2752,8 +2755,7 @@ class _ChildActivitySheet extends StatelessWidget {
                   else
                     ...stats!.recentScores.take(5).map(
                           (e) => Padding(
-                            padding:
-                                const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
                             child: Row(
                               children: [
                                 Expanded(
