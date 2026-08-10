@@ -314,3 +314,72 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Extraer `HomeView` y `AmigosEnLineaCard` para cerrar la modularizacion del dashboard estudiante.
 - Desacoplar `ClassroomChallengesService` y `ProgressRecommendationsService` del `StudentDashboardBloc` mediante repositorios/casos de uso inyectados.
 - Agregar smoke tests de tabs para asegurar que `Panel de Control`, `Mis Juegos` y `Logros` renderizan contenido visible despues de la extraccion.
+
+## Fase 9 - Cierre de modularizacion student_dashboard y desacoplamiento de recomendaciones (2026-08-10)
+
+### Cambios aplicados
+- Se extrajo `StudentHomeView` a `lib/features/student_dashboard/widgets/student_home_view.dart`.
+- Se movio la tarjeta social/challenges interna del home junto con sus helpers de titulo/enlace, dejando `student_dashboard_layout.dart` como orquestador de tabs y navegacion.
+- `student_dashboard_layout.dart` quedo en 239 lineas.
+- `ProgressRecommendationsService` dejo de depender de `PracticeSessionsService`; ahora resuelve `PracticeSessionsRepository` desde `get_it` manteniendo su API publica actual.
+
+### Estado de calidad
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- `student_dashboard_layout.dart` ya no contiene widgets privados grandes del home, juegos, logros, navegacion, recomendaciones ni sesiones.
+
+### Deuda pendiente recomendada
+- Convertir `ProgressRecommendationsService` en un caso de uso/repositorio inyectable para eliminar la fachada estatica restante.
+- Desacoplar `ClassroomChallengesService` del `StudentDashboardBloc` y del dashboard docente mediante contratos de dominio.
+- Continuar con `settings_page.dart` como siguiente monolito complejo.
+
+## Fase 10 - Modularizacion y seguridad de settings (2026-08-10)
+
+### Cambios aplicados
+- Se creo la capa de seguridad de cuenta:
+  - `lib/features/settings/domain/entities/account_security_info.dart`
+  - `lib/features/settings/domain/repositories/account_security_repository.dart`
+  - `lib/features/settings/data/datasources/account_security_datasource.dart`
+  - `lib/features/settings/data/repositories/firebase_account_security_repository.dart`
+- Se registro `AccountSecurityDatasource` y `AccountSecurityRepository` en `get_it`.
+- `settings_page.dart` dejo de acceder directamente a `FirebaseAuth`, `FirebaseFirestore` y `EmailAuthProvider`.
+- Se extrajeron widgets/secciones:
+  - `settings_section_card.dart`
+  - `settings_profile_section.dart`
+  - `settings_subscription_section.dart`
+  - `settings_notifications_section.dart`
+  - `settings_security_section.dart`
+- Se corrigio un fallo de analisis en el modulo nuevo `number_ninja` agregando `number_ninja_page.dart`, ya que el modulo importaba una pagina inexistente.
+
+### Estado de calidad
+- `settings_page.dart` quedo en 335 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- Firebase/Auth en settings queda localizado en `data/datasources`.
+
+### Deuda pendiente recomendada
+- Mover logout del sidebar a un controlador/presenter de settings si se desea eliminar toda resolucion `sl` desde widgets.
+- Evaluar mover borrado de cuenta a Cloud Function/transaccion backend para mayor robustez ante eliminaciones parciales.
+- Continuar con `ClassroomChallengesService` como siguiente bloque de desacoplamiento transversal estudiante/docente.
+
+## Fase 11 - Correccion de retorno desde juegos y preservacion de sesion infantil (2026-08-10)
+
+### Cambios aplicados
+- Se creo `lib/features/student_dashboard/services/student_session_navigation_service.dart` para centralizar el retorno desde juegos.
+- El flujo de game-over ahora preserva el PIN infantil cacheado y vuelve a `studentDashboard` cuando existe contexto del nino.
+- Si no hay PIN recordado, el retorno cae en `gamesCatalog`, que redirige al dashboard estudiante en la pestana `Mis Juegos` sin forzar cierre de sesion.
+- La entrada manual por PIN (`child_pin_page.dart`) ahora guarda el PIN validado usando el mismo servicio compartido.
+- Se reemplazaron navegaciones directas a `RouterPaths.studentDashboard` en los juegos legacy y en el dialogo compartido:
+  - `math_adventure_bloc.dart`
+  - `magic_words_bloc.dart`
+  - `fun_english_bloc.dart`
+  - `time_travel_page.dart`
+  - `sports_challenge_page.dart`
+  - `games/core/widgets/game_over_dialog.dart`
+
+### Estado de calidad
+- `fvm dart format` ejecutado sobre los archivos modificados.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+
+### Deuda pendiente recomendada
+- Unificar tambien las pantallas de pausa/salida voluntaria de todos los juegos bajo `StudentSessionNavigationService`.
+- Agregar widget tests para el flujo: PIN -> juego -> game-over -> retorno al dashboard del mismo nino.
+- Definir una pantalla explicita para padres/adultos cuando un menor intenta continuar sin PIN ni perfil registrado, en vez de depender solo del fallback de registro.

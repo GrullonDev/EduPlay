@@ -1,5 +1,6 @@
 import 'package:edu_play/core/analytics/analytics_service.dart';
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/games/core/game_registry.dart';
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
@@ -53,6 +54,14 @@ class AppRouter {
     if (!ReleaseFlags.teacherExperienceEnabled &&
         _teacherRoutesDisabledInPublicRelease.contains(name)) {
       return _getPageRoute(RouterPaths.root, const MainPage(), null);
+    }
+
+    // Games built on the games engine self-register — check them before
+    // falling back to the legacy hand-written switch below.
+    final registryRoute = GameRegistry.resolve(settings);
+    if (registryRoute != null) {
+      AnalyticsService.logRouteChange(name);
+      return registryRoute;
     }
 
     switch (name) {
