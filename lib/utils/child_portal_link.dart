@@ -3,17 +3,22 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
-/// Generates the shareable child-portal URL for [profile].
+/// Generates the shareable link for [profile] straight to the student
+/// dashboard (the consolidated "Panel de Control" screen).
 ///
 /// The profile data is base64url-encoded and embedded as the `d=` query
-/// parameter so the child portal can render immediately — without any
+/// parameter so the dashboard can render immediately — without any
 /// Firestore query or Firebase authentication — on any device.
 ///
-/// Format: `{origin}/#/child-portal?pin={pin}&d={base64Profile}`
+/// Format: `{origin}/#studentDashboard?pin={pin}&d={base64Profile}`
+///
+/// Old links of the form `/#/child-portal?...` still work — `childPortal`
+/// stays registered as a route alias, and this parsing logic (below) reads
+/// straight from the URL fragment regardless of which route name matched.
 String childPortalUrl(ChildProfile profile) {
   final origin = kIsWeb ? Uri.base.origin : 'http://localhost:3000';
   final encoded = base64Url.encode(utf8.encode(jsonEncode(profile.toJson())));
-  return '$origin/#/child-portal?pin=${profile.pin}&d=$encoded';
+  return '$origin/#studentDashboard?pin=${profile.pin}&d=$encoded';
 }
 
 /// Parses a [ChildProfile] from the `d=` query parameter embedded in the

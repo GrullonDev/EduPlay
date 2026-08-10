@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
-import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
+import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 
 /// Listens to [FirebaseAuth.authStateChanges] and routes the user to the
@@ -12,10 +12,10 @@ import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page
 /// have a valid (persisted) session.
 ///
 /// Role resolution:
-///   • Unauthenticated              → [ChildPortalPage] (guest, child-first UX)
+///   • Unauthenticated              → [StudentDashboardPage] (guest, child-first UX)
 ///   • UID exists in `parents/{uid}`  → [ParentsDashboardPage]
 ///   • UID exists in `teachers/{uid}` → [TeacherDashboardPage]
-///   • Unknown role                 → [ChildPortalPage] (guest)
+///   • Unknown role                 → [StudentDashboardPage] (guest)
 class AuthGate extends StatelessWidget {
   /// [auth]/[firestore] default to the app's singletons; tests inject
   /// [firebase_auth_mocks]/[fake_cloud_firestore] fakes instead.
@@ -67,7 +67,7 @@ class AuthGate extends StatelessWidget {
       // Anonymous sign-in is used by the child portal — leave it alone.
       if (user.isAnonymous) return const _SplashLoader();
       Future.microtask(() => auth.signOut());
-      return const ChildPortalPage();
+      return const StudentDashboardPage(username: null);
     }
 
     // Email not yet verified → show the hard gate.
@@ -86,7 +86,7 @@ class AuthGate extends StatelessWidget {
         if (!user.isAnonymous) {
           Future.microtask(() => auth.signOut());
         }
-        return const ChildPortalPage();
+        return const StudentDashboardPage(username: null);
     }
   }
 
@@ -109,7 +109,7 @@ class AuthGate extends StatelessWidget {
         final user = authSnap.data;
 
         // Not logged in → child dashboard (guest mode, no PIN)
-        if (user == null) return const ChildPortalPage();
+        if (user == null) return const StudentDashboardPage(username: null);
 
         // Logged in → resolve role from Firestore
         return FutureBuilder<String?>(

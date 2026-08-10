@@ -256,7 +256,7 @@ class _ChildPinPageState extends State<ChildPinPage>
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(
                           context,
-                          RouterPaths.childPortal,
+                          RouterPaths.studentDashboard,
                         ),
                         child: Text(
                           '¿No tienes código? Explora EduPlay →',
