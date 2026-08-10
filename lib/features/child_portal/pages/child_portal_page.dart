@@ -4,11 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Persistence key ───────────────────────────────────────────────────────────
@@ -63,10 +65,16 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
       // Persist so the child can return without the full link.
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kPinKey, urlPin);
-      final sessions = await _loadSessions(urlProfile.id);
+      final results = await Future.wait([
+        _loadSessions(urlProfile.id),
+        _syncStudentProfile(urlProfile),
+      ]);
       if (!mounted) return;
-      setState(
-          () => _state = _ProfileView(profile: urlProfile, sessions: sessions));
+      setState(() => _state = _ProfileView(
+            profile: urlProfile,
+            sessions: results[0] as List<PracticeSession>,
+            gamePoints: results[1] as int,
+          ));
       return;
     }
 
@@ -125,9 +133,16 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPinKey, pin);
 
-    final sessions = await _loadSessions(profile.id);
+    final results = await Future.wait([
+      _loadSessions(profile.id),
+      _syncStudentProfile(profile),
+    ]);
     if (!mounted) return;
-    setState(() => _state = _ProfileView(profile: profile, sessions: sessions));
+    setState(() => _state = _ProfileView(
+          profile: profile,
+          sessions: results[0] as List<PracticeSession>,
+          gamePoints: results[1] as int,
+        ));
   }
 
   // ── Callbacks used by child views ──────────────────────────────────────────
@@ -150,6 +165,27 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
     }
   }
 
+  /// Syncs the locally-cached active student id to this [profile] so any
+  /// minigame played from here on (e.g. via the "Juegos" catalog, which
+  /// never passes the profile down to the game itself) attributes its score
+  /// to the right `students/{id}` doc instead of an orphaned/stale one.
+  /// Returns the child's current gamification points.
+  Future<int> _syncStudentProfile(ChildProfile profile) async {
+    try {
+      final repo = sl<StudentRepository>();
+      await repo.setActiveStudentId(profile.id);
+      await repo.ensureProfileForId(
+        studentId: profile.id,
+        name: profile.name,
+        age: profile.age,
+      );
+      final doc = await repo.getStudentProfile(profile.id);
+      return (doc?['points'] as num?)?.toInt() ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,8 +200,8 @@ class _ChildPortalPageState extends State<ChildPortalPage> {
               hadError: _pinError,
             ),
           _Guest() => _GuestView(onBack: _onBackToWelcome),
-          _ProfileView(profile: final p, sessions: final s) =>
-            _ChildProfileView(profile: p, sessions: s),
+          _ProfileView(profile: final p, sessions: final s, gamePoints: final gp) =>
+            _ChildProfileView(profile: p, sessions: s, gamePoints: gp),
         },
       ),
     );
@@ -193,9 +229,14 @@ class _Guest extends _PortalState {
 }
 
 class _ProfileView extends _PortalState {
-  const _ProfileView({required this.profile, required this.sessions});
+  const _ProfileView({
+    required this.profile,
+    required this.sessions,
+    required this.gamePoints,
+  });
   final ChildProfile profile;
   final List<PracticeSession> sessions;
+  final int gamePoints;
 }
 
 // ── Loading view ──────────────────────────────────────────────────────────────
@@ -824,10 +865,12 @@ class _ChildProfileView extends StatelessWidget {
   const _ChildProfileView({
     required this.profile,
     required this.sessions,
+    required this.gamePoints,
   });
 
   final ChildProfile profile;
   final List<PracticeSession> sessions;
+  final int gamePoints;
 
   @override
   Widget build(BuildContext context) {
@@ -866,7 +909,8 @@ class _ChildProfileView extends StatelessWidget {
                       ),
                       const Spacer(),
                       // Points badge — sum of all session scores
-                      _PortalPointsBadge(sessions: sessions),
+                      _PortalPointsBadge(
+                          sessions: sessions, gamePoints: gamePoints),
                       const SizedBox(width: 12),
                       // Catalog shortcut
                       GestureDetector(
@@ -1409,13 +1453,16 @@ class _AccentDot extends StatelessWidget {
 }
 
 // ── Portal points badge ───────────────────────────────────────────────────────
-/// Reads the total score from completed sessions and shows a points chip.
+/// Reads the total score from completed sessions plus the child's
+/// gamification points from `students/{id}` and shows a combined points
+/// chip.
 class _PortalPointsBadge extends StatelessWidget {
-  const _PortalPointsBadge({required this.sessions});
+  const _PortalPointsBadge({required this.sessions, required this.gamePoints});
   final List<PracticeSession> sessions;
+  final int gamePoints;
 
   int get _totalPoints {
-    int total = 0;
+    int total = gamePoints;
     for (final s in sessions) {
       for (final v in s.scoreMap.values) {
         total += v;
