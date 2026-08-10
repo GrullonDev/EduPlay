@@ -450,3 +450,39 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Extraer `AdminDashboardRepository` para sacar Firestore de `admin_dashboard_page.dart`.
 - Migrar `teacher_registration_page.dart` a datasource/repositorio de registro docente.
 - Revisar si `StudentDashboardPage._ensureAnonymousAuth()` debe vivir en un `StudentSessionRepository` para completar el desacoplamiento de Auth en estudiante.
+
+## Fase 14 - Cierre estructural, limpieza de carpetas y desacoplamiento Auth en widgets compartidos (2026-08-10)
+
+### Cambios aplicados
+- Se eliminaron carpetas/archivos huérfanos o duplicados:
+  - `lib/features/login_main/login_page.dart`: feature legacy no referenciada; solo existía un import comentado.
+  - `lib/features/login_main/`: carpeta duplicada frente a `lib/features/login`.
+  - `lib/features/teacher_dashboard/services/`: carpeta vacía tras eliminar fachadas docentes.
+- Se removió el import comentado a `features/login_main/login_page.dart` desde `router_switch.dart`.
+- Se amplió `AuthRepository`/`AuthDatasource` con operaciones de sesión/verificación:
+  - uid, email, displayName, anonymous, emailVerified
+  - reload del usuario actual
+  - reenvío de verificación de email
+  - aseguramiento de sesión anónima
+- Se removió acceso directo a `FirebaseAuth.instance` en:
+  - `shared/widgets/email_verification_banner.dart`
+  - `features/auth/pages/email_verification_gate_page.dart`
+  - `shared/widgets/edu_play_nav_bar.dart`
+  - `features/teacher_dashboard/pages/teacher_dashboard_layout.dart`
+  - `features/student_dashboard/pages/student_dashboard_page.dart`
+- `StudentDashboardPage` ahora delega la autenticación anónima a `AuthRepository.ensureAnonymousAuth()`.
+
+### Estado de calidad
+- No quedan carpetas vacías bajo `lib`.
+- `rg "login_main|TeacherClassesService|ClassroomChallengesService" lib test -n` no reporta usos activos.
+- `fvm dart format` ejecutado sobre los archivos modificados.
+- `fvm flutter analyze` ejecutado después de los cambios: sin issues.
+
+### Accesos Firebase directos restantes
+- `admin_dashboard_page.dart`: requiere `AdminDashboardRepository`/datasource dedicado.
+- `teacher_registration_page.dart`: requiere flujo de registro docente en repositorio/datasource.
+- `onboarding_wizard.dart`: requiere datasource/repositorio de onboarding parent.
+- `session_entry_page.dart`: requiere mover lectura de auth al repositorio de sesiones o `AuthRepository`.
+- `login_layout.dart` y `login_bloc.dart`: parte del flujo auth; conviene mover persistencia web y login social/anónimo a `AuthRepository` en una fase de auth dedicada.
+- `stripe_service.dart`: requiere datasource/repositorio para `FirebaseFunctions`.
+- Los accesos en `data/datasources` son aceptables por arquitectura, ya que ahí vive la infraestructura.
