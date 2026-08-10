@@ -30,6 +30,8 @@ abstract class AuthRepository {
   Future<void> reloadCurrentUser();
   Future<void> sendCurrentUserEmailVerification();
   Future<bool> ensureAnonymousAuth({Duration timeout});
+  Future<void> setSessionPersistence({required bool rememberSession});
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class ImplAuthRepository implements AuthRepository {
@@ -115,5 +117,17 @@ class ImplAuthRepository implements AuthRepository {
     Duration timeout = const Duration(seconds: 8),
   }) {
     return _authDatasource.ensureAnonymousAuth(timeout: timeout);
+  }
+
+  @override
+  Future<void> setSessionPersistence({required bool rememberSession}) {
+    return _authDatasource.setSessionPersistence(
+      rememberSession: rememberSession,
+    );
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) {
+    return _authDatasource.sendPasswordResetEmail(email);
   }
 }

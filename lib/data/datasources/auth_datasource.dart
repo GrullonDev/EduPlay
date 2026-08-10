@@ -31,6 +31,8 @@ abstract class AuthDatasource {
   Future<void> reloadCurrentUser();
   Future<void> sendCurrentUserEmailVerification();
   Future<bool> ensureAnonymousAuth({Duration timeout});
+  Future<void> setSessionPersistence({required bool rememberSession});
+  Future<void> sendPasswordResetEmail(String email);
 }
 
 class ImplAuthDatasource implements AuthDatasource {
@@ -194,5 +196,17 @@ class ImplAuthDatasource implements AuthDatasource {
     } catch (_) {
       return false;
     }
+  }
+
+  @override
+  Future<void> setSessionPersistence({required bool rememberSession}) {
+    return _firebaseAuth.setPersistence(
+      rememberSession ? Persistence.LOCAL : Persistence.SESSION,
+    );
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) {
+    return _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 }
