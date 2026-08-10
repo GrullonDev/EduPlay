@@ -101,9 +101,8 @@ class _ConfettiPainter extends CustomPainter {
     final paint = Paint()..style = PaintingStyle.fill;
 
     for (final particle in particles) {
-      final local =
-          ((progress - particle.fallDelay) / (1 - particle.fallDelay))
-              .clamp(0.0, 1.0);
+      final local = ((progress - particle.fallDelay) / (1 - particle.fallDelay))
+          .clamp(0.0, 1.0);
       if (local <= 0) continue;
 
       final dx = particle.x * size.width + particle.drift * size.width * local;

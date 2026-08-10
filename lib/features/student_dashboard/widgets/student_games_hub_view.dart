@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
 import 'package:edu_play/features/games_catalog/widgets/catalog_filter_content.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
@@ -48,7 +49,7 @@ class StudentGamesHubViewState extends State<StudentGamesHubView> {
   static const _pageSize = 6; // how many each "load more" reveals
 
   // "Continuar Jugando" quick-access strip — unchanged data source.
-  static final _recent = allCatalogGames.take(3).toList();
+  static final _recent = effectiveCatalogGames.take(3).toList();
 
   @override
   void initState() {
@@ -87,7 +88,7 @@ class StudentGamesHubViewState extends State<StudentGamesHubView> {
   }
 
   List<CatalogGame> get _filtered {
-    final list = allCatalogGames.where((g) {
+    final list = effectiveCatalogGames.where((g) {
       if (_selectedSubject != GameSubject.all &&
           g.subject != _selectedSubject) {
         return false;

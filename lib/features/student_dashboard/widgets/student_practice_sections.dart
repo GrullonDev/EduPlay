@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
@@ -90,9 +91,10 @@ class _RecommendationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final game = allCatalogGames
-        .cast<CatalogGame?>()
-        .firstWhere((g) => g?.id == rec.gameId, orElse: () => null);
+    final game = effectiveCatalogGames.cast<CatalogGame?>().firstWhere(
+          (g) => g?.id == rec.gameId,
+          orElse: () => null,
+        );
     if (game == null) return const SizedBox.shrink();
 
     return GestureDetector(
@@ -123,14 +125,17 @@ class _RecommendationTile extends StatelessWidget {
                   Text(
                     game.title,
                     style: GoogleFonts.nunito(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: _kNavy),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: _kNavy,
+                    ),
                   ),
                   Text(
                     rec.reason,
                     style: GoogleFonts.nunito(
-                        fontSize: 11, color: Colors.grey[500]),
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                    ),
                   ),
                 ],
               ),
@@ -146,11 +151,11 @@ class _RecommendationTile extends StatelessWidget {
 // ── Active practice sessions (parent-assigned) ─────────────────────────────────
 
 class StudentPracticeSessionsSection extends StatefulWidget {
-  const StudentPracticeSessionsSection(
-      {super.key,
-      required this.childId,
-      PracticeSessionsRepository? repository})
-      : _repository = repository;
+  const StudentPracticeSessionsSection({
+    super.key,
+    required this.childId,
+    PracticeSessionsRepository? repository,
+  }) : _repository = repository;
   final String childId;
   final PracticeSessionsRepository? _repository;
 
@@ -192,7 +197,10 @@ class StudentPracticeSessionsSectionState
         Text(
           'Sesiones activas',
           style: GoogleFonts.fredoka(
-              fontSize: 16, fontWeight: FontWeight.w700, color: _kNavy),
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _kNavy,
+          ),
         ),
         const SizedBox(height: 12),
         for (final session in _sessions)
@@ -249,8 +257,11 @@ class _SessionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Center(
-                    child: Icon(Icons.sports_esports_rounded,
-                        color: _kNavy, size: 18),
+                    child: Icon(
+                      Icons.sports_esports_rounded,
+                      color: _kNavy,
+                      size: 18,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -277,8 +288,10 @@ class _SessionCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: _kCoral,
                     borderRadius: BorderRadius.circular(20),

@@ -484,7 +484,8 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
       case 'sports-challenge':
         return const SportsChallengePage();
       case 'sticker-album':
-        return _StickerAlbumKioskEntry(childProfileId: widget.session.childProfileId);
+        return _StickerAlbumKioskEntry(
+            childProfileId: widget.session.childProfileId);
       default:
         return Center(
           child: Text(
@@ -539,8 +540,7 @@ class _StickerAlbumKioskEntry extends StatelessWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
-        final points =
-            (snapshot.data?['points'] as num?)?.toInt() ?? 0;
+        final points = (snapshot.data?['points'] as num?)?.toInt() ?? 0;
         final level = StudentRepository.levelForPoints(points);
         final unlockedIds =
             stickersUnlockedAtLevel(level).map((s) => s.id).toList();
