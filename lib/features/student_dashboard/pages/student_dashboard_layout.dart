@@ -42,23 +42,40 @@ class StudentDashboardLayout extends StatefulWidget {
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   late int _tab = widget.initialTab;
 
+  /// Set when the user taps a subject shortcut (e.g. the "Lógica & Puzzles"
+  /// card on the home tab) so "Mis Juegos" opens pre-filtered. Cleared on any
+  /// plain tab switch so it never applies to an unrelated visit.
+  GameSubject? _pendingSubject;
+
   /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
   /// they always land on (and stay on) the games tab. Computed rather than
   /// stored so it can't drift out of sync with `bloc.isYoungChild`.
   int _effectiveTab(StudentDashboardBloc bloc) =>
       bloc.isYoungChild ? 1 : _tab;
 
+  void _selectTab(int i) => setState(() {
+        _tab = i;
+        _pendingSubject = null;
+      });
+
+  void _openGamesForSubject(GameSubject subject) => setState(() {
+        _tab = 1;
+        _pendingSubject = subject;
+      });
+
   Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s, int tab) {
     switch (tab) {
       case 1:
-        return _GamesHubView(bloc: bloc, s: s);
+        return _GamesHubView(
+            bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return _AchievementsView(s: s);
       default:
         return _HomeView(
           bloc: bloc,
           s: s,
-          onTabChange: (t) => setState(() => _tab = t),
+          onTabChange: _selectTab,
+          onSubjectSelect: _openGamesForSubject,
         );
     }
   }
@@ -93,14 +110,14 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
                   bloc: bloc,
                   s: s,
                   selectedTab: tab,
-                  onSelect: (i) => setState(() => _tab = i),
+                  onSelect: _selectTab,
                 ),
                 Expanded(
                   child: Row(
                     children: [
                       _Sidebar(
                         selected: tab,
-                        onSelect: (i) => setState(() => _tab = i),
+                        onSelect: _selectTab,
                         bloc: bloc,
                         wide: s.isWide,
                       ),
@@ -128,7 +145,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
                 selected: tab,
                 onSelect: (i) {
                   Navigator.pop(context);
-                  setState(() => _tab = i);
+                  _selectTab(i);
                 },
                 bloc: bloc,
                 wide: false,
@@ -147,7 +164,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
               selected: tab,
               onSelect: (i) {
                 Navigator.pop(context);
-                setState(() => _tab = i);
+                _selectTab(i);
               },
               bloc: bloc,
               wide: false,
@@ -259,22 +276,34 @@ class _TopNavBar extends StatelessWidget {
           const SizedBox(width: 16),
 
           // Notification bell
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(Icons.notifications_outlined,
-                  color: Colors.grey[600], size: 22),
-              Positioned(
-                top: -2,
-                right: -2,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                      color: _kCoral, shape: BoxShape.circle),
-                ),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notificaciones próximamente.'),
+                duration: Duration(seconds: 2),
               ),
-            ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.notifications_outlined,
+                      color: Colors.grey[600], size: 22),
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                          color: _kCoral, shape: BoxShape.circle),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(width: 16),
 
@@ -579,10 +608,12 @@ class _HomeView extends StatelessWidget {
     required this.bloc,
     required this.s,
     required this.onTabChange,
+    required this.onSubjectSelect,
   });
   final StudentDashboardBloc bloc;
   final ScreenSize s;
   final ValueChanged<int> onTabChange;
+  final ValueChanged<GameSubject> onSubjectSelect;
 
   double get _hPad => s.when(mobile: 16, tablet: 20, desktop: 28);
 
@@ -643,7 +674,11 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           SizedBox(height: s.isMobile ? 12 : 14),
-          _MisJuegosSection(games: games, s: s),
+          _MisJuegosSection(
+            games: games,
+            s: s,
+            onSubjectSelect: onSubjectSelect,
+          ),
 
           SizedBox(height: s.isMobile ? 24 : 28),
 
@@ -1375,9 +1410,14 @@ class _StatCard extends StatelessWidget {
 // ── Mis Juegos section ────────────────────────────────────────────────────────
 
 class _MisJuegosSection extends StatelessWidget {
-  const _MisJuegosSection({required this.games, required this.s});
+  const _MisJuegosSection({
+    required this.games,
+    required this.s,
+    required this.onSubjectSelect,
+  });
   final List<Game> games;
   final ScreenSize s;
+  final ValueChanged<GameSubject> onSubjectSelect;
 
   static const _gradients = [
     [Color(0xFF1565C0), Color(0xFF1E88E5)],
@@ -1395,19 +1435,22 @@ class _MisJuegosSection extends StatelessWidget {
         icon: Icons.history_edu_rounded,
         label: 'Historia',
         name: 'Crónicas de Egipto',
-        sub: 'Explora las pirámides'
+        sub: 'Explora las pirámides',
+        subject: GameSubject.history,
       ),
       (
         icon: Icons.psychology_rounded,
         label: 'Lógica',
         name: 'Lógica & Puzzles',
-        sub: 'Entrena tu cerebro'
+        sub: 'Entrena tu cerebro',
+        subject: GameSubject.logic,
       ),
       (
         icon: Icons.language_rounded,
         label: 'Idiomas',
         name: 'Idiomas Pro',
-        sub: 'Nuevas palabras hoy'
+        sub: 'Nuevas palabras hoy',
+        subject: GameSubject.languages,
       ),
     ];
 
@@ -1461,6 +1504,7 @@ class _MisJuegosSection extends StatelessWidget {
                           name: e.value.name,
                           sub: e.value.sub,
                           gradient: _gradients[e.key % _gradients.length],
+                          onTap: () => onSubjectSelect(e.value.subject),
                         ),
                       ))
                   .toList(),
@@ -1478,6 +1522,7 @@ class _MisJuegosSection extends StatelessWidget {
                     name: e.value.name,
                     sub: e.value.sub,
                     gradient: _gradients[e.key % _gradients.length],
+                    onTap: () => onSubjectSelect(e.value.subject),
                   ),
                 ),
               );
@@ -1738,30 +1783,34 @@ class _SmallGameCard extends StatelessWidget {
     required this.name,
     required this.sub,
     required this.gradient,
+    required this.onTap,
   });
   final IconData icon;
   final String name;
   final String sub;
   final List<Color> gradient;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1800,6 +1849,7 @@ class _SmallGameCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1982,6 +2032,77 @@ class _AmigosEnLineaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The friends/social system isn't built yet (same flag that hides the
+    // "Amigos"/"Tienda" sidebar tabs) — showing fabricated friends and a
+    // fake "Luna te envió un reto" message here would be misleading, so
+    // this falls back to an honest "próximamente" placeholder. Real
+    // teacher-assigned challenges are unaffected and still show below.
+    if (!ReleaseFlags.studentExtraTabsEnabled) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('🎮', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Amigos en Línea',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.hourglass_top_rounded,
+                        size: 16, color: Colors.grey[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Muy pronto podrás jugar y retar a tus amigos aquí.',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (challenges.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            MyChallengesCard(
+              challenges: challenges.take(2).toList(),
+              onComplete: onComplete,
+            ),
+          ],
+        ],
+      );
+    }
+
     final pending = challenges.isNotEmpty
         ? challenges.firstWhere(
             (c) => c['status'] == 'active',
@@ -2053,25 +2174,35 @@ class _AmigosEnLineaCard extends StatelessWidget {
                     ],
                   )),
               // Add button
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
+              GestureDetector(
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Agregar amigos próximamente.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: Colors.grey[300]!, width: 2),
+                      ),
+                      child: Icon(Icons.add,
+                          color: Colors.grey[400], size: 18),
                     ),
-                    child: Icon(Icons.add, color: Colors.grey[400], size: 18),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Añadir',
-                    style: GoogleFonts.nunito(
-                        fontSize: 11, color: Colors.grey[400]),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Añadir',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -2125,9 +2256,14 @@ class _AmigosEnLineaCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GamesHubView extends StatefulWidget {
-  const _GamesHubView({required this.bloc, required this.s});
+  const _GamesHubView({required this.bloc, required this.s, this.initialSubject});
   final StudentDashboardBloc bloc;
   final ScreenSize s;
+
+  /// Set when the child tapped a subject shortcut on the home tab (e.g.
+  /// "Lógica & Puzzles") — pre-filters the catalog to that subject instead
+  /// of the default "all subjects" / weakest-subject auto-filter.
+  final GameSubject? initialSubject;
 
   @override
   State<_GamesHubView> createState() => _GamesHubViewState();
@@ -2157,12 +2293,19 @@ class _GamesHubViewState extends State<_GamesHubView> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialSubject != null) {
+      _selectedSubject = widget.initialSubject!;
+    }
     final profile = widget.bloc.childProfile;
     if (profile != null) {
       _selectedAges
         ..clear()
         ..add(ageRangeForAge(profile.age));
-      _loadWeakestSubject(profile.id);
+      // Don't let the async weakest-subject auto-filter clobber an explicit
+      // subject the child just tapped on the home tab.
+      if (widget.initialSubject == null) {
+        _loadWeakestSubject(profile.id);
+      }
     }
   }
 
