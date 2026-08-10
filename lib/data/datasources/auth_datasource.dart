@@ -23,6 +23,14 @@ abstract class AuthDatasource {
   Future<void> logout();
 
   User? getCurrentUser();
+  String? getCurrentUserUid();
+  String? getCurrentUserEmail();
+  String? getCurrentUserDisplayName();
+  bool isCurrentUserAnonymous();
+  bool isCurrentUserEmailVerified();
+  Future<void> reloadCurrentUser();
+  Future<void> sendCurrentUserEmailVerification();
+  Future<bool> ensureAnonymousAuth({Duration timeout});
 }
 
 class ImplAuthDatasource implements AuthDatasource {
@@ -147,5 +155,44 @@ class ImplAuthDatasource implements AuthDatasource {
   @override
   User? getCurrentUser() {
     return _firebaseAuth.currentUser;
+  }
+
+  @override
+  String? getCurrentUserUid() => _firebaseAuth.currentUser?.uid;
+
+  @override
+  String? getCurrentUserEmail() => _firebaseAuth.currentUser?.email;
+
+  @override
+  String? getCurrentUserDisplayName() => _firebaseAuth.currentUser?.displayName;
+
+  @override
+  bool isCurrentUserAnonymous() =>
+      _firebaseAuth.currentUser?.isAnonymous ?? false;
+
+  @override
+  bool isCurrentUserEmailVerified() =>
+      _firebaseAuth.currentUser?.emailVerified ?? false;
+
+  @override
+  Future<void> reloadCurrentUser() async {
+    await _firebaseAuth.currentUser?.reload();
+  }
+
+  @override
+  Future<void> sendCurrentUserEmailVerification() async {
+    await _firebaseAuth.currentUser?.sendEmailVerification();
+  }
+
+  @override
+  Future<bool> ensureAnonymousAuth(
+      {Duration timeout = const Duration(seconds: 8)}) async {
+    if (_firebaseAuth.currentUser != null) return true;
+    try {
+      await _firebaseAuth.signInAnonymously().timeout(timeout);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
