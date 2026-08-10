@@ -486,3 +486,45 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - `login_layout.dart` y `login_bloc.dart`: parte del flujo auth; conviene mover persistencia web y login social/anónimo a `AuthRepository` en una fase de auth dedicada.
 - `stripe_service.dart`: requiere datasource/repositorio para `FirebaseFunctions`.
 - Los accesos en `data/datasources` son aceptables por arquitectura, ya que ahí vive la infraestructura.
+
+## Fase 15 - Cierre de deuda final Firebase/UI (2026-08-10)
+
+### Cambios aplicados
+- Se agregaron repositorios/datasources finales para mover infraestructura fuera de UI:
+  - Admin: `AdminDashboardDatasource`, `AdminDashboardRepository`, `PlatformStats`.
+  - Onboarding: `OnboardingDatasource`, `OnboardingRepository`.
+  - Registro docente: `TeacherRegistrationDatasource`, `TeacherRegistrationRepository`.
+  - Checkout/Stripe: `CheckoutDatasource`, `CheckoutRepository`.
+- Se migraron vistas/servicios restantes:
+  - `admin_dashboard_page.dart` ahora usa `AdminDashboardRepository`.
+  - `onboarding_wizard.dart` ahora usa `OnboardingRepository`.
+  - `teacher_registration_page.dart` ahora usa `TeacherRegistrationRepository`.
+  - `session_entry_page.dart` usa `AuthRepository.ensureAnonymousAuth()`.
+  - `stripe_service.dart` usa `CheckoutRepository`; Firebase Functions queda en datasource.
+  - `login_bloc.dart` delega persistencia de sesión a `AuthRepository`.
+  - `login_layout.dart` delega reset de contraseña a `AuthRepository`.
+- Se amplió `AuthRepository`/`AuthDatasource` con:
+  - `setSessionPersistence`
+  - `sendPasswordResetEmail`
+  - `ensureAnonymousAuth`
+  - utilidades de usuario actual y verificación de correo.
+
+### Estado final de arquitectura
+- No quedan carpetas vacías bajo `lib`.
+- No quedan referencias activas a `login_main`, `TeacherClassesService` ni `ClassroomChallengesService`.
+- Las llamadas operativas a Firebase/Firestore/Functions quedan concentradas en `data/datasources` y en `core/auth/auth_gate.dart`, que actúa como boundary central de autenticación/ruteo.
+- En UI quedan importaciones de `FirebaseAuthException` solo para mapear códigos de error en login/registro; no realizan llamadas directas a `FirebaseAuth.instance` ni `FirebaseFirestore.instance`.
+
+### Validación
+- `fvm dart format` ejecutado sobre archivos modificados.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+
+### Recomendación post-refactor
+- Agregar tests smoke/regresión antes de considerar el cierre productivo definitivo:
+  - login/reset password
+  - onboarding show/complete
+  - teacher registration
+  - admin role update
+  - Stripe checkout URL
+  - practice session PIN
+  - PIN -> juego -> game-over -> retorno

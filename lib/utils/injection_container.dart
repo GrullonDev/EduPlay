@@ -1,4 +1,16 @@
 import 'package:get_it/get_it.dart';
+import 'package:edu_play/features/teacher_registration/domain/repositories/teacher_registration_repository.dart';
+import 'package:edu_play/features/teacher_registration/data/repositories/firebase_teacher_registration_repository.dart';
+import 'package:edu_play/features/teacher_registration/data/datasources/teacher_registration_datasource.dart';
+import 'package:edu_play/features/subscription/domain/repositories/checkout_repository.dart';
+import 'package:edu_play/features/subscription/data/repositories/firebase_checkout_repository.dart';
+import 'package:edu_play/features/subscription/data/datasources/checkout_datasource.dart';
+import 'package:edu_play/features/onboarding/domain/repositories/onboarding_repository.dart';
+import 'package:edu_play/features/onboarding/data/repositories/firestore_onboarding_repository.dart';
+import 'package:edu_play/features/onboarding/data/datasources/onboarding_datasource.dart';
+import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/features/admin/data/repositories/firestore_admin_dashboard_repository.dart';
+import 'package:edu_play/features/admin/data/datasources/admin_dashboard_datasource.dart';
 import 'package:edu_play/data/datasources/auth_datasource.dart';
 import 'package:edu_play/data/datasources/student_datasource.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
@@ -34,6 +46,11 @@ final sl = GetIt.instance;
 
 void init() {
   // Datasources
+  if (!sl.isRegistered<AdminDashboardDatasource>()) {
+    sl.registerLazySingleton<AdminDashboardDatasource>(
+      () => FirestoreAdminDashboardDatasource(),
+    );
+  }
   if (!sl.isRegistered<AuthDatasource>()) {
     sl.registerLazySingleton<AuthDatasource>(() => ImplAuthDatasource());
   }
@@ -70,6 +87,21 @@ void init() {
       () => FirebaseAccountSecurityDatasource(),
     );
   }
+  if (!sl.isRegistered<OnboardingDatasource>()) {
+    sl.registerLazySingleton<OnboardingDatasource>(
+      () => FirestoreOnboardingDatasource(),
+    );
+  }
+  if (!sl.isRegistered<CheckoutDatasource>()) {
+    sl.registerLazySingleton<CheckoutDatasource>(
+      () => FirebaseCheckoutDatasource(),
+    );
+  }
+  if (!sl.isRegistered<TeacherRegistrationDatasource>()) {
+    sl.registerLazySingleton<TeacherRegistrationDatasource>(
+      () => FirebaseTeacherRegistrationDatasource(),
+    );
+  }
   if (!sl.isRegistered<SubscriptionDatasource>()) {
     sl.registerLazySingleton<SubscriptionDatasource>(
       () => FirestoreSubscriptionDatasource(),
@@ -82,6 +114,11 @@ void init() {
   }
 
   // Repositories
+  if (!sl.isRegistered<AdminDashboardRepository>()) {
+    sl.registerLazySingleton<AdminDashboardRepository>(
+      () => FirestoreAdminDashboardRepository(datasource: sl()),
+    );
+  }
   if (!sl.isRegistered<AuthRepository>()) {
     sl.registerLazySingleton<AuthRepository>(
       () => ImplAuthRepository(authDatasource: sl()),
@@ -120,6 +157,21 @@ void init() {
   if (!sl.isRegistered<AccountSecurityRepository>()) {
     sl.registerLazySingleton<AccountSecurityRepository>(
       () => FirebaseAccountSecurityRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<OnboardingRepository>()) {
+    sl.registerLazySingleton<OnboardingRepository>(
+      () => FirestoreOnboardingRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<CheckoutRepository>()) {
+    sl.registerLazySingleton<CheckoutRepository>(
+      () => FirebaseCheckoutRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<TeacherRegistrationRepository>()) {
+    sl.registerLazySingleton<TeacherRegistrationRepository>(
+      () => FirebaseTeacherRegistrationRepository(datasource: sl()),
     );
   }
   if (!sl.isRegistered<SubscriptionRepository>()) {
