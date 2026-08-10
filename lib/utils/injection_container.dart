@@ -75,6 +75,11 @@ void init() {
       () => FirestoreSubscriptionDatasource(),
     );
   }
+  if (!sl.isRegistered<ClassroomChallengesDatasource>()) {
+    sl.registerLazySingleton<ClassroomChallengesDatasource>(
+      () => FirestoreClassroomChallengesDatasource(),
+    );
+  }
 
   // Repositories
   if (!sl.isRegistered<AuthRepository>()) {
@@ -122,6 +127,9 @@ void init() {
       () => FirestoreSubscriptionRepository(datasource: sl()),
     );
   }
+  if (!sl.isRegistered<ClassroomChallengesRepository>()) {
+    sl.registerLazySingleton<ClassroomChallengesRepository>(
+      () => FirestoreClassroomChallengesRepository(datasource: sl()),
+    );
+  }
 }
-
-
