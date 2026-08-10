@@ -383,3 +383,26 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Unificar tambien las pantallas de pausa/salida voluntaria de todos los juegos bajo `StudentSessionNavigationService`.
 - Agregar widget tests para el flujo: PIN -> juego -> game-over -> retorno al dashboard del mismo nino.
 - Definir una pantalla explicita para padres/adultos cuando un menor intenta continuar sin PIN ni perfil registrado, en vez de depender solo del fallback de registro.
+
+## Fase 12 - Catalogo efectivo de juegos y desacoplamiento de ClassroomChallengesService (2026-08-10)
+
+### Cambios aplicados
+- Se creo `lib/features/games_catalog/models/catalog_game_registry_adapter.dart` para combinar el catalogo enriquecido existente con los juegos registrados en `GameRegistry`.
+- `StudentGamesHubView` ahora consume `effectiveCatalogGames`, evitando que los juegos nuevos queden fuera de `Mis Juegos` cuando solo se registran como modulos del motor.
+- Recomendaciones y secciones de practica tambien resuelven juegos contra `effectiveCatalogGames`.
+- Se extrajo `ClassroomChallenge` a `lib/features/teacher_dashboard/domain/entities/classroom_challenge.dart`.
+- Se creo el contrato `ClassroomChallengesRepository` en `domain/repositories`.
+- Se creo `ClassroomChallengesDatasource` con implementacion Firestore en `data/datasources`.
+- Se creo `FirestoreClassroomChallengesRepository` en `data/repositories`.
+- `ClassroomChallengesService` quedo como fachada de compatibilidad y ya no accede directamente a Firestore.
+- Se registraron `ClassroomChallengesDatasource` y `ClassroomChallengesRepository` en `get_it`.
+
+### Estado de calidad
+- `fvm dart format` ejecutado sobre los archivos modificados.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- No hace falta `flutter clean` para que aparezcan los juegos; basta hot restart/recarga completa si el servidor web ya estaba levantado. `flutter analyze` resolvio dependencias durante la ejecucion.
+
+### Deuda pendiente recomendada
+- Mover `TeacherClassesService` a su propio datasource/repositorio para eliminar la dependencia estatica restante dentro de `FirestoreClassroomChallengesRepository`.
+- Enriquecer `GameMetadata` con descripcion, nivel, etiqueta destacada y progreso inicial para eliminar duplicacion manual en `CatalogGame`.
+- Revisar la UX de filtros de edad: si el nino tiene 12+ anos, juegos nuevos clasificados como 6-8 no se muestran hasta activar ese filtro.
