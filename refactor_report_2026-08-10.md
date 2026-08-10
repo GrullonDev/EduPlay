@@ -155,3 +155,42 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 - Comando ejecutado: `fvm flutter analyze`
 - Resultado: `No issues found`
 
+
+## Fase 2 - Refactorizacion parents_dashboard (2026-08-10)
+
+### Cambios aplicados
+- Se desacoplo `parents_dashboard_page.dart` de acceso directo a Firebase/Auth para el flujo principal de perfiles, controles rapidos y desafios mediante repositorios/datasources ya registrados en `get_it`.
+- Se extrajeron widgets autocontenidos desde `parents_dashboard_page.dart` hacia `lib/features/parents_dashboard/widgets/`:
+  - `parent_quick_controls_card.dart`
+  - `parent_challenges_card.dart`
+  - `parent_weekly_summary_card.dart`
+  - `parent_active_sessions_card.dart`
+  - `parent_session_history_card.dart`
+- Se encapsularon dependencias visuales y de formato (`intl`, estados de streams de sesiones, controles rapidos y desafios) dentro de widgets especializados.
+
+### Estado de calidad
+- `parents_dashboard_page.dart` se redujo progresivamente hasta 2242 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- No quedan referencias a `FirebaseFirestore` ni `FirebaseAuth` en `parents_dashboard_page.dart` ni en los widgets extraidos del dashboard de padres.
+
+### Deuda pendiente recomendada
+- Extraer `_ChildProfilesGrid`, `_ChildCard`, `_AddProfileDialog` y `_ChildActivitySheet` en widgets/controladores dedicados.
+- Desacoplar `PracticeSessionsService` detras de repositorios/datasources para sesiones activas, historial y actividad por hijo.
+- Repetir el mismo patron en `student_dashboard_layout.dart`, `parent_guide_page.dart` y `settings_page.dart`.
+
+## Fase 3 - Desacoplamiento practice_session (2026-08-10)
+
+### Cambios aplicados
+- Se creo el contrato `PracticeSessionsRepository` en `lib/features/practice_session/domain/repositories/`.
+- Se creo `PracticeSessionsDatasource` y `FirestorePracticeSessionsDatasource` en `lib/features/practice_session/data/datasources/` para aislar Firestore/Auth.
+- Se creo `FirestorePracticeSessionsRepository` en `lib/features/practice_session/data/repositories/`.
+- Se registro `PracticeSessionsDatasource` y `PracticeSessionsRepository` en `lib/utils/injection_container.dart`.
+- `PracticeSessionsService` quedo como fachada de compatibilidad que delega al repositorio inyectado, sin imports directos de Firebase.
+
+### Estado de calidad
+- `fvm flutter analyze` ejecutado despues del cambio: sin issues.
+- Firebase/Auth para sesiones queda localizado en la capa `data/datasources`.
+
+### Deuda pendiente recomendada
+- Migrar consumidores de `PracticeSessionsService` a `PracticeSessionsRepository` inyectado por feature/controlador.
+- Extraer `_ChildActivitySheet` para eliminar el ultimo uso de sesiones dentro de `parents_dashboard_page.dart`.
