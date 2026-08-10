@@ -12,8 +12,11 @@ import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_d
 import 'package:edu_play/features/practice_session/data/datasources/practice_sessions_datasource.dart';
 import 'package:edu_play/features/practice_session/data/repositories/firestore_practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
+import 'package:edu_play/features/settings/data/datasources/account_security_datasource.dart';
 import 'package:edu_play/features/settings/data/datasources/settings_datasource.dart';
+import 'package:edu_play/features/settings/data/repositories/firebase_account_security_repository.dart';
 import 'package:edu_play/features/settings/data/repositories/firestore_settings_repository.dart';
+import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/settings_repository.dart';
 import 'package:edu_play/features/sticker_album/data/datasources/level_progress_datasource.dart';
 import 'package:edu_play/features/sticker_album/data/repositories/local_level_progress_repository.dart';
@@ -59,6 +62,11 @@ void init() {
       () => FirestoreSettingsDatasource(),
     );
   }
+  if (!sl.isRegistered<AccountSecurityDatasource>()) {
+    sl.registerLazySingleton<AccountSecurityDatasource>(
+      () => FirebaseAccountSecurityDatasource(),
+    );
+  }
   if (!sl.isRegistered<SubscriptionDatasource>()) {
     sl.registerLazySingleton<SubscriptionDatasource>(
       () => FirestoreSubscriptionDatasource(),
@@ -99,6 +107,11 @@ void init() {
   if (!sl.isRegistered<SettingsRepository>()) {
     sl.registerLazySingleton<SettingsRepository>(
       () => FirestoreSettingsRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<AccountSecurityRepository>()) {
+    sl.registerLazySingleton<AccountSecurityRepository>(
+      () => FirebaseAccountSecurityRepository(datasource: sl()),
     );
   }
   if (!sl.isRegistered<SubscriptionRepository>()) {
