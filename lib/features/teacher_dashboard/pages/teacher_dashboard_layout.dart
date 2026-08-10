@@ -1,5 +1,5 @@
 import 'dart:math' show max;
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +12,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -253,7 +254,7 @@ class _Sidebar extends StatelessWidget {
                   icon: Icons.logout_rounded,
                   label: 'Cerrar Sesión',
                   onTap: () async {
-                    await FirebaseAuth.instance.signOut();
+                    await sl<AuthRepository>().logout();
                     if (!context.mounted) return;
                     Navigator.of(context)
                         .pushReplacementNamed(RouterPaths.root);

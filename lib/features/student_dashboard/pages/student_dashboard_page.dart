@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
@@ -11,6 +11,7 @@ import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.
 import 'package:edu_play/features/student_dashboard/pages/student_dashboard_layout.dart';
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 /// Persistence key for a PIN-resolved child, shared with [childPortalUrl]'s
 /// consumers so a returning child (or a parent-shared link) skips PIN entry.
@@ -47,6 +48,7 @@ class StudentDashboardPage extends StatefulWidget {
 }
 
 class _StudentDashboardPageState extends State<StudentDashboardPage> {
+  final AuthRepository _authRepository = sl<AuthRepository>();
   bool _resolving = true;
   ChildProfile? _resolvedProfile;
   bool _isGuest = false;
@@ -108,16 +110,8 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     });
   }
 
-  Future<bool> _ensureAnonymousAuth() async {
-    if (FirebaseAuth.instance.currentUser != null) return true;
-    try {
-      await FirebaseAuth.instance
-          .signInAnonymously()
-          .timeout(const Duration(seconds: 8));
-      return true;
-    } catch (_) {
-      return false;
-    }
+  Future<bool> _ensureAnonymousAuth() {
+    return _authRepository.ensureAnonymousAuth();
   }
 
   @override
