@@ -18,6 +18,9 @@ import 'package:edu_play/features/settings/data/repositories/firebase_account_se
 import 'package:edu_play/features/settings/data/repositories/firestore_settings_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/settings_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
+import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/sticker_album/data/datasources/level_progress_datasource.dart';
 import 'package:edu_play/features/sticker_album/data/repositories/local_level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
@@ -120,3 +123,5 @@ void init() {
     );
   }
 }
+
+
