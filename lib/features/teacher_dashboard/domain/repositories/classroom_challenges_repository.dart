@@ -1,5 +1,5 @@
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
 abstract class ClassroomChallengesRepository {
   Future<void> createChallenge({

@@ -129,7 +129,10 @@ void init() {
   }
   if (!sl.isRegistered<ClassroomChallengesRepository>()) {
     sl.registerLazySingleton<ClassroomChallengesRepository>(
-      () => FirestoreClassroomChallengesRepository(datasource: sl()),
+      () => FirestoreClassroomChallengesRepository(
+        datasource: sl(),
+        teacherClassesRepository: sl(),
+      ),
     );
   }
 }

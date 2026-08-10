@@ -5,7 +5,7 @@ import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show GameSubject;
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
-import 'package:edu_play/features/teacher_dashboard/services/classroom_challenges_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/utils/injection_container.dart';
@@ -37,6 +37,8 @@ class StudentDashboardBloc extends ChangeNotifier {
   final StudentRepository _studentRepository = sl<StudentRepository>();
   final LevelProgressRepository _levelProgressRepository =
       sl<LevelProgressRepository>();
+  final ClassroomChallengesRepository _classroomChallengesRepository =
+      sl<ClassroomChallengesRepository>();
 
   bool isLoading = true;
   Map<String, dynamic>? profile;
@@ -126,11 +128,12 @@ class StudentDashboardBloc extends ChangeNotifier {
         profile = results[0] as Map<String, dynamic>?;
         leaderboard = results[1] as List<Map<String, dynamic>>;
         myStudentId = results[2] as String;
-        challenges = (await ClassroomChallengesService.getChallengesForStudent(
+        challenges =
+            (await _classroomChallengesRepository.getChallengesForStudent(
           myStudentId,
         ))
-            .map((c) => c.toStudentMap())
-            .toList();
+                .map((c) => c.toStudentMap())
+                .toList();
 
         if (childProfile != null) {
           recommendations =
@@ -197,12 +200,12 @@ class StudentDashboardBloc extends ChangeNotifier {
     final memberId = challenge['member_id'] as String?;
     if (classId == null || memberId == null) return;
 
-    await ClassroomChallengesService.completeChallenge(
+    await _classroomChallengesRepository.completeChallenge(
       classId: classId,
       memberId: memberId,
       challengeId: challengeId,
     );
-    challenges = (await ClassroomChallengesService.getChallengesForStudent(
+    challenges = (await _classroomChallengesRepository.getChallengesForStudent(
       myStudentId,
     ))
         .map((c) => c.toStudentMap())

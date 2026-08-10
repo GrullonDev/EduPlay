@@ -1,13 +1,18 @@
 import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 
 class FirestoreClassroomChallengesRepository
     implements ClassroomChallengesRepository {
-  const FirestoreClassroomChallengesRepository({required this.datasource});
+  const FirestoreClassroomChallengesRepository({
+    required this.datasource,
+    required this.teacherClassesRepository,
+  });
 
   final ClassroomChallengesDatasource datasource;
+  final TeacherClassesRepository teacherClassesRepository;
 
   @override
   Future<void> createChallenge({
@@ -38,7 +43,7 @@ class FirestoreClassroomChallengesRepository
     String studentId,
   ) async {
     final enrollments =
-        await TeacherClassesService.getEnrollmentsForStudent(studentId);
+        await teacherClassesRepository.getEnrollmentsForStudent(studentId);
     if (enrollments.isEmpty) return [];
 
     final classesById = {
