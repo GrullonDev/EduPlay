@@ -194,3 +194,80 @@ No se elimino automaticamente porque puede ser codigo planificado, usado por pru
 ### Deuda pendiente recomendada
 - Migrar consumidores de `PracticeSessionsService` a `PracticeSessionsRepository` inyectado por feature/controlador.
 - Extraer `_ChildActivitySheet` para eliminar el ultimo uso de sesiones dentro de `parents_dashboard_page.dart`.
+
+## Fase 4 - Modularizacion avanzada parents_dashboard (2026-08-10)
+
+### Cambios aplicados
+- Se extrajo `ParentChildActivitySheet` a `lib/features/parents_dashboard/widgets/parent_child_activity_sheet.dart`.
+- Se migro el sheet de actividad infantil a `PracticeSessionsRepository` inyectado, eliminando el uso de `PracticeSessionsService` desde `parents_dashboard_page.dart`.
+- Se extrajo `ParentChildProfilesGrid` a `lib/features/parents_dashboard/widgets/parent_child_profiles_grid.dart`, junto con el card de perfil, acciones, dialogo PIN y helpers visuales asociados.
+- Se elimino `_AddProfileDialog` y helpers relacionados como codigo muerto privado: el flujo activo de alta de perfil navega a `RouterPaths.createExplorer`.
+
+### Estado de calidad
+- `parents_dashboard_page.dart` quedo en 905 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- No quedan referencias a `FirebaseFirestore`, `FirebaseAuth` ni `PracticeSessionsService` en `parents_dashboard_page.dart`.
+
+### Deuda pendiente recomendada
+- Extraer `_AchievementCard`, `_TierBadge` y `_RecommendationsCard` para cerrar la modularizacion del dashboard de padres.
+- Continuar con `settings_page.dart` y `student_dashboard_layout.dart`, que siguen siendo los siguientes archivos monoliticos de mayor riesgo.
+
+
+## Fase 5 - Desacoplamiento subscription y cierre de modularizacion parents_dashboard (2026-08-10)
+
+### Cambios aplicados
+- Se creo `SubscriptionRepository` en `lib/features/subscription/domain/repositories/`.
+- Se creo `SubscriptionDatasource` y `FirestoreSubscriptionDatasource` en `lib/features/subscription/data/datasources/` para aislar Firestore/Auth.
+- Se creo `FirestoreSubscriptionRepository` en `lib/features/subscription/data/repositories/`.
+- Se registro `SubscriptionDatasource` y `SubscriptionRepository` en `lib/utils/injection_container.dart`.
+- `SubscriptionService` quedo como fachada de compatibilidad que delega al repositorio inyectado, sin imports directos de Firebase.
+- Se extrajeron widgets adicionales desde `parents_dashboard_page.dart` hacia `lib/features/parents_dashboard/widgets/`:
+  - `parent_tier_badge.dart`
+  - `parent_achievement_card.dart`
+  - `parent_empty_profiles.dart`
+  - `parent_recommendations_card.dart`
+
+### Estado de calidad
+- `parents_dashboard_page.dart` quedo en 427 lineas.
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- Firebase/Auth para suscripciones queda localizado en `lib/features/subscription/data/datasources/subscription_datasource.dart`.
+- `parents_dashboard_page.dart` no contiene referencias a `FirebaseFirestore`, `FirebaseAuth`, `PracticeSessionsService` ni `SubscriptionService`.
+
+### Deuda pendiente recomendada
+- Migrar consumidores legacy de `SubscriptionService` a `SubscriptionRepository` inyectado: `auth_datasource.dart`, `create_explorer_page.dart`, `create_session_page.dart` y `settings_page.dart`.
+- Evaluar si `ProgressRecommendationsService` debe convertirse en repositorio/caso de uso propio; actualmente no toca Firebase directamente, pero sigue siendo una fachada estatica.
+- Continuar con `settings_page.dart` como siguiente monolito con acoplamiento directo a Firebase/Auth.
+
+## Fase 6 - Correccion GetIt y refactorizacion inicial settings/subscription (2026-08-10)
+
+### Error corregido
+- Se resolvio el fallo runtime: `Object/factory with type SubscriptionRepository is not registered inside GetIt`.
+- `lib/utils/injection_container.dart` ahora registra dependencias de forma idempotente usando `sl.isRegistered<T>()`, evitando fallos por reinicializaciones parciales o reconstrucciones en web/hot restart.
+- `ParentTierBadge` ya no resuelve `SubscriptionRepository` durante la construccion del widget; lo resuelve en `build()` tras asegurar `init()`.
+
+### Cambios aplicados
+- Se migro `_SubscriptionSection` en `settings_page.dart` de `SubscriptionService` a `SubscriptionRepository` inyectado.
+- Se creo una capa inicial para settings:
+  - `lib/features/settings/domain/entities/parent_settings_profile.dart`
+  - `lib/features/settings/domain/entities/notification_preferences.dart`
+  - `lib/features/settings/domain/repositories/settings_repository.dart`
+  - `lib/features/settings/data/datasources/settings_datasource.dart`
+  - `lib/features/settings/data/repositories/firestore_settings_repository.dart`
+- Se registro `SettingsDatasource` y `SettingsRepository` en `get_it`.
+- Se migro lectura/guardado de perfil del padre desde `settings_page.dart` hacia `SettingsRepository`.
+- Se migro lectura/guardado de preferencias de notificacion desde `settings_page.dart` hacia `SettingsRepository`.
+- Se migraron consumidores simples de suscripcion en:
+  - `lib/features/create_explorer/pages/create_explorer_page.dart`
+  - `lib/features/practice_session/pages/create_session_page.dart`
+- `create_session_page.dart` ahora usa `PracticeSessionsRepository` para crear sesiones, eliminando dependencia directa de `PracticeSessionsService`.
+- `auth_datasource.dart` dejo de depender de `SubscriptionService`; siembra el documento `subscriptions/{uid}` desde infraestructura al registrar un padre.
+
+### Estado de calidad
+- `fvm flutter analyze` ejecutado despues de los cambios: sin issues.
+- `SubscriptionService` ya no tiene consumidores en `lib`; queda como fachada legacy disponible.
+- `settings_page.dart` conserva acceso directo a Firebase/Auth solo en flujos sensibles pendientes: cambio de password, cierre de sesion y borrado de cuenta.
+
+### Deuda pendiente recomendada
+- Crear un `AccountSecurityRepository`/datasource para cambio de password, cierre de sesion y borrado de cuenta.
+- Extraer secciones de `settings_page.dart` a widgets dedicados para reducir el archivo monolitico.
+- Separar borrado de cuenta en un caso de uso transaccional o cloud function para evitar inconsistencias entre Auth y Firestore.

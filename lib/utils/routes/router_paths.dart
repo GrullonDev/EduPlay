@@ -20,7 +20,6 @@ class RouterPaths {
   static const artistsInAction = '/artists-in-action';
   static const colorConcert = '/color-concert';
   static const sportsChallenge = '/sports-challenge';
-  static const stickerAlbum = '/sticker-album';
   static const gamesCatalog = '/games-catalog';
   static const childPin = '/child-pin';
   static const parentGuide = '/parent-guide';
