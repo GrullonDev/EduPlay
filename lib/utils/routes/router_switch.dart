@@ -21,7 +21,6 @@ import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/landing/pages/landing_page.dart';
 import 'package:edu_play/features/login/pages/login_page.dart';
-// import 'package:edu_play/features/login_main/login_page.dart';
 import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
 import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
