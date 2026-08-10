@@ -50,8 +50,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
   /// they always land on (and stay on) the games tab. Computed rather than
   /// stored so it can't drift out of sync with `bloc.isYoungChild`.
-  int _effectiveTab(StudentDashboardBloc bloc) =>
-      bloc.isYoungChild ? 1 : _tab;
+  int _effectiveTab(StudentDashboardBloc bloc) => bloc.isYoungChild ? 1 : _tab;
 
   void _selectTab(int i) => setState(() {
         _tab = i;
@@ -66,8 +65,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s, int tab) {
     switch (tab) {
       case 1:
-        return _GamesHubView(
-            bloc: bloc, s: s, initialSubject: _pendingSubject);
+        return _GamesHubView(bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return _AchievementsView(s: s);
       default:
@@ -386,8 +384,7 @@ List<_SideItem> _visibleNavItems(bool isYoungChild) => isYoungChild
     : _sideNavItems;
 
 class _SideItem {
-  const _SideItem(
-      {required this.icon, required this.label, required this.tab});
+  const _SideItem({required this.icon, required this.label, required this.tab});
   final IconData icon;
   final String label;
   final int tab;
@@ -885,9 +882,8 @@ class _PracticeSessionsSectionState extends State<_PracticeSessionsSection> {
 
   Future<void> _load() async {
     try {
-      final sessions =
-          await PracticeSessionsService.getActiveSessionsByChildId(
-              widget.childId);
+      final sessions = await PracticeSessionsService.getActiveSessionsByChildId(
+          widget.childId);
       if (mounted) setState(() => _sessions = sessions);
     } catch (_) {
       // No active sessions / offline — section simply stays hidden.
@@ -989,8 +985,8 @@ class _SessionCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: _kCoral,
                     borderRadius: BorderRadius.circular(20),
@@ -1811,45 +1807,45 @@ class _SmallGameCard extends StatelessWidget {
         child: Column(
           children: [
             Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  gradient[0].withValues(alpha: 0.12),
-                  gradient[1].withValues(alpha: 0.08),
-                ],
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    gradient[0].withValues(alpha: 0.12),
+                    gradient[1].withValues(alpha: 0.08),
+                  ],
+                ),
+                shape: BoxShape.circle,
               ),
-              shape: BoxShape.circle,
+              child: Icon(icon, color: gradient[0], size: 20),
             ),
-            child: Icon(icon, color: gradient[0], size: 20),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.fredoka(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: _kNavy,
+            const SizedBox(height: 8),
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.fredoka(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _kNavy,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            sub,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.nunito(
-              fontSize: 10,
-              color: Colors.grey[400],
+            const SizedBox(height: 2),
+            Text(
+              sub,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.nunito(
+                fontSize: 10,
+                color: Colors.grey[400],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -2189,11 +2185,9 @@ class _AmigosEnLineaCard extends StatelessWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border:
-                            Border.all(color: Colors.grey[300]!, width: 2),
+                        border: Border.all(color: Colors.grey[300]!, width: 2),
                       ),
-                      child: Icon(Icons.add,
-                          color: Colors.grey[400], size: 18),
+                      child: Icon(Icons.add, color: Colors.grey[400], size: 18),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -2256,7 +2250,8 @@ class _AmigosEnLineaCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _GamesHubView extends StatefulWidget {
-  const _GamesHubView({required this.bloc, required this.s, this.initialSubject});
+  const _GamesHubView(
+      {required this.bloc, required this.s, this.initialSubject});
   final StudentDashboardBloc bloc;
   final ScreenSize s;
 
@@ -2698,4 +2693,3 @@ class _TextLink extends StatelessWidget {
         ),
       );
 }
-

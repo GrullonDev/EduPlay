@@ -121,8 +121,9 @@ class StudentDashboardBloc extends ChangeNotifier {
             .toList();
 
         if (childProfile != null) {
-          recommendations = await ProgressRecommendationsService
-              .getRecommendations(childProfile!.id);
+          recommendations =
+              await ProgressRecommendationsService.getRecommendations(
+                  childProfile!.id);
           weakestSubject = await ProgressRecommendationsService.weakestSubject(
             childProfile!.id,
           );

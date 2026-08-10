@@ -40,6 +40,7 @@ class TeacherClass {
 
   final String id;
   final String teacherUid;
+
   /// Display name of the teacher — populated when fetched via the directory.
   final String teacherName;
   final String name;
@@ -47,9 +48,11 @@ class TeacherClass {
   final String gradeLevel;
   final String joinCode; // 6-char alphanumeric
   final int studentCount;
+
   /// Age range this class accepts (inclusive). Used by the parent directory.
   final int minAge;
   final int maxAge;
+
   /// When true, the class appears in the parent-facing teacher directory.
   final bool isPublic;
   final DateTime createdAt;
