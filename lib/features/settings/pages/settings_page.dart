@@ -28,6 +28,19 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   int _sectionIndex =
       0; // 0=Profile, 1=Subscription, 2=Notifications, 3=Security
+  String _parentName = 'Mamá';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadParentName();
+  }
+
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
+  }
 
   static const _sections = [
     (icon: Icons.person_outline_rounded, label: 'Profile'),
@@ -44,7 +57,9 @@ class _SettingsPageState extends State<SettingsPage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          const EduPlayNavBar.parent(activeParentTab: ParentTab.configuracion),
+          EduPlayNavBar.parent(
+              activeParentTab: ParentTab.configuracion,
+              parentName: _parentName),
           Expanded(
             child: isDesktop
                 ? Row(

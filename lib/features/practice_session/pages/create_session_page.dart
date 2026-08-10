@@ -35,11 +35,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   ChildProfile? _selectedProfile;
   final Set<String> _selectedGameIds = {};
   bool _loading = false;
+  String _parentName = 'Mamá';
 
   @override
   void initState() {
     super.initState();
     _loadProfiles();
+    _loadParentName();
   }
 
   Future<void> _loadProfiles() async {
@@ -48,6 +50,12 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
       _profiles = profiles;
       if (profiles.isNotEmpty) _selectedProfile = profiles.first;
     });
+  }
+
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
   }
 
   Future<void> _createSession() async {
@@ -94,11 +102,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     final wide = ScreenSize.of(context).isDesktop;
     return Scaffold(
       backgroundColor: _kBg,
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(64),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
         child: EduPlayNavBar.parent(
           activeParentTab: ParentTab.inicio,
-          parentName: '',
+          parentName: _parentName,
         ),
       ),
       body: _profiles.isEmpty

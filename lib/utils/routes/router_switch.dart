@@ -1,11 +1,10 @@
 import 'package:edu_play/core/analytics/analytics_service.dart';
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
 import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
-import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
-import 'package:edu_play/features/child_portal/pages/child_portal_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
 import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
 import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
@@ -46,11 +45,16 @@ class AppRouter {
     Widget page;
     // Flutter web passes the full hash fragment (e.g. "/child-portal?pin=xxx")
     // as the route name. Strip the query string so the switch matches correctly.
-    // ChildPortalPage reads the pin/profile data from Uri.base.fragment itself.
+    // StudentDashboardPage reads the pin/profile data from Uri.base.fragment itself.
     final rawName = settings.name ?? '';
     final String name = rawName.contains('?')
         ? rawName.substring(0, rawName.indexOf('?'))
         : rawName;
+
+    if (!ReleaseFlags.teacherExperienceEnabled &&
+        _teacherRoutesDisabledInPublicRelease.contains(name)) {
+      return _getPageRoute(RouterPaths.root, const MainPage(), null);
+    }
 
     switch (name) {
       case RouterPaths.root:
@@ -131,12 +135,16 @@ class AppRouter {
           builder: (_) => const StickerAlbumPage(),
         );
       case RouterPaths.gamesCatalog:
+        // Retired as a standalone screen — redirect into the consolidated
+        // dashboard, landing directly on "Mis Juegos" (tab 1).
         final catalogProfile = settings.arguments is ChildProfile
             ? settings.arguments as ChildProfile
             : null;
-        return MaterialPageRoute(
-          builder: (_) => GamesCatalogPage(childProfile: catalogProfile),
+        page = StudentDashboardPage(
+          childProfile: catalogProfile,
+          initialTab: 1,
         );
+        break;
       case RouterPaths.parentsDashboard:
         return MaterialPageRoute(
           builder: (_) => const ParentsDashboardPage(),
@@ -175,10 +183,12 @@ class AppRouter {
           builder: (_) => PracticeKioskPage(session: session),
         );
       case RouterPaths.childPortal:
-        final pin = settings.arguments as String?;
-        return MaterialPageRoute(
-          builder: (_) => ChildPortalPage(pinFromArgs: pin),
-        );
+        // Kept as a compatibility alias for previously-shared links
+        // (`/#/child-portal?pin=...&d=...`) — the dashboard's own entry
+        // resolution reads the pin/profile straight from the URL fragment,
+        // independent of which route name matched.
+        page = const StudentDashboardPage(username: null);
+        break;
       case RouterPaths.joinClass:
         final code = settings.arguments as String?;
         return MaterialPageRoute(
@@ -227,4 +237,11 @@ class AppRouter {
       builder: (_) => viewToShow,
     );
   }
+
+  static const _teacherRoutesDisabledInPublicRelease = {
+    RouterPaths.registerTeacher,
+    RouterPaths.teacherDashboard,
+    RouterPaths.joinClass,
+    RouterPaths.browseTeachers,
+  };
 }

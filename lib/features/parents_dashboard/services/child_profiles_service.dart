@@ -59,8 +59,9 @@ class ChildProfilesService {
   /// Look up a child profile by PIN from the global [child_pins] index.
   ///
   /// Does **not** require the caller to be a parent — any authenticated user
-  /// (including anonymous) can read from [child_pins]. Used by [ChildPortalPage]
-  /// when the child opens the shared link on their own device.
+  /// (including anonymous) can read from [child_pins]. Used by
+  /// `StudentDashboardPage` when the child opens the shared link on their
+  /// own device.
   static Future<ChildProfile?> findByPinGlobal(String pin) async {
     try {
       final doc = await _pinsRef.doc(pin).get();

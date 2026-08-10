@@ -18,6 +18,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
   final List<int> _obstacles = [];
   int _level = 1;
   final Random _random = Random();
+  final GlobalKey _playerKey = GlobalKey();
 
   @override
   void initState() {
@@ -30,6 +31,22 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
       _playerPos = 0;
       _treasurePos = (_rows * _cols) - 1;
       _generateObstacles();
+    });
+    _scrollToPlayer();
+  }
+
+  /// Keeps the boat visible by scrolling the board to follow it, since the
+  /// grid is taller than the viewport and can't show all rows at once.
+  void _scrollToPlayer() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _playerKey.currentContext;
+      if (ctx == null) return;
+      Scrollable.ensureVisible(
+        ctx,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     });
   }
 
@@ -74,6 +91,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
       setState(() {
         _playerPos = newPos;
       });
+      _scrollToPlayer();
       _checkWin();
     }
   }
@@ -150,6 +168,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
 
                     // Water texture
                     return Container(
+                      key: index == _playerPos ? _playerKey : null,
                       decoration: BoxDecoration(
                         color: _obstacles.contains(index)
                             ? Colors.red[50]

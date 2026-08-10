@@ -307,7 +307,7 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                               Navigator.pop(ctx);
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
-                                RouterPaths.childPortal,
+                                RouterPaths.studentDashboard,
                                 (route) => false,
                               );
                             },

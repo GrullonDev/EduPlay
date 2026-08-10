@@ -126,7 +126,7 @@ class _TimeTravelPageState extends State<TimeTravelPage>
   void _goHome() {
     Navigator.pushNamedAndRemoveUntil(
       context,
-      RouterPaths.childPortal,
+      RouterPaths.studentDashboard,
       (route) => false,
     );
   }

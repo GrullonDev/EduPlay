@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
-import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
+import 'package:edu_play/features/games_catalog/widgets/catalog_filter_content.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/menu/models/game.dart';
+import 'package:edu_play/features/practice_session/models/practice_session.dart';
+import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
 import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
-import 'package:edu_play/shared/widgets/placeholder_section.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -28,38 +31,51 @@ const _kBg = Color(0xFFF3F5F9);
 // ─────────────────────────────────────────────────────────────────────────────
 
 class StudentDashboardLayout extends StatefulWidget {
-  const StudentDashboardLayout({super.key});
+  const StudentDashboardLayout({super.key, this.initialTab = 0});
+
+  final int initialTab;
 
   @override
   State<StudentDashboardLayout> createState() => _StudentDashboardLayoutState();
 }
 
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
-  int _tab = 0;
+  late int _tab = widget.initialTab;
 
-  Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s) {
-    switch (_tab) {
+  /// Set when the user taps a subject shortcut (e.g. the "Lógica & Puzzles"
+  /// card on the home tab) so "Mis Juegos" opens pre-filtered. Cleared on any
+  /// plain tab switch so it never applies to an unrelated visit.
+  GameSubject? _pendingSubject;
+
+  /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
+  /// they always land on (and stay on) the games tab. Computed rather than
+  /// stored so it can't drift out of sync with `bloc.isYoungChild`.
+  int _effectiveTab(StudentDashboardBloc bloc) =>
+      bloc.isYoungChild ? 1 : _tab;
+
+  void _selectTab(int i) => setState(() {
+        _tab = i;
+        _pendingSubject = null;
+      });
+
+  void _openGamesForSubject(GameSubject subject) => setState(() {
+        _tab = 1;
+        _pendingSubject = subject;
+      });
+
+  Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s, int tab) {
+    switch (tab) {
       case 1:
-        return _GamesHubView(bloc: bloc, s: s);
+        return _GamesHubView(
+            bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return _AchievementsView(s: s);
-      case 3:
-        return const PlaceholderSection(
-          icon: Icons.people_alt_rounded,
-          title: 'Amigos',
-          message: 'Pronto podrás ver a tus amigos en línea y jugar juntos.',
-        );
-      case 4:
-        return const PlaceholderSection(
-          icon: Icons.storefront_rounded,
-          title: 'Tienda',
-          message: 'Pronto podrás canjear tus XP por premios increíbles.',
-        );
       default:
         return _HomeView(
           bloc: bloc,
           s: s,
-          onTabChange: (t) => setState(() => _tab = t),
+          onTabChange: _selectTab,
+          onSubjectSelect: _openGamesForSubject,
         );
     }
   }
@@ -81,7 +97,8 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           );
         }
 
-        final content = _buildContent(bloc, s);
+        final tab = _effectiveTab(bloc);
+        final content = _buildContent(bloc, s, tab);
 
         // ── Desktop: top nav + persistent sidebar ──────────────────────
         if (s.isDesktop) {
@@ -89,13 +106,18 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             backgroundColor: _kBg,
             body: Column(
               children: [
-                _TopNavBar(bloc: bloc, s: s),
+                _TopNavBar(
+                  bloc: bloc,
+                  s: s,
+                  selectedTab: tab,
+                  onSelect: _selectTab,
+                ),
                 Expanded(
                   child: Row(
                     children: [
                       _Sidebar(
-                        selected: _tab,
-                        onSelect: (i) => setState(() => _tab = i),
+                        selected: tab,
+                        onSelect: _selectTab,
                         bloc: bloc,
                         wide: s.isWide,
                       ),
@@ -120,10 +142,10 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             appBar: _buildAppBar(bloc, showLinks: false),
             drawer: Drawer(
               child: _Sidebar(
-                selected: _tab,
+                selected: tab,
                 onSelect: (i) {
                   Navigator.pop(context);
-                  setState(() => _tab = i);
+                  _selectTab(i);
                 },
                 bloc: bloc,
                 wide: false,
@@ -139,10 +161,10 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           appBar: _buildAppBar(bloc, showLinks: false),
           drawer: Drawer(
             child: _Sidebar(
-              selected: _tab,
+              selected: tab,
               onSelect: (i) {
                 Navigator.pop(context);
-                setState(() => _tab = i);
+                _selectTab(i);
               },
               bloc: bloc,
               wide: false,
@@ -178,11 +200,16 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _TopNavBar extends StatelessWidget {
-  const _TopNavBar({required this.bloc, required this.s});
+  const _TopNavBar({
+    required this.bloc,
+    required this.s,
+    required this.selectedTab,
+    required this.onSelect,
+  });
   final StudentDashboardBloc bloc;
   final ScreenSize s;
-
-  static const _links = ['Learn', 'Games', 'Classroom', 'Reports'];
+  final int selectedTab;
+  final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -202,39 +229,45 @@ class _TopNavBar extends StatelessWidget {
           ),
           const SizedBox(width: 32),
 
-          // Nav links (hide on narrower desktops if needed)
           if (s.isDesktop)
             Row(
-              children: _links.map((l) {
-                final active = l == 'Learn';
-                return Padding(
-                  padding: const EdgeInsets.only(right: 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l,
-                        style: GoogleFonts.nunito(
-                          fontSize: 14,
-                          fontWeight:
-                              active ? FontWeight.w800 : FontWeight.w600,
-                          color: active ? _kNavy : Colors.grey[500],
-                        ),
-                      ),
-                      if (active)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          height: 2,
-                          width: 24,
-                          decoration: BoxDecoration(
-                            color: _kNavy,
-                            borderRadius: BorderRadius.circular(2),
+              children: [
+                for (final item in _visibleNavItems(bloc.isYoungChild))
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () => onSelect(item.tab),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            item.label,
+                            style: GoogleFonts.nunito(
+                              fontSize: 14,
+                              fontWeight: item.tab == selectedTab
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                              color: item.tab == selectedTab
+                                  ? _kNavy
+                                  : Colors.grey[500],
+                            ),
                           ),
-                        ),
-                    ],
+                          if (item.tab == selectedTab)
+                            Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              height: 2,
+                              width: 24,
+                              decoration: BoxDecoration(
+                                color: _kNavy,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
+              ],
             ),
 
           const Spacer(),
@@ -243,22 +276,34 @@ class _TopNavBar extends StatelessWidget {
           const SizedBox(width: 16),
 
           // Notification bell
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Icon(Icons.notifications_outlined,
-                  color: Colors.grey[600], size: 22),
-              Positioned(
-                top: -2,
-                right: -2,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                      color: _kCoral, shape: BoxShape.circle),
-                ),
+          InkWell(
+            borderRadius: BorderRadius.circular(20),
+            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Notificaciones próximamente.'),
+                duration: Duration(seconds: 2),
               ),
-            ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(Icons.notifications_outlined,
+                      color: Colors.grey[600], size: 22),
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                          color: _kCoral, shape: BoxShape.circle),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(width: 16),
 
@@ -325,17 +370,27 @@ class _PointsBadge extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const _sideNavItems = [
-  _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control'),
-  _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos'),
-  _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros'),
-  _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
-  _SideItem(icon: Icons.storefront_rounded, label: 'Tienda'),
+  _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control', tab: 0),
+  _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos', tab: 1),
+  _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros', tab: 2),
+  if (ReleaseFlags.studentExtraTabsEnabled)
+    _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos', tab: 3),
+  if (ReleaseFlags.studentExtraTabsEnabled)
+    _SideItem(icon: Icons.storefront_rounded, label: 'Tienda', tab: 4),
 ];
 
+/// Kindergarten-age children (<= 5) only ever see "Mis Juegos" — Panel de
+/// Control and Logros are hidden entirely, not just unreachable.
+List<_SideItem> _visibleNavItems(bool isYoungChild) => isYoungChild
+    ? _sideNavItems.where((i) => i.tab == 1).toList()
+    : _sideNavItems;
+
 class _SideItem {
-  const _SideItem({required this.icon, required this.label});
+  const _SideItem(
+      {required this.icon, required this.label, required this.tab});
   final IconData icon;
   final String label;
+  final int tab;
 }
 
 class _Sidebar extends StatelessWidget {
@@ -400,22 +455,22 @@ class _Sidebar extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Nav items
-            for (var i = 0; i < _sideNavItems.length; i++)
+            for (final item in _visibleNavItems(bloc.isYoungChild))
               _SideNavTile(
-                item: _sideNavItems[i],
-                selected: i == selected,
-                onTap: () => onSelect(i),
+                item: item,
+                selected: item.tab == selected,
+                onTap: () => onSelect(item.tab),
               ),
 
             const Spacer(),
 
-            // Quest button
+            // Quest button → opens the Mis Juegos tab
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => onSelect(1),
                   icon: const Icon(Icons.rocket_launch_rounded, size: 16),
                   label: Text(
                     '¡Comenzar Quest!',
@@ -440,7 +495,12 @@ class _Sidebar extends StatelessWidget {
             _SideFooterTile(
               icon: Icons.help_outline_rounded,
               label: 'Ayuda',
-              onTap: () {},
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Centro de ayuda próximamente.'),
+                  duration: Duration(seconds: 2),
+                ),
+              ),
             ),
             _SideFooterTile(
               icon: Icons.logout_rounded,
@@ -548,10 +608,12 @@ class _HomeView extends StatelessWidget {
     required this.bloc,
     required this.s,
     required this.onTabChange,
+    required this.onSubjectSelect,
   });
   final StudentDashboardBloc bloc;
   final ScreenSize s;
   final ValueChanged<int> onTabChange;
+  final ValueChanged<GameSubject> onSubjectSelect;
 
   double get _hPad => s.when(mobile: 16, tablet: 20, desktop: 28);
 
@@ -584,6 +646,17 @@ class _HomeView extends StatelessWidget {
             s: s,
           ),
 
+          if (bloc.childProfile != null) ...[
+            SizedBox(height: s.isMobile ? 24 : 28),
+            _NeedsPracticeSection(
+              recommendations: bloc.recommendations,
+              weakestSubject: bloc.weakestSubject,
+              s: s,
+            ),
+            SizedBox(height: s.isMobile ? 24 : 28),
+            _PracticeSessionsSection(childId: bloc.childProfile!.id),
+          ],
+
           SizedBox(height: s.isMobile ? 24 : 28),
 
           // Mis Juegos header
@@ -601,7 +674,11 @@ class _HomeView extends StatelessWidget {
             ],
           ),
           SizedBox(height: s.isMobile ? 12 : 14),
-          _MisJuegosSection(games: games, s: s),
+          _MisJuegosSection(
+            games: games,
+            s: s,
+            onSubjectSelect: onSubjectSelect,
+          ),
 
           SizedBox(height: s.isMobile ? 24 : 28),
 
@@ -653,6 +730,301 @@ class _HomeView extends StatelessWidget {
   }
 }
 
+// ── Needs practice (parent-assigned games / weakest subject) ──────────────────
+
+const _kSubjectLabels = {
+  GameSubject.math: 'Matemáticas',
+  GameSubject.science: 'Ciencias',
+  GameSubject.history: 'Historia',
+  GameSubject.languages: 'Idiomas',
+  GameSubject.logic: 'Lógica',
+  GameSubject.art: 'Arte',
+  GameSubject.music: 'Música',
+  GameSubject.sports: 'Deportes',
+};
+
+class _NeedsPracticeSection extends StatelessWidget {
+  const _NeedsPracticeSection({
+    required this.recommendations,
+    required this.weakestSubject,
+    required this.s,
+  });
+  final List<GameRecommendation> recommendations;
+  final GameSubject? weakestSubject;
+  final ScreenSize s;
+
+  @override
+  Widget build(BuildContext context) {
+    if (recommendations.isEmpty && weakestSubject == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.school_rounded, color: _kCoral, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Necesita practicar',
+                style: GoogleFonts.fredoka(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: _kNavy,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (recommendations.isNotEmpty)
+            for (final rec in recommendations) _RecommendationTile(rec: rec)
+          else if (weakestSubject != null)
+            Text(
+              'Te recomendamos practicar más: '
+              '${_kSubjectLabels[weakestSubject] ?? 'esta materia'}.',
+              style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[600]),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationTile extends StatelessWidget {
+  const _RecommendationTile({required this.rec});
+  final GameRecommendation rec;
+
+  @override
+  Widget build(BuildContext context) {
+    final game = allCatalogGames
+        .cast<CatalogGame?>()
+        .firstWhere((g) => g?.id == rec.gameId, orElse: () => null);
+    if (game == null) return const SizedBox.shrink();
+
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, game.route),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8F7FF),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: game.subjectColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(game.icon, color: game.subjectColor, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    game.title,
+                    style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: _kNavy),
+                  ),
+                  Text(
+                    rec.reason,
+                    style: GoogleFonts.nunito(
+                        fontSize: 11, color: Colors.grey[500]),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Active practice sessions (parent-assigned) ─────────────────────────────────
+
+class _PracticeSessionsSection extends StatefulWidget {
+  const _PracticeSessionsSection({required this.childId});
+  final String childId;
+
+  @override
+  State<_PracticeSessionsSection> createState() =>
+      _PracticeSessionsSectionState();
+}
+
+class _PracticeSessionsSectionState extends State<_PracticeSessionsSection> {
+  List<PracticeSession> _sessions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final sessions =
+          await PracticeSessionsService.getActiveSessionsByChildId(
+              widget.childId);
+      if (mounted) setState(() => _sessions = sessions);
+    } catch (_) {
+      // No active sessions / offline — section simply stays hidden.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_sessions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Sesiones activas',
+          style: GoogleFonts.fredoka(
+              fontSize: 16, fontWeight: FontWeight.w700, color: _kNavy),
+        ),
+        const SizedBox(height: 12),
+        for (final session in _sessions)
+          _SessionCard(
+            session: session,
+            onTap: () => Navigator.pushNamed(
+              context,
+              RouterPaths.practiceKiosk,
+              arguments: session,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SessionCard extends StatelessWidget {
+  const _SessionCard({required this.session, required this.onTap});
+  final PracticeSession session;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final completed = session.completedCount;
+    final total = session.totalCount;
+    final progress = session.progressFraction;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _kNavy.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEDF8),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.sports_esports_rounded,
+                        color: _kNavy, size: 18),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sesión de práctica',
+                        style: GoogleFonts.fredoka(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: _kNavy,
+                        ),
+                      ),
+                      Text(
+                        '$completed de $total juegos completados',
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _kCoral,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '¡Jugar!',
+                    style: GoogleFonts.fredoka(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor: const Color(0xFFEEEDF8),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  progress == 1 ? const Color(0xFF27AE60) : _kCoral,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Mission banner ────────────────────────────────────────────────────────────
 
 class _MissionBanner extends StatelessWidget {
@@ -676,7 +1048,9 @@ class _MissionBanner extends StatelessWidget {
     final showMascot = !s.isMobile;
 
     return Container(
-      height: s.when(mobile: 200, tablet: 185, desktop: 195),
+      constraints: BoxConstraints(
+        minHeight: s.when(mobile: 200, tablet: 185, desktop: 195),
+      ),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -1036,9 +1410,14 @@ class _StatCard extends StatelessWidget {
 // ── Mis Juegos section ────────────────────────────────────────────────────────
 
 class _MisJuegosSection extends StatelessWidget {
-  const _MisJuegosSection({required this.games, required this.s});
+  const _MisJuegosSection({
+    required this.games,
+    required this.s,
+    required this.onSubjectSelect,
+  });
   final List<Game> games;
   final ScreenSize s;
+  final ValueChanged<GameSubject> onSubjectSelect;
 
   static const _gradients = [
     [Color(0xFF1565C0), Color(0xFF1E88E5)],
@@ -1056,19 +1435,22 @@ class _MisJuegosSection extends StatelessWidget {
         icon: Icons.history_edu_rounded,
         label: 'Historia',
         name: 'Crónicas de Egipto',
-        sub: 'Explora las pirámides'
+        sub: 'Explora las pirámides',
+        subject: GameSubject.history,
       ),
       (
         icon: Icons.psychology_rounded,
         label: 'Lógica',
         name: 'Lógica & Puzzles',
-        sub: 'Entrena tu cerebro'
+        sub: 'Entrena tu cerebro',
+        subject: GameSubject.logic,
       ),
       (
         icon: Icons.language_rounded,
         label: 'Idiomas',
         name: 'Idiomas Pro',
-        sub: 'Nuevas palabras hoy'
+        sub: 'Nuevas palabras hoy',
+        subject: GameSubject.languages,
       ),
     ];
 
@@ -1122,6 +1504,7 @@ class _MisJuegosSection extends StatelessWidget {
                           name: e.value.name,
                           sub: e.value.sub,
                           gradient: _gradients[e.key % _gradients.length],
+                          onTap: () => onSubjectSelect(e.value.subject),
                         ),
                       ))
                   .toList(),
@@ -1139,6 +1522,7 @@ class _MisJuegosSection extends StatelessWidget {
                     name: e.value.name,
                     sub: e.value.sub,
                     gradient: _gradients[e.key % _gradients.length],
+                    onTap: () => onSubjectSelect(e.value.subject),
                   ),
                 ),
               );
@@ -1399,30 +1783,34 @@ class _SmallGameCard extends StatelessWidget {
     required this.name,
     required this.sub,
     required this.gradient,
+    required this.onTap,
   });
   final IconData icon;
   final String name;
   final String sub;
   final List<Color> gradient;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1461,6 +1849,7 @@ class _SmallGameCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1643,6 +2032,77 @@ class _AmigosEnLineaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The friends/social system isn't built yet (same flag that hides the
+    // "Amigos"/"Tienda" sidebar tabs) — showing fabricated friends and a
+    // fake "Luna te envió un reto" message here would be misleading, so
+    // this falls back to an honest "próximamente" placeholder. Real
+    // teacher-assigned challenges are unaffected and still show below.
+    if (!ReleaseFlags.studentExtraTabsEnabled) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('🎮', style: TextStyle(fontSize: 16)),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Amigos en Línea',
+                      style: GoogleFonts.fredoka(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.hourglass_top_rounded,
+                        size: 16, color: Colors.grey[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Muy pronto podrás jugar y retar a tus amigos aquí.',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (challenges.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            MyChallengesCard(
+              challenges: challenges.take(2).toList(),
+              onComplete: onComplete,
+            ),
+          ],
+        ],
+      );
+    }
+
     final pending = challenges.isNotEmpty
         ? challenges.firstWhere(
             (c) => c['status'] == 'active',
@@ -1714,25 +2174,35 @@ class _AmigosEnLineaCard extends StatelessWidget {
                     ],
                   )),
               // Add button
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[300]!, width: 2),
+              GestureDetector(
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Agregar amigos próximamente.'),
+                    duration: Duration(seconds: 2),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: Colors.grey[300]!, width: 2),
+                      ),
+                      child: Icon(Icons.add,
+                          color: Colors.grey[400], size: 18),
                     ),
-                    child: Icon(Icons.add, color: Colors.grey[400], size: 18),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Añadir',
-                    style: GoogleFonts.nunito(
-                        fontSize: 11, color: Colors.grey[400]),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Añadir',
+                      style: GoogleFonts.nunito(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1780,21 +2250,134 @@ class _AmigosEnLineaCard extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GAMES HUB TAB
+// GAMES HUB TAB — embeds the full filterable catalog (see
+// lib/features/games_catalog/widgets/catalog_filter_content.dart), ported
+// from the former standalone GamesCatalogPage/_GamesCatalogPageState.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _GamesHubView extends StatelessWidget {
-  const _GamesHubView({required this.bloc, required this.s});
+class _GamesHubView extends StatefulWidget {
+  const _GamesHubView({required this.bloc, required this.s, this.initialSubject});
   final StudentDashboardBloc bloc;
   final ScreenSize s;
 
+  /// Set when the child tapped a subject shortcut on the home tab (e.g.
+  /// "Lógica & Puzzles") — pre-filters the catalog to that subject instead
+  /// of the default "all subjects" / weakest-subject auto-filter.
+  final GameSubject? initialSubject;
+
+  @override
+  State<_GamesHubView> createState() => _GamesHubViewState();
+}
+
+class _GamesHubViewState extends State<_GamesHubView> {
+  GameSubject _selectedSubject = GameSubject.all;
+  // All age ranges active by default so no games are hidden on first open.
+  final Set<AgeRange> _selectedAges = {
+    AgeRange.age6to8,
+    AgeRange.age9to11,
+    AgeRange.age12plus,
+  };
+  final Set<Difficulty> _selectedDifficulties = {
+    Difficulty.beginner,
+    Difficulty.intermediate,
+    Difficulty.advanced,
+  };
+  bool _gridView = true;
+  String _sortBy = 'Popular'; // 'Popular' | 'Newest' | 'Level'
+  int _visibleCount = 9; // games shown before "load more"
+  static const _pageSize = 6; // how many each "load more" reveals
+
+  // "Continuar Jugando" quick-access strip — unchanged data source.
   static final _recent = allCatalogGames.take(3).toList();
-  static final _recommended = allCatalogGames.skip(3).take(6).toList();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialSubject != null) {
+      _selectedSubject = widget.initialSubject!;
+    }
+    final profile = widget.bloc.childProfile;
+    if (profile != null) {
+      _selectedAges
+        ..clear()
+        ..add(ageRangeForAge(profile.age));
+      // Don't let the async weakest-subject auto-filter clobber an explicit
+      // subject the child just tapped on the home tab.
+      if (widget.initialSubject == null) {
+        _loadWeakestSubject(profile.id);
+      }
+    }
+  }
+
+  Future<void> _loadWeakestSubject(String childProfileId) async {
+    final subject =
+        await ProgressRecommendationsService.weakestSubject(childProfileId);
+    if (mounted && subject != null) {
+      setState(() => _selectedSubject = subject);
+    }
+  }
+
+  /// Count of non-default filter selections (shown as badge on mobile).
+  int get _activeFilterCount {
+    int count = 0;
+    if (_selectedSubject != GameSubject.all) count++;
+    if (_selectedAges.length < AgeRange.values.length) count++;
+    if (_selectedDifficulties.length < Difficulty.values.length) count++;
+    return count;
+  }
+
+  List<CatalogGame> get _filtered {
+    final list = allCatalogGames.where((g) {
+      if (_selectedSubject != GameSubject.all &&
+          g.subject != _selectedSubject) {
+        return false;
+      }
+      if (_selectedAges.isNotEmpty && !_selectedAges.contains(g.ageRange)) {
+        return false;
+      }
+      if (_selectedDifficulties.isNotEmpty &&
+          !_selectedDifficulties.contains(g.difficulty)) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    switch (_sortBy) {
+      case 'Newest':
+        list.sort((a, b) => b.level.compareTo(a.level));
+      case 'Level':
+        list.sort((a, b) => a.level.compareTo(b.level));
+      default: // 'Popular' — sort by xpProgress desc as popularity proxy
+        list.sort((a, b) => b.xpProgress.compareTo(a.xpProgress));
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bloc = widget.bloc;
+    final s = widget.s;
     final hPad = s.when(mobile: 16.0, tablet: 20.0, desktop: 28.0);
-    final cols = gridCols(s, mobile: 2, tablet: 2, desktop: 3);
+    final isDesktop = s.isDesktop;
+
+    // Mobile/tablet route filters through a modal sheet (filterDrawer);
+    // desktop renders the filter panel as a persistent sidebar instead (below).
+    final mainContent = CatalogMainContent(
+      filtered: _filtered,
+      gridView: _gridView,
+      onToggleView: () => setState(() => _gridView = !_gridView),
+      activeFilterCount: _activeFilterCount,
+      sortBy: _sortBy,
+      onSortChanged: (v) => setState(() {
+        _sortBy = v;
+        _visibleCount = 9;
+      }),
+      visibleCount: _visibleCount,
+      onLoadMore: () => setState(() => _visibleCount += _pageSize),
+      filterDrawer: isDesktop
+          ? null
+          : _filterPanel(onDismiss: () => Navigator.of(context).pop()),
+    );
 
     return CustomScrollView(
       slivers: [
@@ -1850,64 +2433,74 @@ class _GamesHubView extends StatelessWidget {
           ),
         ),
 
+        // "Continuar Jugando" — quick-access strip above the full catalog
         SliverPadding(
           padding: EdgeInsets.fromLTRB(hPad, 24, hPad, 0),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              const _SectionTitle('▶ Continuar Jugando'),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 110,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _recent.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (_, i) => _RecentChip(game: _recent[i], s: s),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Row(
-                children: [
-                  const _SectionTitle('✨ Recomendados para Ti'),
-                  const Spacer(),
-                  _TextLink(
-                    label: 'Ver catálogo →',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const GamesCatalogPage()),
-                    ),
+          sliver: SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _SectionTitle('▶ Continuar Jugando'),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 110,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _recent.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (_, i) => _RecentChip(game: _recent[i], s: s),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: cols,
-                  crossAxisSpacing: 14,
-                  mainAxisSpacing: 14,
-                  childAspectRatio: 0.74,
                 ),
-                itemCount: _recommended.length,
-                itemBuilder: (_, i) => _CatalogGameCard(game: _recommended[i]),
-              ),
-              const SizedBox(height: 28),
-              _CatalogCTABanner(
-                count: allCatalogGames.length,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const GamesCatalogPage()),
-                ),
-              ),
-              const SizedBox(height: 32),
-            ]),
+              ],
+            ),
+          ),
+        ),
+
+        // Full filterable catalog — same content/behavior as the former
+        // standalone GamesCatalogPage, embedded here as ordinary (non-sliver)
+        // widgets. CatalogMainContent's internal ListView is shrinkWrap +
+        // NeverScrollableScrollPhysics so it composes cleanly inside this
+        // outer CustomScrollView instead of fighting it for scroll gestures.
+        SliverPadding(
+          padding: const EdgeInsets.only(top: 8),
+          sliver: SliverToBoxAdapter(
+            child: isDesktop
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _filterPanel(),
+                      Expanded(child: mainContent),
+                    ],
+                  )
+                : mainContent,
           ),
         ),
       ],
     );
   }
+
+  Widget _filterPanel({VoidCallback? onDismiss}) => CatalogFilterPanel(
+        onDismiss: onDismiss,
+        selectedSubject: _selectedSubject,
+        selectedAges: _selectedAges,
+        selectedDifficulties: _selectedDifficulties,
+        onSubjectChanged: (v) => setState(() {
+          _selectedSubject = v;
+          _visibleCount = 9;
+        }),
+        onAgeToggled: (a) => setState(() {
+          _selectedAges.contains(a)
+              ? _selectedAges.remove(a)
+              : _selectedAges.add(a);
+          _visibleCount = 9;
+        }),
+        onDifficultyToggled: (d) => setState(() {
+          _selectedDifficulties.contains(d)
+              ? _selectedDifficulties.remove(d)
+              : _selectedDifficulties.add(d);
+          _visibleCount = 9;
+        }),
+      );
 }
 
 class _RecentChip extends StatelessWidget {
@@ -1980,198 +2573,6 @@ class _RecentChip extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogGameCard extends StatelessWidget {
-  const _CatalogGameCard({required this.game});
-  final CatalogGame game;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: game.gradientColors,
-                      ),
-                    ),
-                  ),
-                  CustomPaint(painter: _ArtPainter(game.gradientColors)),
-                  Center(
-                    child: Icon(game.icon,
-                        size: 46, color: Colors.white.withValues(alpha: 0.6)),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                          color: game.subjectColor,
-                          borderRadius: BorderRadius.circular(10)),
-                      child: Text(game.subjectLabel,
-                          style: GoogleFonts.nunito(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white)),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Text('Nivel ${game.level}',
-                          style: GoogleFonts.nunito(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(game.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.fredoka(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: _kNavy)),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: game.xpProgress,
-                          minHeight: 5,
-                          backgroundColor: const Color(0xFFF3F4F6),
-                          color: _kGold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text('${(game.xpProgress * 100).toInt()}%',
-                        style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.grey[500])),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, game.route),
-                    icon: const Icon(Icons.play_arrow_rounded, size: 15),
-                    label: Text('Jugar',
-                        style: GoogleFonts.nunito(
-                            fontWeight: FontWeight.w700, fontSize: 12)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _kNavy,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 9),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CatalogCTABanner extends StatelessWidget {
-  const _CatalogCTABanner({required this.count, required this.onTap});
-  final int count;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFFE53935), Color(0xFFFF7043)]),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('¡Descubre más aventuras!',
-                      style: GoogleFonts.fredoka(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text('Explora +$count juegos educativos',
-                      style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8))),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(16)),
-              child: Text('Ver todo →',
-                  style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFFE53935))),
             ),
           ],
         ),
@@ -2298,29 +2699,3 @@ class _TextLink extends StatelessWidget {
       );
 }
 
-// ── Art painter ───────────────────────────────────────────────────────────────
-
-class _ArtPainter extends CustomPainter {
-  const _ArtPainter(this.colors);
-  final List<Color> colors;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = Colors.white.withValues(alpha: 0.06);
-    canvas.drawCircle(
-        Offset(size.width * 1.1, size.height * -0.1), size.width * 0.7, p);
-    canvas.drawCircle(
-        Offset(size.width * -0.15, size.height * 1.1), size.width * 0.55, p);
-    canvas.drawLine(
-      Offset(0, size.height * 1.2),
-      Offset(size.width * 1.2, 0),
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.04)
-        ..strokeWidth = size.width * 0.3
-        ..style = PaintingStyle.stroke,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ArtPainter old) => false;
-}
