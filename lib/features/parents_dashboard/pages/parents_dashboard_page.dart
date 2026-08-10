@@ -6,10 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
+import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
+import 'package:edu_play/features/parents_dashboard/domain/repositories/child_profiles_repository.dart';
+import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
 import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
@@ -20,6 +21,7 @@ import 'package:edu_play/features/progress_recommendations/services/progress_rec
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
@@ -37,6 +39,9 @@ class ParentsDashboardPage extends StatefulWidget {
 }
 
 class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
+  final ChildProfilesRepository _childProfilesRepository =
+      sl<ChildProfilesRepository>();
+
   List<ChildProfile> _profiles = [];
   String _parentName = 'Mamá';
   bool _loading = true;
@@ -53,8 +58,8 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
 
   Future<void> _load() async {
     final results = await Future.wait([
-      ChildProfilesService.getProfiles(),
-      ChildProfilesService.getParentName(),
+      _childProfilesRepository.getProfiles(),
+      _childProfilesRepository.getParentName(),
     ]);
     if (!mounted) return;
     setState(() {
@@ -96,7 +101,7 @@ class _ParentsDashboardPageState extends State<ParentsDashboardPage> {
       ),
     );
     if (confirmed == true) {
-      await ChildProfilesService.deleteProfile(p.id, pin: p.pin);
+      await _childProfilesRepository.deleteProfile(p.id, pin: p.pin);
       if (mounted) setState(() => _profiles.removeWhere((x) => x.id == p.id));
     }
   }
@@ -889,66 +894,40 @@ class _QuickControlsCard extends StatefulWidget {
 }
 
 class _QuickControlsCardState extends State<_QuickControlsCard> {
-  bool _bedtimeEnabled = true;
-  int _dailyLimitMinutes = 120; // 2 hours default
-  int _bedtimeHour = 20; // 20:00 default
-  bool _saving = false;
+  final ParentDashboardRepository _repository = sl<ParentDashboardRepository>();
 
-  static String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  ParentQuickControls _controls = const ParentQuickControls();
+  bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    _loadFromFirestore();
+    _loadControls();
   }
 
-  Future<void> _loadFromFirestore() async {
-    final uid = _uid;
-    if (uid == null) return;
+  Future<void> _loadControls() async {
     try {
-      final doc =
-          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
-      final data = doc.data() ?? {};
-      if (mounted) {
-        setState(() {
-          _bedtimeEnabled = data['bedtimeEnabled'] as bool? ?? true;
-          _dailyLimitMinutes = data['dailyLimitMinutes'] as int? ?? 120;
-          _bedtimeHour = data['bedtimeHour'] as int? ?? 20;
-        });
-      }
+      final controls = await _repository.getQuickControls();
+      if (mounted) setState(() => _controls = controls);
     } catch (_) {}
   }
 
-  Future<void> _saveToFirestore() async {
-    final uid = _uid;
-    if (uid == null) return;
-    setState(() => _saving = true);
+  Future<void> _saveControls(ParentQuickControls controls) async {
+    setState(() {
+      _controls = controls;
+      _saving = true;
+    });
     try {
-      await FirebaseFirestore.instance.collection('parents').doc(uid).update({
-        'bedtimeEnabled': _bedtimeEnabled,
-        'dailyLimitMinutes': _dailyLimitMinutes,
-        'bedtimeHour': _bedtimeHour,
-      });
+      await _repository.saveQuickControls(controls);
     } catch (_) {
-      // If update fails (doc doesn't exist), try set with merge
-      try {
-        final uid2 = _uid;
-        if (uid2 != null) {
-          await FirebaseFirestore.instance.collection('parents').doc(uid2).set({
-            'bedtimeEnabled': _bedtimeEnabled,
-            'dailyLimitMinutes': _dailyLimitMinutes,
-            'bedtimeHour': _bedtimeHour,
-          }, SetOptions(merge: true));
-        }
-      } catch (_) {}
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
   String get _dailyLimitLabel {
-    final h = _dailyLimitMinutes ~/ 60;
-    final m = _dailyLimitMinutes % 60;
+    final h = _controls.dailyLimitMinutes ~/ 60;
+    final m = _controls.dailyLimitMinutes % 60;
     if (m == 0) return 'Activo · $h ${h == 1 ? 'hora' : 'horas'}';
     return 'Activo · ${h}h ${m}m';
   }
@@ -975,7 +954,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                   child: Text(o.label,
                       style: GoogleFonts.nunito(
                           fontSize: 14,
-                          fontWeight: _dailyLimitMinutes == o.minutes
+                          fontWeight: _controls.dailyLimitMinutes == o.minutes
                               ? FontWeight.w800
                               : FontWeight.w500)),
                 ))
@@ -983,8 +962,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
       ),
     );
     if (chosen != null && mounted) {
-      setState(() => _dailyLimitMinutes = chosen);
-      await _saveToFirestore();
+      await _saveControls(_controls.copyWith(dailyLimitMinutes: chosen));
     }
   }
 
@@ -1001,7 +979,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                   child: Text('${h.toString().padLeft(2, '0')}:00',
                       style: GoogleFonts.nunito(
                           fontSize: 14,
-                          fontWeight: _bedtimeHour == h
+                          fontWeight: _controls.bedtimeHour == h
                               ? FontWeight.w800
                               : FontWeight.w500)),
                 ))
@@ -1009,8 +987,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
       ),
     );
     if (chosen != null && mounted) {
-      setState(() => _bedtimeHour = chosen);
-      await _saveToFirestore();
+      await _saveControls(_controls.copyWith(bedtimeHour: chosen));
     }
   }
 
@@ -1102,7 +1079,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: _bedtimeEnabled ? _pickBedtimeHour : null,
+                    onTap: _controls.bedtimeEnabled ? _pickBedtimeHour : null,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1115,7 +1092,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                           ),
                         ),
                         Text(
-                          _bedtimeEnabled ? _bedtimeLabel : 'Desactivado',
+                          _controls.bedtimeEnabled ? _bedtimeLabel : 'Desactivado',
                           style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.55),
@@ -1126,10 +1103,9 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                   ),
                 ),
                 Switch(
-                  value: _bedtimeEnabled,
+                  value: _controls.bedtimeEnabled,
                   onChanged: (v) async {
-                    setState(() => _bedtimeEnabled = v);
-                    await _saveToFirestore();
+                    await _saveControls(_controls.copyWith(bedtimeEnabled: v));
                   },
                   activeThumbColor: const Color(0xFF2ECC71),
                   inactiveTrackColor: Colors.white24,
@@ -1556,7 +1532,9 @@ class _ChallengesCard extends StatefulWidget {
 }
 
 class _ChallengesCardState extends State<_ChallengesCard> {
-  List<Map<String, dynamic>> _challenges = [];
+  final ParentDashboardRepository _repository = sl<ParentDashboardRepository>();
+
+  List<ParentChallenge> _challenges = [];
   bool _loaded = false;
 
   @override
@@ -1566,21 +1544,11 @@ class _ChallengesCardState extends State<_ChallengesCard> {
   }
 
   Future<void> _load() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      if (mounted) setState(() => _loaded = true);
-      return;
-    }
     try {
-      final snap = await FirebaseFirestore.instance
-          .collection('parents')
-          .doc(uid)
-          .collection('challenges')
-          .orderBy('createdAt', descending: false)
-          .get();
+      final challenges = await _repository.getChallenges();
       if (mounted) {
         setState(() {
-          _challenges = snap.docs.map((d) => d.data()).toList();
+          _challenges = challenges;
           _loaded = true;
         });
       }
@@ -1879,7 +1847,7 @@ class _AddProfileDialogState extends State<_AddProfileDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    final profile = await ChildProfilesService.addProfile(
+    final profile = await sl<ChildProfilesRepository>().addProfile(
       name: _nameCtrl.text.trim(),
       age: _age,
       focusSubject: _subject,
@@ -3026,3 +2994,4 @@ class _SessionDetailRow extends StatelessWidget {
     );
   }
 }
+
