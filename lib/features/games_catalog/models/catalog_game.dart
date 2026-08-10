@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 
 enum AgeRange { age6to8, age9to11, age12plus }
 
+AgeRange ageRangeForAge(int age) {
+  if (age <= 8) return AgeRange.age6to8;
+  if (age <= 11) return AgeRange.age9to11;
+  return AgeRange.age12plus;
+}
+
 enum Difficulty { beginner, intermediate, advanced }
 
 enum GameSubject {

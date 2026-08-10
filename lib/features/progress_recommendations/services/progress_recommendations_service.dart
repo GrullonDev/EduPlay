@@ -1,3 +1,4 @@
+import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 
 // ── Game catalog metadata ─────────────────────────────────────────────────────
@@ -109,5 +110,39 @@ class ProgressRecommendationsService {
     });
 
     return recommendations.take(4).toList(); // top 4 recommendations
+  }
+
+  /// Returns the [GameSubject] with the lowest average score among games the
+  /// child has actually played, or null if no scored sessions exist yet.
+  static Future<GameSubject?> weakestSubject(String childProfileId) async {
+    final allSessions = await PracticeSessionsService.getAllSessions();
+    final childSessions = allSessions
+        .where((s) => s.childProfileId == childProfileId && !s.isActive);
+
+    final Map<GameSubject, List<int>> scoresBySubject = {};
+    final gamesById = {for (final g in allCatalogGames) g.id: g};
+
+    for (final session in childSessions) {
+      for (final gameId in session.assignedGameIds) {
+        final score = session.scoreMap[gameId];
+        final subject = gamesById[gameId]?.subject;
+        if (score != null && subject != null) {
+          scoresBySubject.putIfAbsent(subject, () => []).add(score);
+        }
+      }
+    }
+
+    if (scoresBySubject.isEmpty) return null;
+
+    GameSubject? weakest;
+    double lowestAvg = 101;
+    scoresBySubject.forEach((subject, scores) {
+      final avg = scores.reduce((a, b) => a + b) / scores.length;
+      if (avg < lowestAvg) {
+        lowestAvg = avg;
+        weakest = subject;
+      }
+    });
+    return weakest;
   }
 }

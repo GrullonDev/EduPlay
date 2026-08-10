@@ -1,4 +1,5 @@
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
 import 'package:edu_play/utils/points_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -50,11 +51,26 @@ class _GamesCatalogPageState extends State<GamesCatalogPage> {
   void initState() {
     super.initState();
     _loadPoints();
+    final profile = widget.childProfile;
+    if (profile != null) {
+      _selectedAges
+        ..clear()
+        ..add(ageRangeForAge(profile.age));
+      _loadWeakestSubject(profile.id);
+    }
   }
 
   Future<void> _loadPoints() async {
     final pts = await PointsService.getPoints();
     if (mounted) setState(() => _localPoints = pts);
+  }
+
+  Future<void> _loadWeakestSubject(String childProfileId) async {
+    final subject =
+        await ProgressRecommendationsService.weakestSubject(childProfileId);
+    if (mounted && subject != null) {
+      setState(() => _selectedSubject = subject);
+    }
   }
 
   @override
