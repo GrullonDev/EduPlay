@@ -93,7 +93,7 @@ const CatalogGame _numberNinja = CatalogGame(
   ageRange: AgeRange.age6to8,
   difficulty: Difficulty.beginner,
   level: 2,
-  route: '/math-adventure',
+  route: '/number-ninja',
   gradientColors: [Color(0xFF0F3443), Color(0xFF34E89E)],
   subjectLabel: 'MATEMÁTICAS',
   subjectColor: Color(0xFF2ECC71),
