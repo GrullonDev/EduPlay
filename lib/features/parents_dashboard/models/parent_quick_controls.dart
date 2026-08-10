@@ -5,10 +5,6 @@ class ParentQuickControls {
     this.bedtimeHour = 20,
   });
 
-  final bool bedtimeEnabled;
-  final int dailyLimitMinutes;
-  final int bedtimeHour;
-
   factory ParentQuickControls.fromJson(Map<String, dynamic> json) {
     return ParentQuickControls(
       bedtimeEnabled: json['bedtimeEnabled'] as bool? ?? true,
@@ -16,6 +12,10 @@ class ParentQuickControls {
       bedtimeHour: json['bedtimeHour'] as int? ?? 20,
     );
   }
+
+  final bool bedtimeEnabled;
+  final int dailyLimitMinutes;
+  final int bedtimeHour;
 
   Map<String, dynamic> toJson() {
     return {

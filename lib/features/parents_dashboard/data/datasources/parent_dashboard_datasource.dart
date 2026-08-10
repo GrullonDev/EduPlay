@@ -54,6 +54,8 @@ class FirestoreParentDashboardDatasource implements ParentDashboardDatasource {
         .collection('challenges')
         .orderBy('createdAt', descending: false)
         .get();
-    return snap.docs.map((doc) => ParentChallenge.fromJson(doc.data())).toList();
+    return snap.docs
+        .map((doc) => ParentChallenge.fromJson(doc.data()))
+        .toList();
   }
 }

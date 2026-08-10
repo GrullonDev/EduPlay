@@ -933,7 +933,7 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
   }
 
   String get _bedtimeLabel =>
-      'Desde las ${_bedtimeHour.toString().padLeft(2, '0')}:00';
+      'Desde las ${_controls.bedtimeHour.toString().padLeft(2, '0')}:00';
 
   Future<void> _pickDailyLimit() async {
     final options = [
@@ -1092,7 +1092,9 @@ class _QuickControlsCardState extends State<_QuickControlsCard> {
                           ),
                         ),
                         Text(
-                          _controls.bedtimeEnabled ? _bedtimeLabel : 'Desactivado',
+                          _controls.bedtimeEnabled
+                              ? _bedtimeLabel
+                              : 'Desactivado',
                           style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.55),
@@ -1644,13 +1646,11 @@ class _ChallengesCardState extends State<_ChallengesCard> {
           else
             for (final c in _challenges) ...[
               _ChallengeTile(
-                icon: _iconForSubject(c['subject'] as String? ?? ''),
-                title: c['title'] as String? ?? 'Desafío',
-                subtitle: c['assignedBy'] != null
-                    ? 'Asignado por: ${c['assignedBy']}'
-                    : (c['subtitle'] as String? ?? ''),
-                tag: c['tag'] as String? ?? 'Pendiente',
-                tagColor: _colorForTag(c['tag'] as String? ?? ''),
+                icon: _iconForSubject(c.subject),
+                title: c.title,
+                subtitle: c.displaySubtitle,
+                tag: c.tag,
+                tagColor: _colorForTag(c.tag),
               ),
               const Divider(height: 1, color: Color(0xFFF3F4F6)),
             ],
@@ -2994,4 +2994,3 @@ class _SessionDetailRow extends StatelessWidget {
     );
   }
 }
-
