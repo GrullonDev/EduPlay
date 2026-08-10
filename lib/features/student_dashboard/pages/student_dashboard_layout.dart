@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+import 'package:edu_play/core/audio/sound_manager.dart';
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/widgets/catalog_filter_content.dart';
@@ -15,6 +16,8 @@ import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
 import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
+import 'package:edu_play/utils/dialogs/confetti_burst.dart';
+import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -51,6 +54,53 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   /// they always land on (and stay on) the games tab. Computed rather than
   /// stored so it can't drift out of sync with `bloc.isYoungChild`.
   int _effectiveTab(StudentDashboardBloc bloc) => bloc.isYoungChild ? 1 : _tab;
+
+  /// Guards the level-up celebration to a true one-shot per pending level-up:
+  /// set synchronously (not inside the post-frame callback) so a rebuild
+  /// triggered by `acknowledgeLevelUp()`'s `notifyListeners()` can't race
+  /// into scheduling the dialog a second time.
+  bool _celebrationShown = false;
+
+  void _maybeShowLevelUpCelebration(StudentDashboardBloc bloc) {
+    if (bloc.levelUpToShow == null || _celebrationShown) return;
+    _celebrationShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showLevelUpCelebration(context, bloc);
+    });
+  }
+
+  void _showLevelUpCelebration(BuildContext context, StudentDashboardBloc bloc) {
+    SoundManager().playWin();
+    final newStickers = bloc.newlyUnlockedStickers;
+    final content = newStickers.isEmpty
+        ? '¡Sigue jugando para desbloquear más sorpresas!'
+        : newStickers.length == 1
+            ? '¡Ganaste la estampa "${newStickers.first.name}"!'
+            : '¡Ganaste ${newStickers.length} estampas nuevas!';
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, _, __) => Stack(
+        children: [
+          const Positioned.fill(child: ConfettiBurst()),
+          CustomDialog(
+            type: DialogType.levelUp,
+            title: '¡Subiste a Nivel ${bloc.levelUpToShow}!',
+            content: content,
+            buttonText: '¡Genial!',
+            onButtonPressed: () {
+              bloc.acknowledgeLevelUp();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   void _selectTab(int i) => setState(() {
         _tab = i;
@@ -94,6 +144,8 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             ),
           );
         }
+
+        _maybeShowLevelUpCelebration(bloc);
 
         final tab = _effectiveTab(bloc);
         final content = _buildContent(bloc, s, tab);
@@ -1902,7 +1954,9 @@ class _StickerAlbumSection extends StatelessWidget {
               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const StickerAlbumPage()),
+                  MaterialPageRoute(
+                    builder: (_) => StickerAlbumPage(unlockedIds: unlockedIds),
+                  ),
                 ),
                 child: Container(
                   padding:
@@ -1971,6 +2025,15 @@ class _StickerCell extends StatelessWidget {
                 : const Color(0xFFE0E0E0),
             width: 1.5,
           ),
+          boxShadow: unlocked
+              ? [
+                  BoxShadow(
+                    color: sticker.color.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -2590,6 +2653,10 @@ class _AchievementsView extends StatelessWidget {
     final progress = bloc.totalStickerCount == 0
         ? 0.0
         : bloc.unlockedStickerCount / bloc.totalStickerCount;
+    final complete = bloc.unlockedStickerCount >= bloc.totalStickerCount;
+    final teaser = complete
+        ? '¡Álbum completo! Eres un verdadero Explorador 🎉'
+        : '¡Sube a nivel ${bloc.level + 1} para tu próxima estampa!';
 
     return CustomScrollView(
       slivers: [
@@ -2610,13 +2677,34 @@ class _AchievementsView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '🏆 Mis Logros',
-                      style: GoogleFonts.fredoka(
-                        fontSize: s.isMobile ? 22 : 26,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '🏆 Mis Logros',
+                          style: GoogleFonts.fredoka(
+                            fontSize: s.isMobile ? 22 : 26,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '🦊 Nivel ${bloc.level}',
+                            style: GoogleFonts.fredoka(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -2627,12 +2715,16 @@ class _AchievementsView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 10,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    _AnimatedMilestoneBar(
+                      progress: progress,
+                      milestoneCount: bloc.totalStickerCount,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      teaser,
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                         color: _kGold,
                       ),
                     ),
@@ -2642,13 +2734,74 @@ class _AchievementsView extends StatelessWidget {
             ),
           ),
         ),
-        const SliverPadding(
-          padding: EdgeInsets.all(16),
+        SliverPadding(
+          padding: const EdgeInsets.all(16),
           sliver: SliverToBoxAdapter(
-            child: StickerAlbumGrid(padding: EdgeInsets.zero),
+            child: StickerAlbumGrid(
+              unlockedIds: bloc.unlockedStickerIds,
+              padding: EdgeInsets.zero,
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Progress bar that animates in from 0 on first build, with a small
+/// milestone dot overlaid per sticker (filled once that sticker is
+/// unlocked).
+class _AnimatedMilestoneBar extends StatelessWidget {
+  const _AnimatedMilestoneBar({
+    required this.progress,
+    required this.milestoneCount,
+  });
+
+  final double progress;
+  final int milestoneCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: progress),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) => Stack(
+        alignment: Alignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: value,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              color: _kGold,
+            ),
+          ),
+          if (milestoneCount > 1)
+            Row(
+              children: List.generate(milestoneCount, (i) {
+                final reached = i / (milestoneCount - 1) <= value + 0.001;
+                return Expanded(
+                  child: Align(
+                    alignment:
+                        i == 0 ? Alignment.centerLeft : Alignment.centerRight,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: reached
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+        ],
+      ),
     );
   }
 }

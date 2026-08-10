@@ -11,11 +11,14 @@ import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
 import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
 import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
+import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
 
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -481,7 +484,7 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
       case 'sports-challenge':
         return const SportsChallengePage();
       case 'sticker-album':
-        return const StickerAlbumPage();
+        return _StickerAlbumKioskEntry(childProfileId: widget.session.childProfileId);
       default:
         return Center(
           child: Text(
@@ -514,6 +517,35 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Sticker album entry (resolves the child's level before rendering) ─────────
+
+/// `StickerAlbumPage` needs the child's unlocked stickers, but this kiosk
+/// only knows a [childProfileId] — not a live `StudentDashboardBloc`. Fetches
+/// that child's profile once, derives their level, then renders the album.
+class _StickerAlbumKioskEntry extends StatelessWidget {
+  const _StickerAlbumKioskEntry({required this.childProfileId});
+
+  final String childProfileId;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: sl<StudentRepository>().getStudentProfile(childProfileId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final points =
+            (snapshot.data?['points'] as num?)?.toInt() ?? 0;
+        final level = StudentRepository.levelForPoints(points);
+        final unlockedIds =
+            stickersUnlockedAtLevel(level).map((s) => s.id).toList();
+        return StickerAlbumPage(unlockedIds: unlockedIds);
+      },
     );
   }
 }
