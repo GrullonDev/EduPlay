@@ -10,6 +10,7 @@ import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.
 import 'package:edu_play/features/student_dashboard/widgets/student_dashboard_navigation.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_games_hub_view.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_achievements_view.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_challenges_view.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_home_view.dart';
 import 'package:edu_play/utils/dialogs/confetti_burst.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
@@ -94,6 +95,8 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return StudentAchievementsView(s: s);
+      case 5:
+        return StudentChallengesView(s: s);
       case 3:
         if (!ReleaseFlags.friendsEnabled) {
           return StudentHomeView(
