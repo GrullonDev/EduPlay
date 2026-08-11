@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 
 /// Lightweight analytics service for EduPlay.
@@ -18,27 +19,27 @@ class AnalyticsService {
   // ── Route tracking ────────────────────────────────────────────────────────
 
   /// Called every time the app navigates to a named route.
-  static void logRouteChange(String routeName, {String? previousRoute}) {
+  static Future<void> logRouteChange(String routeName,
+      {String? previousRoute}) async {
     if (!kDebugMode) return; // swap for FirebaseAnalytics in production
     debugPrint(
       '[Analytics] screen: $routeName'
       '${previousRoute != null ? ' (from: $previousRoute)' : ''}',
     );
-    // TODO: replace with Firebase Analytics when the package is added:
-    // await FirebaseAnalytics.instance.logScreenView(screenName: routeName);
+    await FirebaseAnalytics.instance.logScreenView(screenName: routeName);
   }
 
   // ── Custom events ─────────────────────────────────────────────────────────
 
   /// Log a custom event with optional string parameters.
-  static void logEvent(
+  static Future<void> logEvent(
     String name, {
     Map<String, String> params = const {},
-  }) {
+  }) async {
     if (!kDebugMode) return;
     final paramsStr = params.isEmpty ? '' : ' ${params.toString()}';
     debugPrint('[Analytics] event: $name$paramsStr');
-    // TODO: await FirebaseAnalytics.instance.logEvent(name: name, parameters: params);
+    await FirebaseAnalytics.instance.logEvent(name: name, parameters: params);
   }
 
   // ── Auth events ───────────────────────────────────────────────────────────

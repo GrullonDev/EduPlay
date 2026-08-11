@@ -1,6 +1,6 @@
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -124,10 +124,9 @@ class _TimeTravelPageState extends State<TimeTravelPage>
   }
 
   void _goHome() {
-    Navigator.pushNamedAndRemoveUntil(
+    StudentSessionNavigationService.returnAfterGameOver(
       context,
-      RouterPaths.childPortal,
-      (route) => false,
+      dismissCurrentRoute: false,
     );
   }
 
