@@ -1,7 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
+
+import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
+import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -13,21 +15,6 @@ const _kLav = Color(0xFFEEEDF8);
 
 // ── Model ─────────────────────────────────────────────────────────────────────
 
-class _PlatformStats {
-  const _PlatformStats({
-    required this.totalParents,
-    required this.totalSessions,
-    required this.totalClasses,
-    required this.proSubscribers,
-    required this.totalChildren,
-  });
-  final int totalParents;
-  final int totalSessions;
-  final int totalClasses;
-  final int proSubscribers;
-  final int totalChildren;
-}
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 class AdminDashboardPage extends StatefulWidget {
@@ -38,7 +25,8 @@ class AdminDashboardPage extends StatefulWidget {
 }
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
-  late Future<_PlatformStats?> _statsFuture;
+  final AdminDashboardRepository _repository = sl<AdminDashboardRepository>();
+  late Future<PlatformStats?> _statsFuture;
 
   @override
   void initState() {
@@ -46,43 +34,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _statsFuture = _load();
   }
 
-  Future<_PlatformStats?> _load() async {
-    final db = FirebaseFirestore.instance;
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return null;
-
-    // Verify admin role
-    final parentSnap = await db.collection('parents').doc(user.uid).get();
-    if (parentSnap.data()?['role'] != 'admin') return null;
-
-    // Parallel fetches
-    final results = await Future.wait([
-      db.collection('parents').count().get(),
-      db.collection('practice_sessions').count().get(),
-      db.collection('classes').count().get(),
-      db
-          .collection('subscriptions')
-          .where('tier', isEqualTo: 'pro')
-          .count()
-          .get(),
-    ]);
-
-    // Count children across all parent profiles
-    final parentsSnap = await db.collection('parents').get();
-    int childCount = 0;
-    for (final doc in parentsSnap.docs) {
-      final cSnap =
-          await doc.reference.collection('child_profiles').count().get();
-      childCount += cSnap.count ?? 0;
-    }
-
-    return _PlatformStats(
-      totalParents: results[0].count ?? 0,
-      totalSessions: results[1].count ?? 0,
-      totalClasses: results[2].count ?? 0,
-      proSubscribers: results[3].count ?? 0,
-      totalChildren: childCount,
-    );
+  Future<PlatformStats?> _load() {
+    return _repository.loadStats();
   }
 
   @override
@@ -104,7 +57,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           ),
         ],
       ),
-      body: FutureBuilder<_PlatformStats?>(
+      body: FutureBuilder<PlatformStats?>(
         future: _statsFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
@@ -151,7 +104,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
 class _StatsView extends StatelessWidget {
   const _StatsView({required this.stats});
-  final _PlatformStats stats;
+  final PlatformStats stats;
 
   @override
   Widget build(BuildContext context) {
@@ -321,14 +274,10 @@ class _StatsView extends StatelessWidget {
                 final email = emailCtrl.text.trim();
                 if (email.isEmpty) return;
 
-                // Look up parent by email and update role
-                final snap = await FirebaseFirestore.instance
-                    .collection('parents')
-                    .where('email', isEqualTo: email)
-                    .limit(1)
-                    .get();
+                final updated = await sl<AdminDashboardRepository>()
+                    .setAdminRoleByEmail(email: email, granting: granting);
 
-                if (snap.docs.isEmpty) {
+                if (!updated) {
                   if (ctx.mounted) {
                     ScaffoldMessenger.of(ctx).showSnackBar(
                       const SnackBar(content: Text('Usuario no encontrado.')),
@@ -337,17 +286,13 @@ class _StatsView extends StatelessWidget {
                   return;
                 }
 
-                await snap.docs.first.reference.update({
-                  'role': granting ? 'admin' : 'parent',
-                });
-
                 if (ctx.mounted) {
                   Navigator.of(ctx).pop();
                   ScaffoldMessenger.of(ctx).showSnackBar(
                     SnackBar(
                       content: Text(granting
-                          ? 'Rol admin concedido a $email.'
-                          : 'Rol admin revocado para $email.'),
+                          ? 'Rol admin concedido a .'
+                          : 'Rol admin revocado para .'),
                     ),
                   );
                 }

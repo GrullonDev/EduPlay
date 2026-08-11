@@ -7,8 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   final now = DateTime.now();
-  final currentMonth =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  final currentMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
   final lastMonth = now.month == 1
       ? '${now.year - 1}-12'
       : '${now.year}-${(now.month - 1).toString().padLeft(2, '0')}';

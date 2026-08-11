@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
@@ -14,7 +16,7 @@ const _kBg = Color(0xFFF8F7FF);
 /// Full-screen gate shown to newly registered users whose email is not yet
 /// verified.  The widget:
 ///   • Displays the user's email address so they know which inbox to check.
-///   • Polls [FirebaseAuth.currentUser.reload()] every 10 seconds and
+///   • Polls the auth repository every 10 seconds and
 ///     automatically navigates to the appropriate dashboard once
 ///     [User.emailVerified] becomes true.
 ///   • Offers a "Reenviar" button with a 60-second cooldown.
@@ -32,6 +34,7 @@ class EmailVerificationGatePage extends StatefulWidget {
 }
 
 class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
+  final AuthRepository _authRepository = sl<AuthRepository>();
   Timer? _pollTimer;
   Timer? _cooldownTimer;
 
@@ -57,10 +60,9 @@ class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
   }
 
   Future<void> _checkVerified() async {
-    final auth = FirebaseAuth.instance;
-    await auth.currentUser?.reload();
+    await _authRepository.reloadCurrentUser();
     if (!mounted) return;
-    if (auth.currentUser?.emailVerified == true) {
+    if (_authRepository.isCurrentUserEmailVerified()) {
       _advance();
     }
   }
@@ -80,7 +82,7 @@ class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
     if (_resendCooldown || _resending) return;
     setState(() => _resending = true);
     try {
-      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+      await _authRepository.sendCurrentUserEmailVerification();
       if (!mounted) return;
       setState(() {
         _resending = false;
@@ -111,14 +113,13 @@ class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
   }
 
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await _authRepository.logout();
     // AuthGate will react to authStateChanges and return to MainPage.
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email ?? '';
+    final email = _authRepository.getCurrentUserEmail() ?? '';
 
     return Scaffold(
       backgroundColor: _kBg,

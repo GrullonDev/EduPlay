@@ -6,9 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
+import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -119,7 +120,9 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
     }
 
     // ── Free-tier child limit check ──────────────────────────────────────────
-    final allowed = await SubscriptionService.canAddChild(_existingCount);
+    init();
+    final allowed =
+        await sl<SubscriptionRepository>().canAddChild(_existingCount);
     if (!allowed) {
       if (!mounted) return;
       await showUpgradePrompt(context, UpgradeReason.childLimit);

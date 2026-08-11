@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -19,7 +21,7 @@ const _kLavender = Color(0xFFEEEDF8);
 
 /// Accessed at /#/join-class?code=XXXXXX
 /// Can be opened by parents or students. Shows class details; tapping Join
-/// calls TeacherClassesService.joinClass().
+/// calls TeacherClassesRepository.joinClass().
 class JoinClassPage extends StatefulWidget {
   const JoinClassPage({super.key, this.codeFromArgs});
 
@@ -35,6 +37,9 @@ class _JoinClassPageState extends State<JoinClassPage> {
   final _nameCtrl = TextEditingController();
   List<ChildProfile> _profiles = const [];
   ChildProfile? _selectedProfile;
+  final TeacherClassesRepository _teacherClassesRepository =
+      sl<TeacherClassesRepository>();
+  final AuthRepository _authRepository = sl<AuthRepository>();
   bool _loading = false;
   TeacherClass? _found;
   String? _error;
@@ -96,7 +101,7 @@ class _JoinClassPageState extends State<JoinClassPage> {
     });
 
     try {
-      final tc = await TeacherClassesService.findByCode(code);
+      final tc = await _teacherClassesRepository.findByCode(code);
       if (!mounted) return;
       if (tc == null) {
         setState(() => _error = 'Código no encontrado. Verifica e inténtalo.');
@@ -111,7 +116,7 @@ class _JoinClassPageState extends State<JoinClassPage> {
   }
 
   Future<void> _join() async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _authRepository.getCurrentUser();
     final selectedProfile = _selectedProfile;
     final displayName = selectedProfile?.name ??
         (_nameCtrl.text.trim().isEmpty
@@ -125,7 +130,7 @@ class _JoinClassPageState extends State<JoinClassPage> {
     });
 
     try {
-      await TeacherClassesService.joinClass(
+      await _teacherClassesRepository.joinClass(
         classId: _found!.id,
         displayName: displayName,
         email: email,
@@ -300,8 +305,9 @@ class _FormView extends StatelessWidget {
               onChanged: state._selectProfile,
             ),
             const SizedBox(height: 16),
-          ] else if (FirebaseAuth.instance.currentUser?.displayName == null ||
-              FirebaseAuth.instance.currentUser!.displayName!.isEmpty) ...[
+          ] else if (state._authRepository.getCurrentUser()?.displayName ==
+                  null ||
+              state._authRepository.getCurrentUser()!.displayName!.isEmpty) ...[
             Text('Tu nombre',
                 style: GoogleFonts.nunito(
                     fontSize: 13,
