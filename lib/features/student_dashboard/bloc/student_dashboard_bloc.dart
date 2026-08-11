@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/features/friends/models/friend_identity.dart';
+
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show GameSubject;
@@ -11,10 +14,6 @@ import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/points_service.dart';
 
-/// Loads and exposes everything the student dashboard ("Panel de Control")
-/// needs: the Firestore gamification profile (points, streak, level), the
-/// locally-stored teacher challenges, the class leaderboard and the
-/// sticker collection progress.
 class StudentDashboardBloc extends ChangeNotifier {
   StudentDashboardBloc({
     this.username,
@@ -29,11 +28,9 @@ class StudentDashboardBloc extends ChangeNotifier {
   final int age;
   final ChildProfile? childProfile;
 
-  /// True for a zero-write, zero-Firestore-read visitor (no PIN, no shared
-  /// link, no cached session). Points come from [PointsService] instead of
-  /// the gamification profile, and nothing is ensured/written on load.
   final bool isGuest;
 
+  final AuthRepository _authRepository = sl<AuthRepository>();
   final StudentRepository _studentRepository = sl<StudentRepository>();
   final LevelProgressRepository _levelProgressRepository =
       sl<LevelProgressRepository>();
@@ -46,32 +43,30 @@ class StudentDashboardBloc extends ChangeNotifier {
   List<Map<String, dynamic>> leaderboard = [];
   String myStudentId = '';
   int _guestPoints = 0;
-
-  /// Set (once) after [_load] detects the student's level increased since
-  /// the last time the dashboard celebrated one — consumed by the UI via
-  /// [acknowledgeLevelUp].
   int? levelUpToShow;
   List<Sticker> newlyUnlockedStickers = [];
-
-  /// Scopes locally-persisted per-child state (level-celebration tracking).
-  /// Guests share a single device-wide key, matching how [PointsService]
-  /// already treats guest points as device-global rather than per-guest.
   String get _progressKey => childProfile?.id ?? username ?? 'guest';
-
-  /// Up to 4 games the parent flagged for practice (never-played first, then
-  /// lowest score). Only populated when [childProfile] is known.
   List<GameRecommendation> recommendations = [];
-
-  /// Fallback when there are no specific recommendations yet: the subject
-  /// with the lowest average score across all played games.
   GameSubject? weakestSubject;
-
-  /// Kindergarten-age children (the minimum registrable age, 5) get a
-  /// simplified experience with no "Panel de Control" — only the games tab.
   bool get isYoungChild => childProfile != null && childProfile!.age <= 5;
 
   String get displayName =>
-      profile?['name'] as String? ?? username ?? 'Explorador';
+      profile?['name'] as String? ??
+      childProfile?.name ??
+      username ??
+      'Explorador';
+
+  FriendIdentity? get friendIdentity {
+    if (isGuest) return null;
+    final uid = _authRepository.getCurrentUserUid();
+    if (uid == null) return null;
+    return FriendIdentity(
+      uid: uid,
+      childId: childProfile?.id,
+      role: 'student',
+      name: displayName,
+    );
+  }
 
   int get points =>
       isGuest ? _guestPoints : (profile?['points'] as num?)?.toInt() ?? 0;
@@ -159,8 +154,6 @@ class StudentDashboardBloc extends ChangeNotifier {
         await _levelProgressRepository.getLastCelebratedLevel(_progressKey);
 
     if (lastCelebrated == 0) {
-      // First-ever load for this child — record silently, no popup for
-      // simply "reaching" level 1.
       await _levelProgressRepository.setLastCelebratedLevel(
           _progressKey, level);
       return;
@@ -175,9 +168,6 @@ class StudentDashboardBloc extends ChangeNotifier {
     }
   }
 
-  /// Persists that [levelUpToShow] has been shown to the child, so it isn't
-  /// shown again on the next load. Call only after the celebration UI has
-  /// actually been displayed.
   Future<void> acknowledgeLevelUp() async {
     if (levelUpToShow == null) return;
     await _levelProgressRepository.setLastCelebratedLevel(

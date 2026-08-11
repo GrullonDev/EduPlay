@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/friends/models/friend_request.dart';
-import 'package:edu_play/features/friends/pages/friends_view.dart';
 import 'package:edu_play/features/friends/services/friends_service.dart';
 import 'package:edu_play/features/friends/widgets/add_friend_dialog.dart';
 import 'package:edu_play/features/friends/widgets/friend_avatar.dart';
@@ -17,7 +16,6 @@ import 'package:edu_play/features/student_dashboard/widgets/student_home_games_s
 import 'package:edu_play/features/student_dashboard/widgets/student_home_overview_widgets.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_practice_sections.dart';
 import 'package:edu_play/utils/responsive.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFE53935);
@@ -152,8 +150,6 @@ class StudentHomeView extends StatelessWidget {
   }
 }
 
-// ── Needs practice (parent-assigned games / weakest subject) ──────────────────
-
 class _StudentFriendsCard extends StatelessWidget {
   const _StudentFriendsCard({
     required this.bloc,
@@ -170,10 +166,7 @@ class _StudentFriendsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!ReleaseFlags.friendsEnabled) return const SizedBox.shrink();
 
-    final identity = studentIdentity(
-      displayName: bloc.displayName,
-      childId: bloc.childProfile?.id,
-    );
+    final identity = bloc.friendIdentity;
 
     final pending = challenges.isNotEmpty
         ? challenges.firstWhere(
@@ -275,7 +268,12 @@ class _StudentFriendsCard extends StatelessWidget {
               GestureDetector(
                 onTap: () async {
                   if (identity == null) {
-                    Navigator.of(context).pushNamed(RouterPaths.login);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Entra con tu PIN para agregar amigos.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
                     return;
                   }
                   await showDialog<bool>(
@@ -348,12 +346,6 @@ class _StudentFriendsCard extends StatelessWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// GAMES HUB TAB — embeds the full filterable catalog (see
-// lib/features/games_catalog/widgets/catalog_filter_content.dart), ported
-// from the former standalone GamesCatalogPage/_GamesCatalogPageState.
-// ─────────────────────────────────────────────────────────────────────────────
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.text, {this.fontSize = 20});

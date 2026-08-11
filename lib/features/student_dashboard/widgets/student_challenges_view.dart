@@ -10,11 +10,6 @@ const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFE53935);
 const _kGreen = Color(0xFF2E7D32);
 
-/// "Mis Retos" tab: full list of challenges the student's teacher(s) have
-/// assigned to their class(es), grouped as pending / completed. Reads
-/// straight from [StudentDashboardBloc.challenges], so a challenge only
-/// appears here once it actually exists in Firestore for a class the
-/// student is enrolled in — nothing on this screen is fabricated.
 class StudentChallengesView extends StatelessWidget {
   const StudentChallengesView({super.key, required this.s});
   final ScreenSize s;
@@ -22,7 +17,8 @@ class StudentChallengesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = context.watch<StudentDashboardBloc>();
-    final active = bloc.challenges.where((c) => c['status'] == 'active').toList();
+    final active =
+        bloc.challenges.where((c) => c['status'] == 'active').toList();
     final completed =
         bloc.challenges.where((c) => c['status'] == 'completed').toList();
 
@@ -31,13 +27,18 @@ class StudentChallengesView extends StatelessWidget {
       onRefresh: bloc.refresh,
       child: CustomScrollView(
         slivers: [
+          SizedBox(height: s.isMobile ? 12 : 24),
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFF1A1060), Color(0xFF2D2A82), Color(0xFF3D3AA0)],
+                  colors: [
+                    Color(0xFF1A1060),
+                    Color(0xFF2D2A82),
+                    Color(0xFF3D3AA0)
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -182,8 +183,7 @@ class _ChallengeCard extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: _kNavy,
-                    decoration:
-                        isCompleted ? TextDecoration.lineThrough : null,
+                    decoration: isCompleted ? TextDecoration.lineThrough : null,
                     decorationColor: Colors.grey,
                   ),
                 ),

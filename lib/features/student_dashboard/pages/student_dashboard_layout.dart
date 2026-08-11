@@ -107,10 +107,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           );
         }
         return FriendsView(
-          identity: studentIdentity(
-            displayName: bloc.displayName,
-            childId: bloc.childProfile?.id,
-          ),
+          identity: bloc.friendIdentity,
           subtitle: 'Conecta con otros exploradores de EduPlay.',
         );
       default:

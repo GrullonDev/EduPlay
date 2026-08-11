@@ -10,18 +10,12 @@ import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 
-/// A pending challenge together with the child it was assigned to — needed
-/// because this card aggregates across every profile the parent manages.
 class _PendingChallenge {
   const _PendingChallenge(this.child, this.challenge);
   final ChildProfile child;
   final ClassroomChallenge challenge;
 }
 
-/// "Próximos Desafíos": real challenges teachers assigned to any of this
-/// parent's children, read straight from the same
-/// `classes/{classId}/challenges` data the student dashboard's "Retos" tab
-/// uses — nothing here is fabricated or locally stored.
 class ParentChallengesCard extends StatefulWidget {
   const ParentChallengesCard({super.key, required this.profiles});
 
@@ -81,7 +75,7 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
         builder: (_) => StudentDashboardPage(
           username: child.name,
           childProfile: child,
-          initialTab: 5, // "Retos" tab
+          initialTab: 5,
         ),
       ),
     );
@@ -258,7 +252,8 @@ class _ChallengeTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey[300]),
+            Icon(Icons.chevron_right_rounded,
+                size: 18, color: Colors.grey[300]),
           ],
         ),
       ),
@@ -273,7 +268,8 @@ class _ChallengeTile extends StatelessWidget {
     if (due == null) return ('Pendiente', const Color(0xFF95A5A6));
 
     final today = DateTime.now();
-    final daysLeft = due.difference(DateTime(today.year, today.month, today.day)).inDays;
+    final daysLeft =
+        due.difference(DateTime(today.year, today.month, today.day)).inDays;
     if (daysLeft < 0) return ('Vencido', const Color(0xFFC0392B));
     if (daysLeft <= 2) return ('Urgente', const Color(0xFFC0392B));
     return ('Pendiente', const Color(0xFF95A5A6));
