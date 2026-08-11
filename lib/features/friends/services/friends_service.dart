@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:edu_play/features/friends/models/friend_identity.dart';
 import 'package:edu_play/features/friends/models/friend_request.dart';
@@ -15,7 +16,15 @@ import 'package:edu_play/features/friends/models/friend_request.dart';
 class FriendsService {
   const FriendsService._();
 
-  static FirebaseFirestore get _db => FirebaseFirestore.instance;
+  static FirebaseFirestore? _firestoreForTest;
+
+  static FirebaseFirestore get _db =>
+      _firestoreForTest ?? FirebaseFirestore.instance;
+
+  @visibleForTesting
+  static void useFirestoreForTest(FirebaseFirestore? firestore) {
+    _firestoreForTest = firestore;
+  }
 
   static CollectionReference<Map<String, dynamic>> get _codes =>
       _db.collection('friend_codes');
