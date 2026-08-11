@@ -97,7 +97,9 @@ void main() {
       await FriendsService.sendRequestByCode(me: parent, code: code);
 
       final requests = await firestore.collection('friend_requests').get();
+      final notifications = await firestore.collection('notifications').get();
       expect(requests.docs, hasLength(1));
+      expect(notifications.docs, hasLength(1));
 
       final request = FriendRequestModel.fromMap(
         requests.docs.single.data(),
@@ -107,6 +109,14 @@ void main() {
       expect(request.toKey, student.key);
       expect(request.status, 'pending');
       expect(request.viaCode, code);
+
+      final notification = notifications.docs.single.data();
+      expect(notification['recipientUid'], student.uid);
+      expect(notification['recipientChildId'], student.childId);
+      expect(notification['senderUid'], parent.uid);
+      expect(notification['type'], 'friend_request');
+      expect(notification['read'], isFalse);
+      expect(notification['friendRequestId'], requests.docs.single.id);
     });
 
     test('rejects unknown codes and self requests', () async {

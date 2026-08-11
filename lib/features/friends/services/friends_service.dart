@@ -125,7 +125,27 @@ class FriendsService {
       createdAt: DateTime.now(),
       viaCode: normalized,
     );
-    await _requests.add(request.toMap());
+
+    final requestRef = _requests.doc();
+    final notificationRef = _db.collection('notifications').doc();
+    final batch = _db.batch();
+    batch.set(requestRef, request.toMap());
+    batch.set(notificationRef, {
+      'recipientUid': toUid,
+      'recipientChildId': toChildId,
+      'recipientRole': toRole,
+      'senderUid': me.uid,
+      'senderChildId': me.childId,
+      'senderRole': me.role,
+      'senderName': me.name,
+      'type': 'friend_request',
+      'title': 'Nueva solicitud de amistad',
+      'body': '${me.name} quiere conectar contigo en EduPlay.',
+      'friendRequestId': requestRef.id,
+      'read': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
   }
 
   /// Pending requests sent *to* [me].

@@ -58,4 +58,17 @@ void main() {
       ),
     );
   });
+
+  test('notifications are scoped to recipients and sender-created requests',
+      () {
+    expect(rules, contains('match /notifications/{notificationId}'));
+    expect(rules, contains('request.auth.uid == resource.data.recipientUid'));
+    expect(
+      rules,
+      contains('request.auth.uid == request.resource.data.senderUid'),
+    );
+    expect(rules, contains("request.resource.data.type == 'friend_request'"));
+    expect(rules, contains("affectedKeys() .hasOnly(['read'])"));
+    expect(rules, contains('request.resource.data.read == true'));
+  });
 }
