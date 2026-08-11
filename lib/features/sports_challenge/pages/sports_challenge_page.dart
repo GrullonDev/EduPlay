@@ -305,13 +305,8 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                           child: OutlinedButton(
                             onPressed: () {
                               Navigator.pop(ctx); // dismiss game-over dialog
-                              Navigator.pop(context); // back to caller
-                              Navigator.pop(ctx);
                               StudentSessionNavigationService
-                                  .returnAfterGameOver(
-                                context,
-                                dismissCurrentRoute: false,
-                              );
+                                  .returnAfterGameOver(context);
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF1E1B6A),

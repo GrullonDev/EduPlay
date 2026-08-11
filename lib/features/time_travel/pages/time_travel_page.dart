@@ -124,11 +124,7 @@ class _TimeTravelPageState extends State<TimeTravelPage>
   }
 
   void _goHome() {
-    Navigator.pop(context); // back to caller
-    StudentSessionNavigationService.returnAfterGameOver(
-      context,
-      dismissCurrentRoute: false,
-    );
+    StudentSessionNavigationService.returnAfterGameOver(context);
   }
 
   @override
