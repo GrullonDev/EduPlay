@@ -37,7 +37,8 @@ abstract class TeacherClassesDatasource {
 
   Future<void> deleteClass(String classId);
 
-  Future<void> removeMember({required String classId, required String memberId});
+  Future<void> removeMember(
+      {required String classId, required String memberId});
 
   Future<void> joinClass({
     required String classId,

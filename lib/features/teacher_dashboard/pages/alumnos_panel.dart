@@ -70,7 +70,9 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
           return a.joinedAt.compareTo(b.joinedAt);
         case 0:
         default:
-          return a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase());
+          return a.displayName
+              .toLowerCase()
+              .compareTo(b.displayName.toLowerCase());
       }
     }
 
@@ -89,20 +91,23 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
       return;
     }
 
-    final buffer = StringBuffer('Nombre,Edad,Clase,Retos completados,Ingresó\n');
+    final buffer =
+        StringBuffer('Nombre,Edad,Clase,Retos completados,Ingresó\n');
     for (final m in members) {
       final name = m.displayName.replaceAll(',', ' ');
       final age = m.age?.toString() ?? '';
       final className = m.className.replaceAll(',', ' ');
       final completed = m.completedChallengeIds.length.toString();
-      buffer.writeln('$name,$age,$className,$completed,${_formatDate(m.joinedAt)}');
+      buffer.writeln(
+          '$name,$age,$className,$completed,${_formatDate(m.joinedAt)}');
     }
 
     await Clipboard.setData(ClipboardData(text: buffer.toString()));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Datos copiados (CSV). Pégalos en Excel o Google Sheets.'),
+        content:
+            Text('Datos copiados (CSV). Pégalos en Excel o Google Sheets.'),
         duration: Duration(seconds: 3),
       ),
     );
@@ -150,7 +155,9 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
       _refreshTick++;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${selected.length} alumnos fueron quitados de sus clases.')),
+      SnackBar(
+          content: Text(
+              '${selected.length} alumnos fueron quitados de sus clases.')),
     );
   }
 
@@ -271,8 +278,9 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
                     // (e.g. after one was removed by another action).
                     final validIds = members.map((m) => m.id).toSet();
                     _selectedIds.removeWhere((id) => !validIds.contains(id));
-                    final selectedMembers =
-                        members.where((m) => _selectedIds.contains(m.id)).toList();
+                    final selectedMembers = members
+                        .where((m) => _selectedIds.contains(m.id))
+                        .toList();
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,14 +295,19 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
                               setState(() => _classFilter = v),
                           selectedCount: selectedMembers.length,
                           canBulkAssign: selectedMembers.isNotEmpty &&
-                              selectedMembers.map((m) => m.classId).toSet().length == 1 &&
+                              selectedMembers
+                                      .map((m) => m.classId)
+                                      .toSet()
+                                      .length ==
+                                  1 &&
                               widget.onNavigateTab != null,
                           onBulkAssign: () => widget.onNavigateTab?.call(3),
                           onBulkRemove: () => _bulkRemove(selectedMembers),
                           onClearSelection: () =>
                               setState(() => _selectedIds.clear()),
-                          onExport: () => _exportCsv(
-                              selectedMembers.isNotEmpty ? selectedMembers : filtered),
+                          onExport: () => _exportCsv(selectedMembers.isNotEmpty
+                              ? selectedMembers
+                              : filtered),
                         ),
                         const SizedBox(height: 12),
                         Expanded(
@@ -315,7 +328,8 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
                                   sortAscending: _sortAscending,
                                   onSort: _onSort,
                                   selectedIds: _selectedIds,
-                                  onToggleSelect: (id, selected) => setState(() {
+                                  onToggleSelect: (id, selected) =>
+                                      setState(() {
                                     if (selected) {
                                       _selectedIds.add(id);
                                     } else {
@@ -324,10 +338,11 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
                                   }),
                                   onSelectAll: (selectAll) => setState(() {
                                     if (selectAll) {
-                                      _selectedIds.addAll(filtered.map((m) => m.id));
+                                      _selectedIds
+                                          .addAll(filtered.map((m) => m.id));
                                     } else {
-                                      _selectedIds.removeWhere(
-                                          (id) => filtered.any((m) => m.id == id));
+                                      _selectedIds.removeWhere((id) =>
+                                          filtered.any((m) => m.id == id));
                                     }
                                   }),
                                 ),
@@ -405,7 +420,9 @@ class _ToolbarRow extends StatelessWidget {
             Text(
               '$selectedCount seleccionado${selectedCount == 1 ? '' : 's'}',
               style: GoogleFonts.nunito(
-                  color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13),
             ),
             _ToolbarChipButton(
               icon: Icons.flag_rounded,
@@ -441,7 +458,8 @@ class _ToolbarRow extends StatelessWidget {
         isExpanded: true,
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           filled: true,
           fillColor: _kLavender,
           border: OutlineInputBorder(
@@ -453,7 +471,8 @@ class _ToolbarRow extends StatelessWidget {
         items: [
           DropdownMenuItem(
               value: null,
-              child: Text('Todas las clases', style: GoogleFonts.nunito(fontSize: 13))),
+              child: Text('Todas las clases',
+                  style: GoogleFonts.nunito(fontSize: 13))),
           ...classes.map(
             (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
           ),
@@ -519,7 +538,8 @@ class _ToolbarChipButton extends StatelessWidget {
                 style: GoogleFonts.nunito(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: (color ?? Colors.white).withValues(alpha: enabled ? 1 : 0.5),
+                  color: (color ?? Colors.white)
+                      .withValues(alpha: enabled ? 1 : 0.5),
                 ),
               ),
             ],
@@ -863,7 +883,8 @@ class _AlumnosTable extends StatelessWidget {
 }
 
 class _ActionsMenu extends StatefulWidget {
-  const _ActionsMenu({required this.member, this.onNavigateTab, this.onRemoved});
+  const _ActionsMenu(
+      {required this.member, this.onNavigateTab, this.onRemoved});
 
   final ClassMember member;
   final ValueChanged<int>? onNavigateTab;
@@ -877,8 +898,9 @@ class _ActionsMenuState extends State<_ActionsMenu> {
   bool _busy = false;
 
   Future<void> _remove(BuildContext context) async {
-    final name =
-        widget.member.displayName.isEmpty ? 'este alumno' : widget.member.displayName;
+    final name = widget.member.displayName.isEmpty
+        ? 'este alumno'
+        : widget.member.displayName;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -950,14 +972,19 @@ class _ActionsMenuState extends State<_ActionsMenu> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _DetailRow(label: 'Clase', value: m.className.isEmpty ? '—' : m.className),
               _DetailRow(
-                  label: 'Materia', value: m.classSubject.isEmpty ? '—' : m.classSubject),
-              _DetailRow(label: 'Edad', value: m.age != null ? '${m.age} años' : '—'),
+                  label: 'Clase',
+                  value: m.className.isEmpty ? '—' : m.className),
+              _DetailRow(
+                  label: 'Materia',
+                  value: m.classSubject.isEmpty ? '—' : m.classSubject),
+              _DetailRow(
+                  label: 'Edad', value: m.age != null ? '${m.age} años' : '—'),
               _DetailRow(
                   label: 'Le interesa',
                   value: m.focusSubject.isEmpty ? '—' : m.focusSubject),
-              _DetailRow(label: 'Correo', value: m.email.isEmpty ? '—' : m.email),
+              _DetailRow(
+                  label: 'Correo', value: m.email.isEmpty ? '—' : m.email),
               _DetailRow(label: 'Ingresó', value: _formatDate(m.joinedAt)),
               _DetailRow(
                   label: 'Retos completados',
@@ -1004,7 +1031,8 @@ class _ActionsMenuState extends State<_ActionsMenu> {
       itemBuilder: (context) => [
         const PopupMenuItem(
           value: 'detail',
-          child: _MenuRow(icon: Icons.visibility_outlined, label: 'Ver detalle'),
+          child:
+              _MenuRow(icon: Icons.visibility_outlined, label: 'Ver detalle'),
         ),
         if (widget.onNavigateTab != null)
           const PopupMenuItem(
@@ -1040,7 +1068,9 @@ class _MenuRow extends StatelessWidget {
           Text(
             label,
             style: GoogleFonts.nunito(
-                fontSize: 13, fontWeight: FontWeight.w600, color: color ?? _kNavy),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: color ?? _kNavy),
           ),
         ],
       );
@@ -1062,7 +1092,9 @@ class _DetailRow extends StatelessWidget {
               child: Text(
                 label,
                 style: GoogleFonts.nunito(
-                    fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey[600]),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey[600]),
               ),
             ),
             Expanded(
