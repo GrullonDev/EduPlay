@@ -40,11 +40,9 @@ class StudentDashboardPage extends StatefulWidget {
   /// Optional ChildProfile passed from the PIN login flow.
   final ChildProfile? childProfile;
 
-  /// Which sidebar tab to open on — lets callers deep-link straight into
-  /// e.g. the Amigos tab instead of always landing on the home panel.
-  final int initialTab;
-
-  /// Which dashboard tab to land on (0 = Panel de Control, 1 = Mis Juegos).
+  /// Which sidebar tab to open on (0 = Panel de Control, 1 = Mis Juegos) —
+  /// lets callers deep-link straight into e.g. the Amigos tab instead of
+  /// always landing on the home panel.
   final int initialTab;
 
   @override
@@ -152,7 +150,6 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
           ),
         ),
       ],
-      // child: StudentDashboardLayout(initialTab: initialTab),
       child: StudentDashboardLayout(initialTab: widget.initialTab),
     );
   }

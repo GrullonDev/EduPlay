@@ -140,7 +140,7 @@ const _sideNavItems = [
   _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control', tab: 0),
   _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos', tab: 1),
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros', tab: 2),
-  if (ReleaseFlags.studentExtraTabsEnabled)
+  if (ReleaseFlags.friendsEnabled)
     _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos', tab: 3),
   if (ReleaseFlags.studentExtraTabsEnabled)
     _SideItem(icon: Icons.storefront_rounded, label: 'Tienda', tab: 4),

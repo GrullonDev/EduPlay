@@ -3,6 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/friends/models/friend_request.dart';
+import 'package:edu_play/features/friends/pages/friends_view.dart';
+import 'package:edu_play/features/friends/services/friends_service.dart';
+import 'package:edu_play/features/friends/widgets/add_friend_dialog.dart';
+import 'package:edu_play/features/friends/widgets/friend_avatar.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
@@ -12,8 +17,10 @@ import 'package:edu_play/features/student_dashboard/widgets/student_home_games_s
 import 'package:edu_play/features/student_dashboard/widgets/student_home_overview_widgets.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_practice_sections.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
+const _kCoral = Color(0xFFE53935);
 
 class StudentHomeView extends StatelessWidget {
   const StudentHomeView({
@@ -119,8 +126,9 @@ class StudentHomeView extends StatelessWidget {
                   const SizedBox(width: 20),
                   Expanded(
                     child: _StudentFriendsCard(
-                      challenges: bloc.challenges,
+                      bloc: bloc,
                       onComplete: bloc.completeChallenge,
+                      onViewAll: () => onTabChange(3),
                     ),
                   ),
                 ],
@@ -133,8 +141,9 @@ class StudentHomeView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _StudentFriendsCard(
-              challenges: bloc.challenges,
+              bloc: bloc,
               onComplete: bloc.completeChallenge,
+              onViewAll: () => onTabChange(3),
             ),
           ],
         ],
@@ -147,90 +156,24 @@ class StudentHomeView extends StatelessWidget {
 
 class _StudentFriendsCard extends StatelessWidget {
   const _StudentFriendsCard({
-    required this.challenges,
+    required this.bloc,
     required this.onComplete,
+    required this.onViewAll,
   });
-  final List<Map<String, dynamic>> challenges;
+  final StudentDashboardBloc bloc;
   final ValueChanged<String> onComplete;
+  final VoidCallback onViewAll;
 
-  static const _friends = [
-    (name: 'Oliver', initial: 'O', color: Color(0xFF43A047)),
-    (name: 'Emma', initial: 'E', color: Color(0xFF1E88E5)),
-    (name: 'Lucas', initial: 'L', color: Color(0xFFE53935)),
-  ];
+  List<Map<String, dynamic>> get challenges => bloc.challenges;
 
   @override
   Widget build(BuildContext context) {
-    // The friends/social system isn't built yet (same flag that hides the
-    // "Amigos"/"Tienda" sidebar tabs) — showing fabricated friends and a
-    // fake "Luna te envió un reto" message here would be misleading, so
-    // this falls back to an honest "próximamente" placeholder. Real
-    // teacher-assigned challenges are unaffected and still show below.
-    if (!ReleaseFlags.studentExtraTabsEnabled) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text('🎮', style: TextStyle(fontSize: 16)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Amigos en Línea',
-                      style: GoogleFonts.fredoka(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: _kNavy,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.hourglass_top_rounded,
-                        size: 16, color: Colors.grey[400]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Muy pronto podrás jugar y retar a tus amigos aquí.',
-                        style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (challenges.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            MyChallengesCard(
-              challenges: challenges.take(2).toList(),
-              onComplete: onComplete,
-            ),
-          ],
-        ],
-      );
-    }
+    if (!ReleaseFlags.friendsEnabled) return const SizedBox.shrink();
+
+    final identity = studentIdentity(
+      displayName: bloc.displayName,
+      childId: bloc.childProfile?.id,
+    );
 
     final pending = challenges.isNotEmpty
         ? challenges.firstWhere(
@@ -260,12 +203,25 @@ class _StudentFriendsCard extends StatelessWidget {
             children: [
               const Text('🎮', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
-              Text(
-                'Amigos en Línea',
-                style: GoogleFonts.fredoka(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _kNavy,
+              Expanded(
+                child: Text(
+                  'Amigos en Línea',
+                  style: GoogleFonts.fredoka(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _kNavy,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: onViewAll,
+                child: Text(
+                  'Ver todos',
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: _kCoral,
+                  ),
                 ),
               ),
             ],
@@ -277,39 +233,56 @@ class _StudentFriendsCard extends StatelessWidget {
             spacing: 12,
             runSpacing: 8,
             children: [
-              ..._friends.map((f) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: f.color,
-                        child: Text(
-                          f.initial,
-                          style: GoogleFonts.fredoka(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+              if (identity != null)
+                StreamBuilder<List<FriendRequestModel>>(
+                  stream: FriendsService.watchFriends(identity),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
+                    final friends =
+                        snapshot.data ?? const <FriendRequestModel>[];
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: friends.take(4).map((r) {
+                        final other = r.other(identity.key);
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              FriendAvatar(name: other.name, radius: 20),
+                              const SizedBox(height: 4),
+                              Text(
+                                other.name,
+                                style: GoogleFonts.nunito(
+                                  fontSize: 11,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        f.name,
-                        style: GoogleFonts.nunito(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  )),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
               // Add button
               GestureDetector(
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Agregar amigos próximamente.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                ),
+                onTap: () async {
+                  if (identity == null) {
+                    Navigator.of(context).pushNamed(RouterPaths.login);
+                    return;
+                  }
+                  await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AddFriendDialog(identity: identity),
+                  );
+                },
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
