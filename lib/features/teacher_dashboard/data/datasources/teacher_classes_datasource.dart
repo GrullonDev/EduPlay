@@ -37,6 +37,8 @@ abstract class TeacherClassesDatasource {
 
   Future<void> deleteClass(String classId);
 
+  Future<void> removeMember({required String classId, required String memberId});
+
   Future<void> joinClass({
     required String classId,
     required String displayName,
@@ -220,6 +222,23 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
   @override
   Future<void> deleteClass(String classId) {
     return _classes.doc(classId).delete();
+  }
+
+  @override
+  Future<void> removeMember({
+    required String classId,
+    required String memberId,
+  }) async {
+    final classRef = _classes.doc(classId);
+    final memberRef = classRef.collection('members').doc(memberId);
+
+    await _db.runTransaction((tx) async {
+      final memberSnap = await tx.get(memberRef);
+      if (!memberSnap.exists) return;
+
+      tx.delete(memberRef);
+      tx.update(classRef, {'studentCount': FieldValue.increment(-1)});
+    });
   }
 
   @override

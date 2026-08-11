@@ -32,6 +32,10 @@ abstract class TeacherClassesRepository {
 
   Future<void> deleteClass(String classId);
 
+  /// Removes a single student from a class: deletes their `members` doc and
+  /// decrements the class's `studentCount`.
+  Future<void> removeMember({required String classId, required String memberId});
+
   Future<void> joinClass({
     required String classId,
     required String displayName,

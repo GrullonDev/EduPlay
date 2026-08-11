@@ -71,6 +71,14 @@ class FirestoreTeacherClassesRepository implements TeacherClassesRepository {
   Future<void> deleteClass(String classId) => datasource.deleteClass(classId);
 
   @override
+  Future<void> removeMember({
+    required String classId,
+    required String memberId,
+  }) {
+    return datasource.removeMember(classId: classId, memberId: memberId);
+  }
+
+  @override
   Future<void> joinClass({
     required String classId,
     required String displayName,
