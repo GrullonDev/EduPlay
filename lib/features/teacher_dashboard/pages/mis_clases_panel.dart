@@ -4,7 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -62,7 +65,7 @@ class MisClasesPanel extends StatelessWidget {
           // ── Class list ────────────────────────────────────────────────────
           Expanded(
             child: StreamBuilder<List<TeacherClass>>(
-              stream: TeacherClassesService.watchMyClasses(),
+              stream: sl<TeacherClassesRepository>().watchMyClasses(),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -240,7 +243,7 @@ class _ClassCardState extends State<_ClassCard> {
                       ),
                     );
                     if (confirmed == true) {
-                      await TeacherClassesService.deleteClass(tc.id);
+                      await sl<TeacherClassesRepository>().deleteClass(tc.id);
                     }
                   }
                 },
@@ -373,7 +376,7 @@ class _ClassCardState extends State<_ClassCard> {
           ),
           const SizedBox(height: 12),
           FutureBuilder<List<ClassMember>>(
-            future: TeacherClassesService.getMembers(tc.id),
+            future: sl<TeacherClassesRepository>().getMembers(tc.id),
             builder: (context, snapshot) {
               final members = snapshot.data ?? const <ClassMember>[];
               if (members.isEmpty) {
@@ -546,7 +549,7 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
     });
 
     try {
-      final tc = await TeacherClassesService.createClass(
+      final tc = await sl<TeacherClassesRepository>().createClass(
         name: _nameCtrl.text.trim(),
         subject: _subjectCtrl.text.trim().isEmpty
             ? 'General'

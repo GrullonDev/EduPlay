@@ -1,3 +1,11 @@
+import 'package:edu_play/features/games_catalog/widgets/catalog_filter_content.dart';
+import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
+import 'package:edu_play/features/menu/models/game.dart';
+import 'package:edu_play/features/sticker_album/models/sticker.dart';
+import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
+import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
+import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -8,24 +16,20 @@ import 'package:edu_play/features/friends/pages/friends_view.dart';
 import 'package:edu_play/features/friends/services/friends_service.dart';
 import 'package:edu_play/features/friends/widgets/add_friend_dialog.dart';
 import 'package:edu_play/features/friends/widgets/friend_avatar.dart';
+import 'package:edu_play/core/audio/sound_manager.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
-import 'package:edu_play/features/games_catalog/pages/games_catalog_page.dart';
-import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
-import 'package:edu_play/features/menu/models/game.dart';
-import 'package:edu_play/features/sticker_album/models/sticker.dart';
-import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
-import 'package:edu_play/features/student_dashboard/widgets/leaderboard_card.dart';
-import 'package:edu_play/features/student_dashboard/widgets/my_challenges_card.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_dashboard_navigation.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_games_hub_view.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_achievements_view.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_home_view.dart';
+import 'package:edu_play/utils/dialogs/confetti_burst.dart';
+import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 
 const _kNavy = Color(0xFF1E1B6A);
-const _kNavyMid = Color(0xFF2D2A82);
-const _kCoral = Color(0xFFE53935);
-const _kGold = Color(0xFFFFD700);
 const _kBg = Color(0xFFF3F5F9);
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -46,10 +50,79 @@ class StudentDashboardLayout extends StatefulWidget {
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   late int _tab = widget.initialTab;
 
-  Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s) {
-    switch (_tab) {
+  /// Set when the user taps a subject shortcut (e.g. the "Lógica & Puzzles"
+  /// card on the home tab) so "Mis Juegos" opens pre-filtered. Cleared on any
+  /// plain tab switch so it never applies to an unrelated visit.
+  GameSubject? _pendingSubject;
+
+  /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
+  /// they always land on (and stay on) the games tab. Computed rather than
+  /// stored so it can't drift out of sync with `bloc.isYoungChild`.
+  int _effectiveTab(StudentDashboardBloc bloc) => bloc.isYoungChild ? 1 : _tab;
+
+  /// Guards the level-up celebration to a true one-shot per pending level-up:
+  /// set synchronously (not inside the post-frame callback) so a rebuild
+  /// triggered by `acknowledgeLevelUp()`'s `notifyListeners()` can't race
+  /// into scheduling the dialog a second time.
+  bool _celebrationShown = false;
+
+  void _maybeShowLevelUpCelebration(StudentDashboardBloc bloc) {
+    if (bloc.levelUpToShow == null || _celebrationShown) return;
+    _celebrationShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _showLevelUpCelebration(context, bloc);
+    });
+  }
+
+  void _showLevelUpCelebration(
+      BuildContext context, StudentDashboardBloc bloc) {
+    SoundManager().playWin();
+    final newStickers = bloc.newlyUnlockedStickers;
+    final content = newStickers.isEmpty
+        ? '¡Sigue jugando para desbloquear más sorpresas!'
+        : newStickers.length == 1
+            ? '¡Ganaste la estampa "${newStickers.first.name}"!'
+            : '¡Ganaste ${newStickers.length} estampas nuevas!';
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, _, __) => Stack(
+        children: [
+          const Positioned.fill(child: ConfettiBurst()),
+          CustomDialog(
+            type: DialogType.levelUp,
+            title: '¡Subiste a Nivel ${bloc.levelUpToShow}!',
+            content: content,
+            buttonText: '¡Genial!',
+            onButtonPressed: () {
+              bloc.acknowledgeLevelUp();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _selectTab(int i) => setState(() {
+        _tab = i;
+        _pendingSubject = null;
+      });
+
+  void _openGamesForSubject(GameSubject subject) => setState(() {
+        _tab = 1;
+        _pendingSubject = subject;
+      });
+
+  Widget _buildContent(StudentDashboardBloc bloc, ScreenSize s, int tab) {
+    switch (tab) {
       case 1:
-        return _GamesHubView(bloc: bloc, s: s);
+        return StudentGamesHubView(
+            bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return _AchievementsView(s: s);
       case 3:
@@ -67,11 +140,13 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           ),
           subtitle: 'Conecta con otros exploradores de EduPlay.',
         );
+        return StudentAchievementsView(s: s);
       default:
-        return _HomeView(
+        return StudentHomeView(
           bloc: bloc,
           s: s,
-          onTabChange: (t) => setState(() => _tab = t),
+          onTabChange: _selectTab,
+          onSubjectSelect: _openGamesForSubject,
         );
     }
   }
@@ -93,7 +168,10 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           );
         }
 
-        final content = _buildContent(bloc, s);
+        _maybeShowLevelUpCelebration(bloc);
+
+        final tab = _effectiveTab(bloc);
+        final content = _buildContent(bloc, s, tab);
 
         // ── Desktop: top nav + persistent sidebar ──────────────────────
         if (s.isDesktop) {
@@ -101,18 +179,16 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             backgroundColor: _kBg,
             body: Column(
               children: [
-                _TopNavBar(
+                StudentTopNavBar(
                   bloc: bloc,
                   s: s,
-                  selectedTab: _tab,
-                  onSelect: (i) => setState(() => _tab = i),
                 ),
                 Expanded(
                   child: Row(
                     children: [
-                      _Sidebar(
-                        selected: _tab,
-                        onSelect: (i) => setState(() => _tab = i),
+                      StudentSidebar(
+                        selected: tab,
+                        onSelect: _selectTab,
                         bloc: bloc,
                         wide: s.isWide,
                       ),
@@ -136,11 +212,11 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             backgroundColor: _kBg,
             appBar: _buildAppBar(bloc, showLinks: false),
             drawer: Drawer(
-              child: _Sidebar(
-                selected: _tab,
+              child: StudentSidebar(
+                selected: tab,
                 onSelect: (i) {
                   Navigator.pop(context);
-                  setState(() => _tab = i);
+                  _selectTab(i);
                 },
                 bloc: bloc,
                 wide: false,
@@ -155,11 +231,11 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           backgroundColor: _kBg,
           appBar: _buildAppBar(bloc, showLinks: false),
           drawer: Drawer(
-            child: _Sidebar(
-              selected: _tab,
+            child: StudentSidebar(
+              selected: tab,
               onSelect: (i) {
                 Navigator.pop(context);
-                setState(() => _tab = i);
+                _selectTab(i);
               },
               bloc: bloc,
               wide: false,
@@ -183,7 +259,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             fontWeight: FontWeight.w700, fontSize: 20, color: Colors.white),
       ),
       actions: [
-        _PointsBadge(points: bloc.points),
+        StudentPointsBadge(points: bloc.points),
         const SizedBox(width: 12),
       ],
     );
@@ -1753,7 +1829,8 @@ class _AmigosEnLineaCard extends StatelessWidget {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       );
                     }
-                    final friends = snapshot.data ?? const <FriendRequestModel>[];
+                    final friends =
+                        snapshot.data ?? const <FriendRequestModel>[];
                     return Row(
                       mainAxisSize: MainAxisSize.min,
                       children: friends.take(4).map((r) {
@@ -1801,8 +1878,7 @@ class _AmigosEnLineaCard extends StatelessWidget {
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.grey[300]!, width: 2),
                       ),
-                      child:
-                          Icon(Icons.add, color: Colors.grey[400], size: 18),
+                      child: Icon(Icons.add, color: Colors.grey[400], size: 18),
                     ),
                     const SizedBox(height: 4),
                     Text(

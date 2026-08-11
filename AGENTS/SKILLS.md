@@ -7,7 +7,10 @@ current gaps (see `CLAUDE.md`: weak test coverage, Stripe/webhook backend, auth 
 - **`/code-review`** — Run before merging any PR that touches `lib/features/auth`,
   `lib/features/login`, `lib/features/register*`, `lib/features/subscription`, or
   `functions/`. Use effort `high` on payment/auth-adjacent diffs since those are the
-  areas with zero test coverage today, so review is the main safety net.
+  areas with zero test coverage today, so review is the main safety net. Also worth
+  running on `lib/core/auth/auth_gate.dart` specifically — it's the single auth guard
+  for the whole app (see `CLAUDE.md`'s "Fixed this cycle" note on the retry/cache logic
+  added there), so regressions there are high-blast-radius.
 
 - **`/security-review`** — Run on any change to `functions/index.js`
   (`stripeWebhook`, `createStripeCheckoutSession`), `firestore.rules`, or auth code.

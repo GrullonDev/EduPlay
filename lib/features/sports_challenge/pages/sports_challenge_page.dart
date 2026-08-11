@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -305,6 +306,12 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                             onPressed: () {
                               Navigator.pop(ctx); // dismiss game-over dialog
                               Navigator.pop(context); // back to caller
+                              Navigator.pop(ctx);
+                              StudentSessionNavigationService
+                                  .returnAfterGameOver(
+                                context,
+                                dismissCurrentRoute: false,
+                              );
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF1E1B6A),

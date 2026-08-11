@@ -7,8 +7,7 @@ const _kLastUpdated = '24 de junio de 2026';
 const _sections = <LegalSection>[
   LegalSection(
     title: '1. Aceptación de los términos',
-    body:
-        'Al crear una cuenta, acceder a EduPlay como invitado o utilizar '
+    body: 'Al crear una cuenta, acceder a EduPlay como invitado o utilizar '
         'cualquier función de la plataforma, aceptas estos Términos de '
         'Servicio. Si no estás de acuerdo con alguna parte, te pedimos que no '
         'uses el servicio.\n\n'
@@ -43,8 +42,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '4. Uso aceptable',
-    body:
-        'Te comprometes a no:\n\n'
+    body: 'Te comprometes a no:\n\n'
         '• Usar la plataforma para actividades ilegales o que dañen a otros '
         'usuarios.\n'
         '• Intentar acceder a datos de otros usuarios sin autorización.\n'
@@ -57,8 +55,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '5. Propiedad intelectual',
-    body:
-        'Todo el contenido de EduPlay — incluyendo diseños, ilustraciones, '
+    body: 'Todo el contenido de EduPlay — incluyendo diseños, ilustraciones, '
         'música, textos, código fuente y marcas — es propiedad de EduPlay '
         'Learning / GrullonDev o de sus licenciantes, y está protegido por las '
         'leyes de propiedad intelectual aplicables.\n\n'
@@ -84,8 +81,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '7. Disponibilidad del servicio',
-    body:
-        'Nos esforzamos por mantener EduPlay disponible 24/7, pero no '
+    body: 'Nos esforzamos por mantener EduPlay disponible 24/7, pero no '
         'garantizamos una disponibilidad ininterrumpida. Podemos realizar '
         'mantenimientos programados (con aviso previo) o experimentar '
         'interrupciones imprevistas.\n\n'
@@ -117,8 +113,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '10. Ley aplicable y resolución de disputas',
-    body:
-        'Estos Términos se rigen por las leyes de la República Dominicana. '
+    body: 'Estos Términos se rigen por las leyes de la República Dominicana. '
         'Cualquier disputa se resolverá preferentemente mediante negociación '
         'directa. Si no se alcanza un acuerdo, las partes se someten a la '
         'jurisdicción de los tribunales competentes de Santo Domingo.\n\n'
@@ -128,8 +123,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '11. Contacto',
-    body:
-        'Para preguntas sobre estos Términos de Servicio, escríbenos a:\n\n'
+    body: 'Para preguntas sobre estos Términos de Servicio, escríbenos a:\n\n'
         'EduPlay Learning — GrullonDev\n'
         'Correo: legal@eduplay.app\n'
         'Sitio web: www.eduplay.app',

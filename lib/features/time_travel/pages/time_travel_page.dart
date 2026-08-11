@@ -1,5 +1,6 @@
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -124,6 +125,10 @@ class _TimeTravelPageState extends State<TimeTravelPage>
 
   void _goHome() {
     Navigator.pop(context); // back to caller
+    StudentSessionNavigationService.returnAfterGameOver(
+      context,
+      dismissCurrentRoute: false,
+    );
   }
 
   @override

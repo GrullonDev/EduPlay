@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.theme,
         // AuthGate listens to Firebase auth state and routes to the
         // correct dashboard (or login) on every cold start.
-        home: const AuthGate(),
+        home: AuthGate(),
         onGenerateRoute: AppRouter.generateRoute,
       ),
     );

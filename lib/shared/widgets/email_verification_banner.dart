@@ -1,8 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 /// Non-blocking email verification banner.
 ///
@@ -26,6 +28,7 @@ class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
   bool _resendCooldown = false;
   bool _resending = false;
   bool _justSent = false;
+  final AuthRepository _authRepository = sl<AuthRepository>();
   Timer? _pollTimer;
   Timer? _cooldownTimer;
 
@@ -47,19 +50,17 @@ class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
   }
 
   Future<void> _checkVerified() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    await user.reload();
-    final fresh = FirebaseAuth.instance.currentUser;
+    if (_authRepository.getCurrentUserUid() == null) return;
+    await _authRepository.reloadCurrentUser();
     if (!mounted) return;
-    setState(() => _verified = fresh?.emailVerified ?? false);
+    setState(() => _verified = _authRepository.isCurrentUserEmailVerified());
   }
 
   Future<void> _resend() async {
     if (_resendCooldown || _resending) return;
     setState(() => _resending = true);
     try {
-      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+      await _authRepository.sendCurrentUserEmailVerification();
       if (!mounted) return;
       setState(() {
         _resendCooldown = true;
@@ -81,12 +82,12 @@ class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (_verified || user == null || user.emailVerified) {
+    final email = _authRepository.getCurrentUserEmail();
+    if (_verified ||
+        email == null ||
+        _authRepository.isCurrentUserEmailVerified()) {
       return const SizedBox.shrink();
     }
-
-    final email = user.email ?? '';
 
     return Container(
       width: double.infinity,

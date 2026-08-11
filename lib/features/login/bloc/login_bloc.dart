@@ -52,9 +52,7 @@ class LoginBloc extends ChangeNotifier {
 
     // Set persistence before signing in: LOCAL keeps the session after
     // browser restart; SESSION clears it when the tab closes.
-    await FirebaseAuth.instance.setPersistence(
-      rememberMe ? Persistence.LOCAL : Persistence.SESSION,
-    );
+    await authRepository.setSessionPersistence(rememberSession: rememberMe);
 
     try {
       final user = await authRepository.loginParent(

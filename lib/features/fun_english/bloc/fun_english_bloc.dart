@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:flutter/material.dart';
 
 class FunEnglishProvider with ChangeNotifier {
@@ -150,10 +151,8 @@ class FunEnglishProvider with ChangeNotifier {
         content: 'Puntuación: $finalScore pts\n¡Sigue practicando!',
         buttonText: 'Volver al inicio',
         type: DialogType.gameOver,
-        onButtonPressed: () {
-          Navigator.pop(context); // dismiss game-over dialog
-          Navigator.pop(context); // back to caller
-        },
+        onButtonPressed: () =>
+            StudentSessionNavigationService.returnAfterGameOver(context),
       ),
     );
   }

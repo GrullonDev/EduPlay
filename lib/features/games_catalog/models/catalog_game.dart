@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 
 enum AgeRange { age6to8, age9to11, age12plus }
 
+AgeRange ageRangeForAge(int age) {
+  if (age <= 8) return AgeRange.age6to8;
+  if (age <= 11) return AgeRange.age9to11;
+  return AgeRange.age12plus;
+}
+
 enum Difficulty { beginner, intermediate, advanced }
 
 enum GameSubject {
@@ -87,7 +93,7 @@ const CatalogGame _numberNinja = CatalogGame(
   ageRange: AgeRange.age6to8,
   difficulty: Difficulty.beginner,
   level: 2,
-  route: '/math-adventure',
+  route: '/number-ninja',
   gradientColors: [Color(0xFF0F3443), Color(0xFF34E89E)],
   subjectLabel: 'MATEMÁTICAS',
   subjectColor: Color(0xFF2ECC71),
