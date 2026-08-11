@@ -12,6 +12,7 @@ import 'package:edu_play/features/student_dashboard/pages/student_dashboard_layo
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const kChildPinKey = StudentSessionNavigationService.childPinKey;
 
@@ -38,13 +39,14 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   bool _resolving = true;
   ChildProfile? _resolvedProfile;
   bool _isGuest = false;
+  bool _routeNormalized = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.childProfile != null) {
       _resolvedProfile = widget.childProfile;
-      _ensureAnonymousAuth().then((_) {
+      _ensureChildSession(widget.childProfile!).then((_) {
         if (!mounted) return;
         setState(() => _resolving = false);
       });
@@ -100,6 +102,28 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     return _authRepository.ensureAnonymousAuth();
   }
 
+  Future<void> _ensureChildSession(ChildProfile profile) async {
+    await _ensureAnonymousAuth();
+    await StudentSessionNavigationService.rememberChildPin(profile.pin);
+  }
+
+  void _normalizeRouteIfNeeded() {
+    if (_routeNormalized) return;
+    final routeName = ModalRoute.of(context)?.settings.name;
+    final isLegacy = routeName == RouterPaths.legacyStudentDashboard ||
+        routeName == RouterPaths.legacySlashStudentDashboard;
+    if (!isLegacy) return;
+
+    _routeNormalized = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(
+        RouterPaths.studentDashboard,
+        arguments: _resolvedProfile ?? widget.username,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_resolving) {
@@ -111,6 +135,8 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         ),
       );
     }
+
+    _normalizeRouteIfNeeded();
 
     final registerProvider = context.read<RegisterProvider>();
     final age =

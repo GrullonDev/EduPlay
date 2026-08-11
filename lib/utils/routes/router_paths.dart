@@ -11,7 +11,9 @@ class RouterPaths {
   static const funEnglish = '/fun-english';
   static const notFound = '/not-found';
   static const String guestEntry = 'guestEntry';
-  static const String studentDashboard = 'studentDashboard';
+  static const String studentDashboard = '/student-dashboard';
+  static const String legacyStudentDashboard = 'studentDashboard';
+  static const String legacySlashStudentDashboard = '/studentDashboard';
   static const String parentsDashboard = 'parentsDashboard';
   static const String teacherDashboard = 'teacherDashboard';
   static const natureExplorers = '/nature-explorers';

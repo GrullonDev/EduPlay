@@ -87,6 +87,8 @@ class AppRouter {
       // Legacy alias kept for back-compat
       case RouterPaths.menu:
       case RouterPaths.studentDashboard:
+      case RouterPaths.legacyStudentDashboard:
+      case RouterPaths.legacySlashStudentDashboard:
         // Accepts either a ChildProfile (from PIN flow) or a plain String username
         final args = settings.arguments;
         if (args is ChildProfile) {
