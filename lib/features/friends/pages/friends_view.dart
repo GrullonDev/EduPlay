@@ -68,10 +68,18 @@ class FriendsView extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () async {
-                  await showDialog<bool>(
+                  final sent = await showDialog<bool>(
                     context: context,
                     builder: (_) => AddFriendDialog(identity: me),
                   );
+                  if (sent == true && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Solicitud de amistad enviada.'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
                 label: Text(
