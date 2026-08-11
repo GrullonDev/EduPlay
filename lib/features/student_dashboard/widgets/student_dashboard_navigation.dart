@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -43,34 +44,9 @@ class StudentTopNavBar extends StatelessWidget {
           const SizedBox(width: 16),
 
           // Notification bell
-          InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notificaciones próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(Icons.notifications_outlined,
-                      color: Colors.grey[600], size: 22),
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                          color: _kCoral, shape: BoxShape.circle),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          NotificationsButton(
+            childId: bloc.childProfile?.id,
+            iconColor: Colors.grey[600],
           ),
           const SizedBox(width: 16),
 

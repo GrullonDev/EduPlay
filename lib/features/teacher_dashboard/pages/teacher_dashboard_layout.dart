@@ -14,6 +14,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/friends_panel.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/injection_container.dart';
@@ -389,14 +390,8 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           // Icons
-          _TopIcon(
-            Icons.notifications_none_rounded,
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notificaciones próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
+          NotificationsButton(
+            iconColor: Colors.grey.shade600,
           ),
           const SizedBox(width: 4),
           _TopIcon(

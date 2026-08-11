@@ -4,6 +4,7 @@ import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
@@ -143,14 +144,9 @@ class EduPlayNavBar extends StatelessWidget {
               const Spacer(),
 
               // Right side icons
-              _IconBtn(
-                icon: Icons.notifications_outlined,
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Notificaciones próximamente.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                ),
+              NotificationsButton(
+                iconColor: Colors.grey[400],
+                padding: EdgeInsets.zero,
               ),
               const SizedBox(width: 12),
               _IconBtn(
