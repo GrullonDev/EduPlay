@@ -1,8 +1,3 @@
-// TeacherClass and ClassMember back the entire teacher_dashboard feature
-// (classes, join codes, roster) and had zero test coverage. These tests
-// cover only the pure fromMap/toMap logic — no Firestore instance is
-// touched (FieldValue.serverTimestamp() just builds a local sentinel).
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';

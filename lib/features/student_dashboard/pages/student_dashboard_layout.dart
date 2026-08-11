@@ -15,14 +15,8 @@ import 'package:edu_play/utils/dialogs/confetti_burst.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
 
-// ── Tokens ────────────────────────────────────────────────────────────────────
-
 const _kNavy = Color(0xFF1E1B6A);
 const _kBg = Color(0xFFF3F5F9);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Root layout
-// ─────────────────────────────────────────────────────────────────────────────
 
 class StudentDashboardLayout extends StatefulWidget {
   const StudentDashboardLayout({super.key, this.initialTab = 0});
@@ -35,21 +29,10 @@ class StudentDashboardLayout extends StatefulWidget {
 
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   late int _tab = widget.initialTab;
-
-  /// Set when the user taps a subject shortcut (e.g. the "Lógica & Puzzles"
-  /// card on the home tab) so "Mis Juegos" opens pre-filtered. Cleared on any
-  /// plain tab switch so it never applies to an unrelated visit.
   GameSubject? _pendingSubject;
 
-  /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
-  /// they always land on (and stay on) the games tab. Computed rather than
-  /// stored so it can't drift out of sync with `bloc.isYoungChild`.
   int _effectiveTab(StudentDashboardBloc bloc) => bloc.isYoungChild ? 1 : _tab;
 
-  /// Guards the level-up celebration to a true one-shot per pending level-up:
-  /// set synchronously (not inside the post-frame callback) so a rebuild
-  /// triggered by `acknowledgeLevelUp()`'s `notifyListeners()` can't race
-  /// into scheduling the dialog a second time.
   bool _celebrationShown = false;
 
   void _maybeShowLevelUpCelebration(StudentDashboardBloc bloc) {
