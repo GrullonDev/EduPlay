@@ -13,20 +13,8 @@ import 'package:edu_play/features/student_dashboard/services/student_session_nav
 import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
-/// Persistence key for a PIN-resolved child, shared with [childPortalUrl]'s
-/// consumers so a returning child (or a parent-shared link) skips PIN entry.
 const kChildPinKey = StudentSessionNavigationService.childPinKey;
 
-/// Entry point for the student "Panel de Control" — the single consolidated
-/// child-facing screen. Provides the gamification profile/challenges/
-/// leaderboard (via [StudentDashboardBloc]) plus the games catalog (via
-/// [MenuProvider]) to the dashboard layout.
-///
-/// When neither [childProfile] nor [username] is supplied (e.g. when built
-/// directly by `AuthGate` for a fresh/anonymous visitor), this page resolves
-/// who's asking on its own, in priority order: a profile embedded in a
-/// parent-shared link, a cached PIN from a previous visit, or — if neither
-/// resolves — a true zero-write guest experience.
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({
     super.key,
@@ -37,12 +25,8 @@ class StudentDashboardPage extends StatefulWidget {
 
   final String? username;
 
-  /// Optional ChildProfile passed from the PIN login flow.
   final ChildProfile? childProfile;
 
-  /// Which sidebar tab to open on (0 = Panel de Control, 1 = Mis Juegos) —
-  /// lets callers deep-link straight into e.g. the Amigos tab instead of
-  /// always landing on the home panel.
   final int initialTab;
 
   @override
@@ -58,10 +42,13 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.childProfile != null || widget.username != null) {
-      // Fast path: identity already known (PIN flow / legacy guest-entry) —
-      // skip async resolution entirely.
+    if (widget.childProfile != null) {
       _resolvedProfile = widget.childProfile;
+      _ensureAnonymousAuth().then((_) {
+        if (!mounted) return;
+        setState(() => _resolving = false);
+      });
+    } else if (widget.username != null) {
       _resolving = false;
     } else {
       _resolveEntry();
@@ -99,12 +86,9 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
           return;
         }
       }
-      // Cached PIN no longer valid (or auth failed) — clear silently and
-      // fall through to guest, matching the previous portal's behavior.
       await StudentSessionNavigationService.clearChildPin();
     }
 
-    // Nothing resolved — true, zero-write guest mode.
     if (!mounted) return;
     setState(() {
       _isGuest = true;
