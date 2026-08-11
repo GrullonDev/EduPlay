@@ -4,7 +4,8 @@
 // touched (FieldValue.serverTimestamp() just builds a local sentinel).
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
