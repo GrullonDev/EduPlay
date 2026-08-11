@@ -59,7 +59,8 @@ class FriendRequestModel {
       FriendIdentity.keyFor(uid: toUid, role: toRole, childId: toChildId);
 
   /// The other participant's display info, relative to [myKey].
-  ({String uid, String? childId, String role, String name}) other(String myKey) {
+  ({String uid, String? childId, String role, String name}) other(
+      String myKey) {
     if (fromKey == myKey) {
       return (uid: toUid, childId: toChildId, role: toRole, name: toName);
     }

@@ -150,7 +150,8 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
             const SizedBox(height: 4),
             Text(
               'Comparte este código para que otros te agreguen.',
-              style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500),
             ),
             const SizedBox(height: 20),
             Text(
@@ -175,7 +176,8 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
               const SizedBox(height: 8),
               Text(
                 _error!,
-                style: GoogleFonts.nunito(fontSize: 12, color: Colors.red.shade700),
+                style: GoogleFonts.nunito(
+                    fontSize: 12, color: Colors.red.shade700),
               ),
             ],
           ],

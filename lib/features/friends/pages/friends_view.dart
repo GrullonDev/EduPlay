@@ -90,7 +90,8 @@ class FriendsView extends StatelessWidget {
                   backgroundColor: _kCoral,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -133,11 +134,13 @@ class _SignInGate extends StatelessWidget {
             Text(
               'Necesitas una cuenta para conectar con otros usuarios de EduPlay.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade500),
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade500),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pushNamed(RouterPaths.login),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(RouterPaths.login),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kNavy,
                 foregroundColor: Colors.white,
@@ -183,7 +186,8 @@ class _IncomingRequestsSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ...requests.map((r) => _RequestRow(request: r, myKey: identity.key)),
+              ...requests
+                  .map((r) => _RequestRow(request: r, myKey: identity.key)),
             ],
           ),
         );
@@ -237,11 +241,13 @@ class _RequestRowState extends State<_RequestRow> {
               children: [
                 Text(
                   other.name,
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: _kNavy),
+                  style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.w700, color: _kNavy),
                 ),
                 Text(
                   roleLabel(other.role),
-                  style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500),
+                  style: GoogleFonts.nunito(
+                      fontSize: 11, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -257,7 +263,8 @@ class _RequestRowState extends State<_RequestRow> {
             )
           else ...[
             IconButton(
-              icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A)),
+              icon: const Icon(Icons.check_circle_rounded,
+                  color: Color(0xFF16A34A)),
               tooltip: 'Aceptar',
               onPressed: () => _respond(true),
             ),
@@ -297,16 +304,19 @@ class _FriendsListSection extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Icon(Icons.people_outline_rounded, size: 40, color: _kNavy),
+                const Icon(Icons.people_outline_rounded,
+                    size: 40, color: _kNavy),
                 const SizedBox(height: 12),
                 Text(
                   'Aún no tienes amigos conectados.',
-                  style: GoogleFonts.nunito(fontSize: 14, color: Colors.grey.shade600),
+                  style: GoogleFonts.nunito(
+                      fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Usa "Agregar amigo" y comparte tu código.',
-                  style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey.shade500),
+                  style: GoogleFonts.nunito(
+                      fontSize: 12, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -366,17 +376,20 @@ class _FriendTile extends StatelessWidget {
                 Text(
                   other.name,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: _kNavy),
+                  style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.w700, color: _kNavy),
                 ),
                 Text(
                   roleLabel(other.role),
-                  style: GoogleFonts.nunito(fontSize: 11, color: Colors.grey.shade500),
+                  style: GoogleFonts.nunito(
+                      fontSize: 11, color: Colors.grey.shade500),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(Icons.person_remove_rounded, size: 18, color: Colors.grey.shade400),
+            icon: Icon(Icons.person_remove_rounded,
+                size: 18, color: Colors.grey.shade400),
             tooltip: 'Eliminar amigo',
             onPressed: () => _confirmRemove(context),
           ),
@@ -398,9 +411,11 @@ class _FriendTile extends StatelessWidget {
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade600),
+            style:
+                ElevatedButton.styleFrom(backgroundColor: Colors.red.shade600),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Eliminar', style: TextStyle(color: Colors.white)),
+            child:
+                const Text('Eliminar', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

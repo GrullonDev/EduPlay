@@ -145,7 +145,8 @@ class FriendsService {
       final list = snap.docs
           .map((d) => FriendRequestModel.fromMap(d.data(), d.id))
           .where((r) =>
-              r.status == 'accepted' && (r.fromKey == me.key || r.toKey == me.key))
+              r.status == 'accepted' &&
+              (r.fromKey == me.key || r.toKey == me.key))
           .toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return list;

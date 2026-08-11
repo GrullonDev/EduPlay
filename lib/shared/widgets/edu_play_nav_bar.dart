@@ -66,11 +66,7 @@ class EduPlayNavBar extends StatelessWidget {
       route: RouterPaths.parentGuide
     ),
     if (ReleaseFlags.friendsEnabled)
-      (
-        label: 'Amigos',
-        tab: ParentTab.amigos,
-        route: RouterPaths.friends
-      ),
+      (label: 'Amigos', tab: ParentTab.amigos, route: RouterPaths.friends),
     (
       label: 'Configuración',
       tab: ParentTab.configuracion,
