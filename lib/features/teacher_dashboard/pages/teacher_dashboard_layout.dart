@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/alumnos_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
@@ -39,6 +40,7 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
     _NavItem(icon: Icons.groups_rounded, label: 'Mis Clases'),
+    _NavItem(icon: Icons.school_rounded, label: 'Alumnos'),
     _NavItem(icon: Icons.emoji_events_rounded, label: 'Retos'),
     _NavItem(icon: Icons.bar_chart_rounded, label: 'Rendimiento'),
     _NavItem(icon: Icons.description_rounded, label: 'Informes'),
@@ -90,11 +92,12 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
                   searchHint: const [
                     'Buscar alumnos, retos...',
                     'Buscar clase...',
+                    'Buscar alumno...',
                     'Buscar reto...',
                     'Buscar alumno...',
                     'Buscar informes...',
                     'Buscar amigos...',
-                  ][_selectedIndex.clamp(0, 5)],
+                  ][_selectedIndex.clamp(0, 6)],
                 ),
                 Expanded(
                   child: bloc.isLoading
@@ -116,12 +119,14 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
       case 1:
         return const MisClasesPanel();
       case 2:
-        return RetosPanel(bloc: bloc);
+        return const AlumnosPanel();
       case 3:
-        return RendimientoPanel(bloc: bloc);
+        return RetosPanel(bloc: bloc);
       case 4:
-        return InformesPanel(bloc: bloc);
+        return RendimientoPanel(bloc: bloc);
       case 5:
+        return InformesPanel(bloc: bloc);
+      case 6:
         if (ReleaseFlags.friendsEnabled) return FriendsPanel(bloc: bloc);
         return _OverviewPanel(bloc: bloc);
       default:
@@ -232,9 +237,9 @@ class _Sidebar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Divider(height: 24),
-                // Nuevo Reporte → switches to Informes tab (index 4)
+                // Nuevo Reporte → switches to Informes tab (index 5)
                 ElevatedButton.icon(
-                  onPressed: () => onSelect(4),
+                  onPressed: () => onSelect(5),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text(
                     'Nuevo Reporte',
