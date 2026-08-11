@@ -1,22 +1,41 @@
-import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
-import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
-import 'package:edu_play/utils/injection_container.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/shared/data/subject_catalog.dart';
+import 'package:edu_play/utils/injection_container.dart';
+
 const _kNavy = Color(0xFF1E1B6A);
 
+/// A pending challenge together with the child it was assigned to — needed
+/// because this card aggregates across every profile the parent manages.
+class _PendingChallenge {
+  const _PendingChallenge(this.child, this.challenge);
+  final ChildProfile child;
+  final ClassroomChallenge challenge;
+}
+
+/// "Próximos Desafíos": real challenges teachers assigned to any of this
+/// parent's children, read straight from the same
+/// `classes/{classId}/challenges` data the student dashboard's "Retos" tab
+/// uses — nothing here is fabricated or locally stored.
 class ParentChallengesCard extends StatefulWidget {
-  const ParentChallengesCard({super.key});
+  const ParentChallengesCard({super.key, required this.profiles});
+
+  final List<ChildProfile> profiles;
 
   @override
   State<ParentChallengesCard> createState() => _ParentChallengesCardState();
 }
 
 class _ParentChallengesCardState extends State<ParentChallengesCard> {
-  final ParentDashboardRepository _repository = sl<ParentDashboardRepository>();
+  final ClassroomChallengesRepository _repository =
+      sl<ClassroomChallengesRepository>();
 
-  List<ParentChallenge> _challenges = [];
+  List<_PendingChallenge> _pending = [];
   bool _loaded = false;
 
   @override
@@ -25,12 +44,29 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(covariant ParentChallengesCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.profiles != widget.profiles) _load();
+  }
+
   Future<void> _load() async {
     try {
-      final challenges = await _repository.getChallenges();
+      final entries = <_PendingChallenge>[];
+      for (final child in widget.profiles) {
+        final challenges = await _repository.getChallengesForStudent(child.id);
+        entries.addAll(
+          challenges
+              .where((c) => !c.completed)
+              .map((c) => _PendingChallenge(child, c)),
+        );
+      }
+      entries.sort(
+        (a, b) => b.challenge.createdAt.compareTo(a.challenge.createdAt),
+      );
       if (mounted) {
         setState(() {
-          _challenges = challenges;
+          _pending = entries;
           _loaded = true;
         });
       }
@@ -39,9 +75,21 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
     }
   }
 
+  void _openChallenge(ChildProfile child) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StudentDashboardPage(
+          username: child.name,
+          childProfile: child,
+          initialTab: 5, // "Retos" tab
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final pendingCount = _challenges.length;
+    final pendingCount = _pending.length;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -100,7 +148,7 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               ),
             )
-          else if (_challenges.isEmpty)
+          else if (_pending.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
@@ -133,13 +181,10 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
               ),
             )
           else
-            for (final c in _challenges) ...[
+            for (final entry in _pending) ...[
               _ChallengeTile(
-                icon: _iconForSubject(c.subject),
-                title: c.title,
-                subtitle: c.displaySubtitle,
-                tag: c.tag,
-                tagColor: _colorForTag(c.tag),
+                entry: entry,
+                onTap: () => _openChallenge(entry.child),
               ),
               const Divider(height: 1, color: Color(0xFFF3F4F6)),
             ],
@@ -147,105 +192,90 @@ class _ParentChallengesCardState extends State<ParentChallengesCard> {
       ),
     );
   }
-
-  IconData _iconForSubject(String subject) {
-    switch (subject.toLowerCase()) {
-      case 'math':
-      case 'matemáticas':
-        return Icons.calculate_rounded;
-      case 'science':
-      case 'ciencias':
-        return Icons.eco_rounded;
-      case 'english':
-      case 'inglés':
-        return Icons.translate_rounded;
-      case 'history':
-      case 'historia':
-        return Icons.history_edu_rounded;
-      default:
-        return Icons.school_rounded;
-    }
-  }
-
-  Color _colorForTag(String tag) {
-    switch (tag.toLowerCase()) {
-      case 'urgente':
-        return const Color(0xFFC0392B);
-      case 'recomendado':
-        return const Color(0xFF2ECC71);
-      default:
-        return const Color(0xFF95A5A6);
-    }
-  }
 }
 
 class _ChallengeTile extends StatelessWidget {
-  const _ChallengeTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.tag,
-    required this.tagColor,
-  });
+  const _ChallengeTile({required this.entry, required this.onTap});
 
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String tag;
-  final Color tagColor;
+  final _PendingChallenge entry;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEEDF8),
-              borderRadius: BorderRadius.circular(10),
+    final challenge = entry.challenge;
+    final subject = subjectByKey(challenge.subjectKey);
+    final (tag, tagColor) = _dueTag(challenge.dueDate);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEDF8),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                subject.icon,
+                size: 20,
+                color: _kNavy,
+              ),
             ),
-            child: Icon(icon, size: 20, color: _kNavy),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: _kNavy,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    challenge.title,
+                    style: GoogleFonts.nunito(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: _kNavy,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.nunito(
-                    fontSize: 11,
-                    color: Colors.grey[500],
+                  Text(
+                    '${entry.child.name} · ${challenge.className}',
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Text(
-            tag,
-            style: GoogleFonts.nunito(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: tagColor,
+            Text(
+              tag,
+              style: GoogleFonts.nunito(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: tagColor,
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey[300]),
-        ],
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey[300]),
+          ],
+        ),
       ),
     );
   }
-}
 
-// ── Empty state when no children ──────────────────────────────────────────────
+  (String, Color) _dueTag(String? dueDateIso) {
+    if (dueDateIso == null || dueDateIso.isEmpty) {
+      return ('Pendiente', const Color(0xFF95A5A6));
+    }
+    final due = DateTime.tryParse(dueDateIso);
+    if (due == null) return ('Pendiente', const Color(0xFF95A5A6));
+
+    final today = DateTime.now();
+    final daysLeft = due.difference(DateTime(today.year, today.month, today.day)).inDays;
+    if (daysLeft < 0) return ('Vencido', const Color(0xFFC0392B));
+    if (daysLeft <= 2) return ('Urgente', const Color(0xFFC0392B));
+    return ('Pendiente', const Color(0xFF95A5A6));
+  }
+}

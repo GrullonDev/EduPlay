@@ -335,7 +335,10 @@ class _OverviewBodyState extends State<_OverviewBody> {
                       ),
                     ),
                     const SizedBox(width: 20),
-                    const Expanded(flex: 6, child: ParentChallengesCard()),
+                    Expanded(
+                      flex: 6,
+                      child: ParentChallengesCard(profiles: widget.profiles),
+                    ),
                   ],
                 ),
               )
@@ -344,7 +347,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                   ParentAchievementCard(
                       profiles: widget.profiles, stats: _stats),
                   const SizedBox(height: 20),
-                  const ParentChallengesCard(),
+                  ParentChallengesCard(profiles: widget.profiles),
                 ],
               ),
         const SizedBox(height: 28),
