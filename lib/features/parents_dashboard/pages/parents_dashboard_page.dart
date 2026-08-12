@@ -10,6 +10,7 @@ import 'package:edu_play/features/parents_dashboard/widgets/parent_achievement_c
 import 'package:edu_play/features/parents_dashboard/widgets/parent_challenges_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_child_profiles_grid.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_empty_profiles.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_purchase_approvals_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_quick_controls_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_recommendations_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_session_history_card.dart';
@@ -360,6 +361,8 @@ class _OverviewBodyState extends State<_OverviewBody> {
         ),
         const SizedBox(height: 16),
         const ParentQuickControlsCard(),
+        const SizedBox(height: 16),
+        ParentPurchaseApprovalsCard(profiles: widget.profiles),
         const SizedBox(height: 16),
         const ParentActiveSessionsCard(),
         const SizedBox(height: 16),

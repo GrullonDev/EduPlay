@@ -9,13 +9,9 @@ import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_clas
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
-// ── Palette ───────────────────────────────────────────────────────────────────
-
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
 const _kLavender = Color(0xFFEEEDF8);
-
-// ── Entry point ───────────────────────────────────────────────────────────────
 
 class MisClasesPanel extends StatelessWidget {
   const MisClasesPanel({super.key});

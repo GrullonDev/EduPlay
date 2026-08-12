@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
 import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/features/admin/pages/admin_store_catalog_page.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -187,6 +188,15 @@ class _StatsView extends StatelessWidget {
             label: 'Gestionar roles de usuario',
             subtitle: 'Asignar o revocar rol admin',
             onTap: () => _showManageRolesDialog(context),
+          ),
+          const SizedBox(height: 8),
+          _ActionTile(
+            icon: Icons.storefront_rounded,
+            label: 'Catálogo de la Tienda',
+            subtitle: 'Precios, PRO, nivel y temporadas',
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AdminStoreCatalogPage()),
+            ),
           ),
           const SizedBox(height: 8),
           _ActionTile(

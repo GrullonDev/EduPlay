@@ -57,6 +57,12 @@ class _ParentQuickControlsCardState extends State<ParentQuickControlsCard> {
   String get _bedtimeLabel =>
       'Desde las ${_controls.bedtimeHour.toString().padLeft(2, '0')}:00';
 
+  String get _spendLimitLabel {
+    final periodLabel =
+        _controls.spendLimitPeriod == SpendLimitPeriod.daily ? 'día' : 'semana';
+    return '${_controls.spendLimitAmount} pts por $periodLabel';
+  }
+
   Future<void> _pickDailyLimit() async {
     final options = [
       (label: '30 minutos', minutes: 30),
@@ -124,6 +130,74 @@ class _ParentQuickControlsCardState extends State<ParentQuickControlsCard> {
     );
     if (chosen != null && mounted) {
       await _saveControls(_controls.copyWith(bedtimeHour: chosen));
+    }
+  }
+
+  Future<void> _pickSpendLimit() async {
+    var amount = _controls.spendLimitAmount;
+    var period = _controls.spendLimitPeriod;
+    const amountOptions = [50, 100, 150, 200, 300, 500];
+
+    final result = await showDialog<(int, SpendLimitPeriod)>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSt) => AlertDialog(
+          title: Text(
+            'Límite de Gasto',
+            style: GoogleFonts.fredoka(fontSize: 18, color: _kNavy),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('Por día'),
+                    selected: period == SpendLimitPeriod.daily,
+                    onSelected: (_) => setSt(() => period = SpendLimitPeriod.daily),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    label: const Text('Por semana'),
+                    selected: period == SpendLimitPeriod.weekly,
+                    onSelected: (_) => setSt(() => period = SpendLimitPeriod.weekly),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: amountOptions
+                    .map((a) => ChoiceChip(
+                          label: Text('$a pts'),
+                          selected: amount == a,
+                          onSelected: (_) => setSt(() => amount = a),
+                        ))
+                    .toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, (amount, period)),
+              child: const Text('Guardar'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null && mounted) {
+      await _saveControls(_controls.copyWith(
+        spendLimitAmount: result.$1,
+        spendLimitPeriod: result.$2,
+      ));
     }
   }
 
@@ -251,6 +325,103 @@ class _ParentQuickControlsCardState extends State<ParentQuickControlsCard> {
                   value: _controls.bedtimeEnabled,
                   onChanged: (v) async {
                     await _saveControls(_controls.copyWith(bedtimeEnabled: v));
+                  },
+                  activeThumbColor: const Color(0xFF2ECC71),
+                  inactiveTrackColor: Colors.white24,
+                  thumbColor: WidgetStateProperty.all(Colors.white),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Store purchase approval
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Compras en la Tienda',
+                        style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        _controls.requirePurchaseApproval
+                            ? 'Requiere tu aprobación'
+                            : 'Libre, sin aprobación',
+                        style: GoogleFonts.nunito(
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.55),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _controls.requirePurchaseApproval,
+                  onChanged: (v) async {
+                    await _saveControls(
+                      _controls.copyWith(requirePurchaseApproval: v),
+                    );
+                  },
+                  activeThumbColor: const Color(0xFF2ECC71),
+                  inactiveTrackColor: Colors.white24,
+                  thumbColor: WidgetStateProperty.all(Colors.white),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Spend limit
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.07),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _controls.spendLimitEnabled ? _pickSpendLimit : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Límite de Gasto',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          _controls.spendLimitEnabled
+                              ? _spendLimitLabel
+                              : 'Sin límite',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: _controls.spendLimitEnabled,
+                  onChanged: (v) async {
+                    await _saveControls(_controls.copyWith(spendLimitEnabled: v));
                   },
                   activeThumbColor: const Color(0xFF2ECC71),
                   inactiveTrackColor: Colors.white24,
