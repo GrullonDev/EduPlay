@@ -7,11 +7,12 @@ import 'package:edu_play/features/store/bloc/store_bloc.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kGold = Color(0xFFFFD700);
 
-/// The "Tienda" dashboard tab — a student spends their gamification points
+/// The "Tienda" dashboard tab â€” a student spends their gamification points
 /// on avatar cosmetics and exclusive stickers. Owns its own [StoreBloc] but
 /// reads/writes through [dashboardBloc] so the points badge and sticker
 /// album elsewhere in the dashboard stay in sync after a purchase.
@@ -85,7 +86,7 @@ class _TiendaBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '🛍️ Tienda',
+                      'ðŸ›ï¸ Tienda',
                       style: GoogleFonts.fredoka(
                         fontSize: s.isMobile ? 22 : 26,
                         fontWeight: FontWeight.w700,
@@ -112,11 +113,17 @@ class _TiendaBody extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              if (storeBloc.dashboardBloc.isGuest) ...[
+                _GuestStoreLimitBanner(
+                  remaining: storeBloc.guestPurchasesRemaining,
+                ),
+                const SizedBox(height: 24),
+              ],
               _StoreSection(title: 'Colores de avatar', items: avatarColors),
               const SizedBox(height: 24),
-              _StoreSection(title: 'Íconos de avatar', items: avatarIcons),
+              _StoreSection(title: 'Ãconos de avatar', items: avatarIcons),
               const SizedBox(height: 24),
-              _StoreSection(title: 'Stickers exclusivos ⭐', items: stickers),
+              _StoreSection(title: 'Stickers exclusivos â­', items: stickers),
             ]),
           ),
         ),
@@ -151,6 +158,59 @@ class _StorePointsPill extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GuestStoreLimitBanner extends StatelessWidget {
+  const _GuestStoreLimitBanner({required this.remaining});
+
+  final int remaining;
+
+  @override
+  Widget build(BuildContext context) {
+    final reached = remaining <= 0;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: reached ? const Color(0xFFFFEBEE) : const Color(0xFFE0F2F1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: reached ? const Color(0xFFE53935) : const Color(0xFF00897B),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            reached ? Icons.lock_outline_rounded : Icons.shopping_bag_rounded,
+            color: reached ? const Color(0xFFE53935) : const Color(0xFF00897B),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              reached
+                  ? 'Ya compraste tus 3 productos de prueba. Regístrate para seguir comprando.'
+                  : 'Modo invitado: puedes comprar $remaining producto${remaining == 1 ? '' : 's'} más antes de registrarte.',
+              style: GoogleFonts.nunito(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: reached ? const Color(0xFF7F1D1D) : _kNavy,
+              ),
+            ),
+          ),
+          if (reached) ...[
+            const SizedBox(width: 10),
+            TextButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                RouterPaths.registerParents,
+              ),
+              child: const Text('Registrarse'),
+            ),
+          ],
         ],
       ),
     );
@@ -277,10 +337,10 @@ class _ActionButton extends StatelessWidget {
     final storeBloc = context.watch<StoreBloc>();
 
     if (owned && item.category == StoreCategory.sticker) {
-      return const _StaticLabel(text: '✓ En tu álbum', color: Colors.green);
+      return const _StaticLabel(text: 'âœ“ En tu Ã¡lbum', color: Colors.green);
     }
     if (owned && equipped) {
-      return const _StaticLabel(text: '✓ Equipado', color: Colors.green);
+      return const _StaticLabel(text: 'âœ“ Equipado', color: Colors.green);
     }
     if (owned) {
       return SizedBox(
@@ -299,11 +359,37 @@ class _ActionButton extends StatelessWidget {
       );
     }
 
+    if (!storeBloc.canAccess(item)) {
+      return const _StaticLabel(text: 'Solo PRO', color: Color(0xFF7C3AED));
+    }
+
+    if (storeBloc.guestLimitReached) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton(
+          onPressed: () => Navigator.pushNamed(
+            context,
+            RouterPaths.registerParents,
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: _kNavy,
+            side: const BorderSide(color: _kNavy),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text('Registrarse', style: TextStyle(fontSize: 12)),
+        ),
+      );
+    }
+
     final canAfford = storeBloc.points >= item.cost;
+    final canPurchase = storeBloc.canPurchase(item);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: storeBloc.isBusy || !canAfford
+        onPressed: storeBloc.isBusy || !canPurchase
             ? null
             : () async {
                 final ok = await storeBloc.purchase(item);

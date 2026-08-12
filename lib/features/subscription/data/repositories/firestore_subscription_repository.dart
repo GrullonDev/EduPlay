@@ -13,6 +13,11 @@ class FirestoreSubscriptionRepository implements SubscriptionRepository {
   }
 
   @override
+  Future<Subscription> getSubscriptionForUser(String uid) {
+    return datasource.getSubscriptionForUser(uid);
+  }
+
+  @override
   Stream<Subscription> watchSubscription() {
     return datasource.watchSubscription();
   }

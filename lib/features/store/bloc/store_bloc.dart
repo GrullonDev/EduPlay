@@ -26,6 +26,22 @@ class StoreBloc extends ChangeNotifier {
 
   bool isOwned(StoreItem item) => dashboardBloc.ownedItemIds.contains(item.id);
 
+  bool isProOnly(StoreItem item) => dashboardBloc.isProOnlyItem(item);
+
+  bool canAccess(StoreItem item) => dashboardBloc.canAccessItem(item);
+
+  bool get guestLimitReached =>
+      dashboardBloc.isGuest && !dashboardBloc.hasGuestPurchasesRemaining;
+
+  int get guestPurchasesRemaining => dashboardBloc.guestPurchasesRemaining;
+
+  bool canPurchase(StoreItem item) {
+    if (isOwned(item)) return false;
+    if (!canAccess(item)) return false;
+    if (guestLimitReached) return false;
+    return points >= item.cost;
+  }
+
   bool isEquipped(StoreItem item) {
     switch (item.category) {
       case StoreCategory.avatarColor:
@@ -39,6 +55,16 @@ class StoreBloc extends ChangeNotifier {
 
   Future<bool> purchase(StoreItem item) async {
     if (isBusy) return false;
+    if (!canAccess(item)) {
+      lastError = 'Los stickers exclusivos son solo para usuarios PRO.';
+      notifyListeners();
+      return false;
+    }
+    if (guestLimitReached) {
+      lastError = 'Ya probaste 3 productos. Regístrate para seguir comprando.';
+      notifyListeners();
+      return false;
+    }
     isBusy = true;
     lastError = null;
     notifyListeners();
@@ -59,7 +85,9 @@ class StoreBloc extends ChangeNotifier {
       case PurchaseResult.insufficientPoints:
         lastError = 'Todavía no te alcanzan los puntos.';
       case PurchaseResult.error:
-        lastError = 'No se pudo completar la compra. Intenta de nuevo.';
+        lastError = dashboardBloc.isGuest && guestLimitReached
+            ? 'Ya probaste 3 productos. Regístrate para seguir comprando.'
+            : 'No se pudo completar la compra. Intenta de nuevo.';
     }
 
     isBusy = false;

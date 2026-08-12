@@ -6,6 +6,8 @@ import 'package:edu_play/features/subscription/models/subscription.dart';
 abstract class SubscriptionDatasource {
   Future<Subscription> getSubscription();
 
+  Future<Subscription> getSubscriptionForUser(String uid);
+
   Stream<Subscription> watchSubscription();
 
   Future<void> initSubscription(String uid);
@@ -33,12 +35,15 @@ class FirestoreSubscriptionDatasource implements SubscriptionDatasource {
 
   @override
   Future<Subscription> getSubscription() async {
-    final ref = _doc;
-    if (ref == null) return Subscription.freeTier();
+    final uid = _uid;
+    if (uid == null) return Subscription.freeTier();
+    return getSubscriptionForUser(uid);
+  }
 
-    final snap = await ref.get();
+  @override
+  Future<Subscription> getSubscriptionForUser(String uid) async {
+    final snap = await _db.collection('subscriptions').doc(uid).get();
     if (!snap.exists) return Subscription.freeTier();
-
     return Subscription.fromMap(snap.data()!);
   }
 

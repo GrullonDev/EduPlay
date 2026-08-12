@@ -8,6 +8,7 @@ import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show GameSubject;
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
+import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
@@ -43,6 +44,8 @@ class StudentDashboardBloc extends ChangeNotifier {
       sl<LevelProgressRepository>();
   final ClassroomChallengesRepository _classroomChallengesRepository =
       sl<ClassroomChallengesRepository>();
+  final SubscriptionRepository _subscriptionRepository =
+      sl<SubscriptionRepository>();
 
   bool isLoading = true;
   Map<String, dynamic>? profile;
@@ -54,9 +57,12 @@ class StudentDashboardBloc extends ChangeNotifier {
   String? _guestEquippedAvatarColorHex;
   String? _guestEquippedAvatarIcon;
 
+  static const guestPurchaseLimit = 3;
   static const _guestOwnedItemsKey = 'edu_play_guest_owned_item_ids';
   static const _guestAvatarColorKey = 'edu_play_guest_avatar_color_hex';
   static const _guestAvatarIconKey = 'edu_play_guest_avatar_icon';
+
+  bool isProSubscriber = false;
 
   /// Set (once) after [_load] detects the student's level increased since
   /// the last time the dashboard celebrated one — consumed by the UI via
@@ -113,10 +119,34 @@ class StudentDashboardBloc extends ChangeNotifier {
       ? _guestEquippedAvatarIcon
       : profile?['equippedAvatarIcon'] as String?;
 
-  List<String> get unlockedStickerIds => {
-        ...stickersUnlockedAtLevel(level).map((s) => s.id),
-        ...ownedItemIds,
-      }.toList();
+  int get guestPurchasedItemCount => isGuest ? _guestOwnedItemIds.length : 0;
+
+  bool get hasGuestPurchasesRemaining =>
+      !isGuest || guestPurchasedItemCount < guestPurchaseLimit;
+
+  int get guestPurchasesRemaining => isGuest
+      ? (guestPurchaseLimit - guestPurchasedItemCount)
+          .clamp(0, guestPurchaseLimit)
+      : guestPurchaseLimit;
+
+  bool isProOnlyItem(StoreItem item) => item.category == StoreCategory.sticker;
+
+  bool canAccessItem(StoreItem item) => !isProOnlyItem(item) || isProSubscriber;
+
+  List<String> get unlockedStickerIds {
+    final proStickerIds = allStoreItems
+        .where((item) => item.category == StoreCategory.sticker)
+        .map((item) => item.id)
+        .toSet();
+    final eligibleOwnedIds = ownedItemIds.where(
+      (id) => isProSubscriber || !proStickerIds.contains(id),
+    );
+
+    return {
+      ...stickersUnlockedAtLevel(level).map((s) => s.id),
+      ...eligibleOwnedIds,
+    }.toList();
+  }
 
   int get unlockedStickerCount => unlockedStickerIds.length;
 
@@ -128,9 +158,11 @@ class StudentDashboardBloc extends ChangeNotifier {
 
     try {
       if (isGuest) {
+        isProSubscriber = false;
         _guestPoints = await PointsService.getPoints();
         await _loadGuestStore();
       } else {
+        await _loadSubscriptionStatus();
         if (childProfile != null) {
           await _studentRepository.setActiveStudentId(childProfile!.id);
           await _studentRepository.ensureProfileForId(
@@ -223,11 +255,24 @@ class StudentDashboardBloc extends ChangeNotifier {
     _guestEquippedAvatarIcon = prefs.getString(_guestAvatarIconKey);
   }
 
+  Future<void> _loadSubscriptionStatus() async {
+    try {
+      final parentUid = childProfile?.parentUid;
+      final subscription = parentUid != null && parentUid.isNotEmpty
+          ? await _subscriptionRepository.getSubscriptionForUser(parentUid)
+          : await _subscriptionRepository.getSubscription();
+      isProSubscriber = subscription.isPro;
+    } catch (_) {
+      isProSubscriber = false;
+    }
+  }
+
   Future<PurchaseResult> purchaseGuestItem(StoreItem item) async {
-    if (!isGuest) return PurchaseResult.error;
+    if (!isGuest || !canAccessItem(item)) return PurchaseResult.error;
     if (_guestOwnedItemIds.contains(item.id)) {
       return PurchaseResult.alreadyOwned;
     }
+    if (!hasGuestPurchasesRemaining) return PurchaseResult.error;
     if (_guestPoints < item.cost) return PurchaseResult.insufficientPoints;
 
     _guestPoints -= item.cost;
