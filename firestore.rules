@@ -44,6 +44,15 @@ service cloud.firestore {
       }
     }
 
+    // ── Independent students (self-registered, 15+) ────────────────────────────
+    // Role marker doc so AuthGate can route them to their own student dashboard
+    // instead of the parent/teacher dashboards. Their actual gameplay profile
+    // lives at parents/{uid}/child_profiles/{id} (uid == this uid), which is
+    // already covered by the "Parents" rule below.
+    match /independent_students/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
     // ── Teachers ──────────────────────────────────────────────────────────────
     match /teachers/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
