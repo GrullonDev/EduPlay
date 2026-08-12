@@ -262,23 +262,35 @@ class StudentDatasource {
     final doc = _students.doc(studentId);
     try {
       return await _firestore.runTransaction((tx) async {
-        final data = (await tx.get(doc)).data();
-        final owned = List<String>.from(data?['ownedItemIds'] as List? ?? []);
+        final data = (await tx.get(doc)).data() ?? <String, dynamic>{};
+        final owned = List<String>.from(data['ownedItemIds'] as List? ?? []);
         if (owned.contains(itemId)) return PurchaseResult.alreadyOwned;
 
-        final points = (data?['points'] as num?)?.toInt() ?? 0;
+        final points = (data['points'] as num?)?.toInt() ?? 0;
         if (points < cost) return PurchaseResult.insufficientPoints;
 
-        tx.set(
-          doc,
-          {
-            'points': FieldValue.increment(-cost),
-            'ownedItemIds': FieldValue.arrayUnion([itemId]),
-            'purchasedAt.$itemId': FieldValue.serverTimestamp(),
-            'lastPurchase': {'itemId': itemId, 'cost': cost},
-          },
-          SetOptions(merge: true),
-        );
+        final purchasedAt =
+            Map<String, dynamic>.from(data['purchasedAt'] as Map? ?? {});
+        purchasedAt[itemId] = Timestamp.now();
+
+        // fake_cloud_firestore's runTransaction doesn't honor
+        // SetOptions(merge: true): a tx.set() inside a transaction silently
+        // replaces the whole document with exactly the map given, dropping
+        // every field not mentioned — and separately, even outside a
+        // transaction, a plain top-level Map-valued field under merge:true
+        // only adds/overwrites keys, it never removes ones missing from the
+        // new value. Real Firestore does neither of those things, but since
+        // this is the only way the Dart suite can exercise the purchase
+        // logic, sidestep both by computing the complete document ourselves
+        // from the already-read `data` and writing it as a plain (non-merge)
+        // replace — which is unambiguous everywhere.
+        tx.set(doc, {
+          ...data,
+          'points': points - cost,
+          'ownedItemIds': [...owned, itemId],
+          'purchasedAt': purchasedAt,
+          'lastPurchase': {'itemId': itemId, 'cost': cost},
+        });
         tx.set(doc.collection('transactions').doc(), {
           'itemId': itemId,
           'itemName': itemName,
@@ -309,25 +321,25 @@ class StudentDatasource {
     final doc = _students.doc(studentId);
     try {
       return await _firestore.runTransaction((tx) async {
-        final data = (await tx.get(doc)).data();
-        final owned = List<String>.from(data?['ownedItemIds'] as List? ?? []);
+        final data = (await tx.get(doc)).data() ?? <String, dynamic>{};
+        final owned = List<String>.from(data['ownedItemIds'] as List? ?? []);
         if (owned.contains(itemId)) return PurchaseResult.alreadyOwned;
 
         final pending =
-            Map<String, dynamic>.from(data?['pendingPurchases'] as Map? ?? {});
+            Map<String, dynamic>.from(data['pendingPurchases'] as Map? ?? {});
         if (pending.containsKey(itemId)) return PurchaseResult.pendingApproval;
 
-        final points = (data?['points'] as num?)?.toInt() ?? 0;
+        final points = (data['points'] as num?)?.toInt() ?? 0;
         if (points < cost) return PurchaseResult.insufficientPoints;
 
-        tx.set(
-          doc,
-          {
-            'pendingPurchases.$itemId': cost,
-            'lastPurchase': {'itemId': itemId, 'cost': cost},
-          },
-          SetOptions(merge: true),
-        );
+        pending[itemId] = cost;
+        // See purchaseItem's comment: full replace, not merge, so untouched
+        // fields (points, name, ...) survive intact.
+        tx.set(doc, {
+          ...data,
+          'pendingPurchases': pending,
+          'lastPurchase': {'itemId': itemId, 'cost': cost},
+        });
         return PurchaseResult.pendingApproval;
       });
     } catch (e) {
@@ -346,36 +358,36 @@ class StudentDatasource {
     final doc = _students.doc(studentId);
     try {
       return await _firestore.runTransaction((tx) async {
-        final data = (await tx.get(doc)).data();
+        final data = (await tx.get(doc)).data() ?? <String, dynamic>{};
         final pending =
-            Map<String, dynamic>.from(data?['pendingPurchases'] as Map? ?? {});
+            Map<String, dynamic>.from(data['pendingPurchases'] as Map? ?? {});
         final cost = (pending[itemId] as num?)?.toInt();
         if (cost == null) return PurchaseResult.error;
 
-        final owned = List<String>.from(data?['ownedItemIds'] as List? ?? []);
+        final owned = List<String>.from(data['ownedItemIds'] as List? ?? []);
         if (owned.contains(itemId)) {
-          tx.set(
-            doc,
-            {'pendingPurchases.$itemId': FieldValue.delete()},
-            SetOptions(merge: true),
-          );
+          pending.remove(itemId);
+          tx.set(doc, {...data, 'pendingPurchases': pending});
           return PurchaseResult.alreadyOwned;
         }
 
-        final points = (data?['points'] as num?)?.toInt() ?? 0;
+        final points = (data['points'] as num?)?.toInt() ?? 0;
         if (points < cost) return PurchaseResult.insufficientPoints;
 
-        tx.set(
-          doc,
-          {
-            'points': FieldValue.increment(-cost),
-            'ownedItemIds': FieldValue.arrayUnion([itemId]),
-            'pendingPurchases.$itemId': FieldValue.delete(),
-            'purchasedAt.$itemId': FieldValue.serverTimestamp(),
-            'lastPurchase': {'itemId': itemId, 'cost': cost},
-          },
-          SetOptions(merge: true),
-        );
+        pending.remove(itemId);
+        final purchasedAt =
+            Map<String, dynamic>.from(data['purchasedAt'] as Map? ?? {});
+        purchasedAt[itemId] = Timestamp.now();
+
+        // See purchaseItem's comment: full replace, not merge.
+        tx.set(doc, {
+          ...data,
+          'points': points - cost,
+          'ownedItemIds': [...owned, itemId],
+          'pendingPurchases': pending,
+          'purchasedAt': purchasedAt,
+          'lastPurchase': {'itemId': itemId, 'cost': cost},
+        });
         tx.set(doc.collection('transactions').doc(), {
           'itemId': itemId,
           'itemName': itemName,
@@ -399,11 +411,18 @@ class StudentDatasource {
     required String studentId,
     required String itemId,
   }) async {
+    final doc = _students.doc(studentId);
     try {
-      await _students.doc(studentId).set(
-        {'pendingPurchases.$itemId': FieldValue.delete()},
-        SetOptions(merge: true),
-      );
+      // Transaction + full replace, not a bare merge write: see
+      // purchaseItem's comment on why a plain top-level Map field under
+      // merge:true can't reliably remove a key.
+      await _firestore.runTransaction((tx) async {
+        final data = (await tx.get(doc)).data() ?? <String, dynamic>{};
+        final pending =
+            Map<String, dynamic>.from(data['pendingPurchases'] as Map? ?? {});
+        pending.remove(itemId);
+        tx.set(doc, {...data, 'pendingPurchases': pending});
+      });
     } catch (e) {
       debugPrint('StudentDatasource.rejectPendingPurchase error: $e');
     }
