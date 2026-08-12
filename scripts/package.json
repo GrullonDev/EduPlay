@@ -1,0 +1,14 @@
+{
+  "name": "eduplay-admin-scripts",
+  "description": "One-off admin/migration scripts run by hand with the Firebase Admin SDK — never invoked by the app or a client.",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "seed-store-catalog": "node seed_store_catalog.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
