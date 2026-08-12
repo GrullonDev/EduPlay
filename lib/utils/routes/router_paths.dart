@@ -25,6 +25,8 @@ class RouterPaths {
   static const gamesCatalog = '/games-catalog';
   static const numberNinja = '/number-ninja';
   static const childPin = '/child-pin';
+  static const ageGate = '/age-gate';
+  static const registerStudent = '/register-student';
   static const parentGuide = '/parent-guide';
   static const settings = '/settings';
   static const progressReports = '/progress-reports';

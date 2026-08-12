@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
+import 'package:edu_play/core/auth/independent_student_loader.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 
@@ -24,8 +25,8 @@ const _kBg = Color(0xFFF8F7FF);
 class EmailVerificationGatePage extends StatefulWidget {
   const EmailVerificationGatePage({super.key, required this.role});
 
-  /// The resolved role — either 'parent' or 'teacher'.  Used to navigate to
-  /// the correct dashboard once verification succeeds.
+  /// The resolved role — 'parent', 'teacher', or 'independent_student'.
+  /// Used to navigate to the correct dashboard once verification succeeds.
   final String role;
 
   @override
@@ -69,9 +70,11 @@ class _EmailVerificationGatePageState extends State<EmailVerificationGatePage> {
 
   void _advance() {
     if (!mounted) return;
-    final destination = widget.role == 'teacher'
-        ? const TeacherDashboardPage()
-        : const ParentsDashboardPage();
+    final destination = switch (widget.role) {
+      'teacher' => const TeacherDashboardPage(),
+      'independent_student' => const IndependentStudentLoader(),
+      _ => const ParentsDashboardPage(),
+    };
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => destination),
       (route) => false,

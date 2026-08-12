@@ -5,7 +5,9 @@ import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
 import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
+import 'package:edu_play/features/age_gate/pages/age_gate_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/register_student/pages/register_student_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
 import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
 import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
@@ -99,6 +101,13 @@ class AppRouter {
         break;
       case RouterPaths.childPin:
         return MaterialPageRoute(builder: (_) => const ChildPinPage());
+      case RouterPaths.ageGate:
+        return MaterialPageRoute(builder: (_) => const AgeGatePage());
+      case RouterPaths.registerStudent:
+        final age = settings.arguments as int? ?? 15;
+        return MaterialPageRoute(
+          builder: (_) => RegisterStudentPage(age: age),
+        );
 
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
