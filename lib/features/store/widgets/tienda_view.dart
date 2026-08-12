@@ -116,8 +116,7 @@ class _TiendaBody extends StatelessWidget {
               const SizedBox(height: 24),
               _StoreSection(title: 'Íconos de avatar', items: avatarIcons),
               const SizedBox(height: 24),
-              _StoreSection(
-                  title: 'Stickers exclusivos ⭐', items: stickers),
+              _StoreSection(title: 'Stickers exclusivos ⭐', items: stickers),
             ]),
           ),
         ),
@@ -324,7 +323,8 @@ class _ActionButton extends StatelessWidget {
           foregroundColor: canAfford ? Colors.white : Colors.grey[600],
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -358,8 +358,8 @@ class _StaticLabel extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: TextStyle(
-            fontSize: 12, fontWeight: FontWeight.w700, color: color),
+        style:
+            TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
       ),
     );
   }

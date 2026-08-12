@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Child PIN Entry Page ───────────────────────────────────────────────────────
@@ -81,6 +82,8 @@ class _ChildPinPageState extends State<ChildPinPage>
         _digits.clear();
       });
     } else {
+      await StudentSessionNavigationService.rememberChildPin(pin);
+      if (!mounted) return;
       // Navigate to student dashboard, passing the profile
       Navigator.of(context).pushReplacementNamed(
         RouterPaths.studentDashboard,
@@ -256,7 +259,7 @@ class _ChildPinPageState extends State<ChildPinPage>
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(
                           context,
-                          RouterPaths.childPortal,
+                          RouterPaths.studentDashboard,
                         ),
                         child: Text(
                           '¿No tienes código? Explora EduPlay →',

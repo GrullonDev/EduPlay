@@ -100,3 +100,10 @@ final List<Sticker> allStickers = [
       description: 'Guardián legendario',
       isPremium: true),
 ];
+
+/// Stickers unlock one per level gained past level 1, capped at the list
+/// length. Level 1 (0 pts) = 0 stickers. Do not reorder/remove entries in
+/// [allStickers] — that would silently change which stickers a child at a
+/// given level has "earned".
+List<Sticker> stickersUnlockedAtLevel(int level) =>
+    allStickers.take((level - 1).clamp(0, allStickers.length)).toList();

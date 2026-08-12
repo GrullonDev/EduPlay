@@ -54,7 +54,6 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
-
 # iOS related
 ios/Pods/
 ios/.symlinks/
@@ -76,8 +75,12 @@ ios/Flutter/ephemeral/
 /ios/Flutter/flutter_assets
 /ios/Flutter/ephemeral/
 
-# Desktop platforms — this project targets web only, these build targets
-# aren't used and shouldn't show up as changes.
+# Desktop platforms
 /windows/
 /linux/
 /macos/
+
+pubspec.lock
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m

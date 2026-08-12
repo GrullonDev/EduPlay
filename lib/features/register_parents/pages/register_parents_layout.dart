@@ -224,7 +224,7 @@ class _LeftContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Illustration placeholder
+        // Decorative family illustration (icons + gradient, no image asset)
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Container(

@@ -1,10 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/data/repositories/student_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/services/classroom_challenges_service.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 class TeacherDashboardBloc extends ChangeNotifier {
@@ -13,7 +16,10 @@ class TeacherDashboardBloc extends ChangeNotifier {
   }
 
   final StudentRepository _studentRepository = sl<StudentRepository>();
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final TeacherClassesRepository _teacherClassesRepository =
+      sl<TeacherClassesRepository>();
+  final ClassroomChallengesRepository _classroomChallengesRepository =
+      sl<ClassroomChallengesRepository>();
 
   bool isLoading = true;
   String teacherName = 'Profe';
@@ -87,8 +93,8 @@ class TeacherDashboardBloc extends ChangeNotifier {
 
     try {
       teacherName = await _loadTeacherName();
-      classes = await TeacherClassesService.getMyClasses();
-      members = await TeacherClassesService.getMembersForClasses(
+      classes = await _teacherClassesRepository.getMyClasses();
+      members = await _teacherClassesRepository.getMembersForClasses(
         classes.map((c) => c.id).toList(),
       );
 
@@ -104,7 +110,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
             days: 28),
         _studentRepository.getWeeklyScoreTotalsForStudents(linkedStudentIds),
         _studentRepository.getSubjectPerformanceForStudents(linkedStudentIds),
-        ClassroomChallengesService.getChallengesForClasses(classes),
+        _classroomChallengesRepository.getChallengesForClasses(classes),
       ]);
 
       final studentProfiles = results[0] as List<Map<String, dynamic>>;
@@ -137,7 +143,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
     required String subjectKey,
     String? dueDate,
   }) async {
-    await ClassroomChallengesService.createChallenge(
+    await _classroomChallengesRepository.createChallenge(
       classId: classId,
       title: title,
       subjectKey: subjectKey,
@@ -251,14 +257,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
     return false;
   }
 
-  Future<String> _loadTeacherName() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return 'Profe';
-
-    final doc = await _db.collection('teachers').doc(uid).get();
-    if (!doc.exists) return 'Profe';
-
-    final firstName = (doc.data()?['firstName'] as String?)?.trim();
-    return (firstName == null || firstName.isEmpty) ? 'Profe' : firstName;
+  Future<String> _loadTeacherName() {
+    return _teacherClassesRepository.getCurrentTeacherFirstName();
   }
 }

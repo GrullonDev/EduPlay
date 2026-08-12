@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/features/onboarding/domain/repositories/onboarding_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Color tokens ──────────────────────────────────────────────────────────────
@@ -24,19 +24,9 @@ class OnboardingWizard extends StatefulWidget {
 
   /// Checks Firestore and shows the wizard if the parent hasn't completed onboarding.
   static Future<void> showIfNeeded(BuildContext context) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    try {
-      final doc =
-          await FirebaseFirestore.instance.collection('parents').doc(uid).get();
-      final complete = doc.data()?['onboardingComplete'] as bool? ?? false;
-      if (complete) return;
-    } catch (_) {
-      return;
-    }
-
-    if (!context.mounted) return;
+    final repository = sl<OnboardingRepository>();
+    final shouldShow = await repository.shouldShowForCurrentParent();
+    if (!shouldShow || !context.mounted) return;
 
     await showDialog<void>(
       context: context,
@@ -46,13 +36,8 @@ class OnboardingWizard extends StatefulWidget {
     );
   }
 
-  static Future<void> _markComplete() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    await FirebaseFirestore.instance
-        .collection('parents')
-        .doc(uid)
-        .update({'onboardingComplete': true});
+  static Future<void> _markComplete() {
+    return sl<OnboardingRepository>().markCurrentParentComplete();
   }
 
   @override

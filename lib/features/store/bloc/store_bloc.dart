@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:edu_play/data/datasources/student_datasource.dart' show PurchaseResult;
+import 'package:edu_play/data/datasources/student_datasource.dart'
+    show PurchaseResult;
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';

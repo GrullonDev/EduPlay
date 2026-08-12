@@ -8,11 +8,12 @@ import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
-import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
+import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
+import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -35,11 +36,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   ChildProfile? _selectedProfile;
   final Set<String> _selectedGameIds = {};
   bool _loading = false;
+  String _parentName = 'Mamá';
+
+  SubscriptionRepository get _subscriptionRepository {
+    init();
+    return sl<SubscriptionRepository>();
+  }
+
+  PracticeSessionsRepository get _practiceSessionsRepository {
+    init();
+    return sl<PracticeSessionsRepository>();
+  }
 
   @override
   void initState() {
     super.initState();
     _loadProfiles();
+    _loadParentName();
   }
 
   Future<void> _loadProfiles() async {
@@ -50,12 +63,18 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     });
   }
 
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
+  }
+
   Future<void> _createSession() async {
     final profile = _selectedProfile;
     if (profile == null || _selectedGameIds.isEmpty) return;
 
     // ── Free-tier session limit check ────────────────────────────────────────
-    final allowed = await SubscriptionService.canCreateSession();
+    final allowed = await _subscriptionRepository.canCreateSession();
     if (!allowed) {
       if (!mounted) return;
       await showUpgradePrompt(context, UpgradeReason.sessionLimit);
@@ -64,13 +83,13 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
     setState(() => _loading = true);
     try {
-      final session = await PracticeSessionsService.createSession(
+      final session = await _practiceSessionsRepository.createSession(
         childProfileId: profile.id,
         childName: profile.name,
         assignedGameIds: _selectedGameIds.toList(),
       );
       // Increment monthly session counter after successful creation.
-      await SubscriptionService.incrementSessionCount();
+      await _subscriptionRepository.incrementSessionCount();
       if (!mounted) return;
       _showSessionCreated(session);
     } finally {
@@ -94,11 +113,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     final wide = ScreenSize.of(context).isDesktop;
     return Scaffold(
       backgroundColor: _kBg,
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(64),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
         child: EduPlayNavBar.parent(
           activeParentTab: ParentTab.inicio,
-          parentName: '',
+          parentName: _parentName,
         ),
       ),
       body: _profiles.isEmpty

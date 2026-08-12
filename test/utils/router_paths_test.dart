@@ -29,7 +29,6 @@ void main() {
     RouterPaths.artistsInAction,
     RouterPaths.colorConcert,
     RouterPaths.sportsChallenge,
-    RouterPaths.stickerAlbum,
     RouterPaths.gamesCatalog,
     RouterPaths.childPin,
     RouterPaths.parentGuide,

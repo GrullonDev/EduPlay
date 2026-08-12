@@ -21,8 +21,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '2. Cómo usamos la información',
-    body:
-        'Usamos los datos recopilados para:\n\n'
+    body: 'Usamos los datos recopilados para:\n\n'
         '• Proporcionar y mejorar las funcionalidades de la plataforma.\n'
         '• Generar reportes de progreso para padres y maestros.\n'
         '• Personalizar el nivel de dificultad y el contenido educativo.\n'
@@ -33,8 +32,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '3. Protección de datos de menores',
-    body:
-        'EduPlay está diseñada pensando en niños de 3 a 12 años y cumple con '
+    body: 'EduPlay está diseñada pensando en niños de 3 a 12 años y cumple con '
         'los principios de la Convención de los Derechos del Niño de la ONU y '
         'las mejores prácticas internacionales para aplicaciones educativas.\n\n'
         '• Los perfiles de niños solo pueden ser creados por un adulto con cuenta '
@@ -57,8 +55,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '5. Cookies y tecnologías similares',
-    body:
-        'La versión web de EduPlay utiliza cookies de sesión estrictamente '
+    body: 'La versión web de EduPlay utiliza cookies de sesión estrictamente '
         'necesarias para mantener el inicio de sesión. No usamos cookies de '
         'rastreo ni publicidad comportamental. Puedes desactivar las cookies en '
         'tu navegador, aunque esto puede afectar el funcionamiento de la '
@@ -66,8 +63,7 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '6. Tus derechos',
-    body:
-        'Como padre, madre o tutor tienes derecho a:\n\n'
+    body: 'Como padre, madre o tutor tienes derecho a:\n\n'
         '• Acceder a los datos de tu cuenta y los perfiles de tus hijos.\n'
         '• Corregir información inexacta.\n'
         '• Solicitar la eliminación completa de la cuenta y todos los datos '
@@ -78,16 +74,14 @@ const _sections = <LegalSection>[
   ),
   LegalSection(
     title: '7. Retención de datos',
-    body:
-        'Conservamos los datos de la cuenta mientras esta permanezca activa. '
+    body: 'Conservamos los datos de la cuenta mientras esta permanezca activa. '
         'Al eliminar la cuenta, borramos toda la información personal en un '
         'plazo máximo de 30 días, salvo que la ley exija conservarla por un '
         'período mayor.',
   ),
   LegalSection(
     title: '8. Cambios a esta política',
-    body:
-        'Podemos actualizar esta Política de Privacidad periódicamente. Te '
+    body: 'Podemos actualizar esta Política de Privacidad periódicamente. Te '
         'notificaremos por correo electrónico y mediante un aviso en la '
         'aplicación con al menos 15 días de antelación ante cambios '
         'significativos. El uso continuado de EduPlay tras la fecha de vigencia '
