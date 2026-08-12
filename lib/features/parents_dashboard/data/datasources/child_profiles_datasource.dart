@@ -163,11 +163,11 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
   @override
   Future<String> getParentName() async {
     final uid = _uid;
-    if (uid == null) return 'MamÃ¡';
+    if (uid == null) return 'Mamá';
 
     final doc = await _firestore.collection('parents').doc(uid).get();
-    if (!doc.exists) return 'MamÃ¡';
-    return (doc.data()?['firstName'] as String?) ?? 'MamÃ¡';
+    if (!doc.exists) return 'Mamá';
+    return (doc.data()?['firstName'] as String?) ?? 'Mamá';
   }
 
   @override
