@@ -14,14 +14,8 @@ import 'package:edu_play/utils/dialogs/confetti_burst.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
 
-// ── Tokens ────────────────────────────────────────────────────────────────────
-
 const _kNavy = Color(0xFF1E1B6A);
 const _kBg = Color(0xFFF3F5F9);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Root layout
-// ─────────────────────────────────────────────────────────────────────────────
 
 class StudentDashboardLayout extends StatefulWidget {
   const StudentDashboardLayout({super.key, this.initialTab = 0});
@@ -236,7 +230,3 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Top navigation bar (desktop only)
-// ─────────────────────────────────────────────────────────────────────────────
