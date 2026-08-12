@@ -32,8 +32,13 @@
 
 const admin = require('firebase-admin');
 
+// applicationDefault() still needs either `gcloud auth application-default
+// login` to have been run, or GOOGLE_APPLICATION_CREDENTIALS pointing at a
+// service-account key — this only fills in the project id when neither
+// gcloud nor the credential itself supplies one.
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
+  projectId: process.env.GOOGLE_CLOUD_PROJECT || 'eduplay-8792f',
 });
 
 const db = admin.firestore();
@@ -76,8 +81,12 @@ function toDoc(item) {
     isFeatured: item.isFeatured ?? false,
     ...(item.colorValue !== undefined ? { colorValue: item.colorValue } : {}),
     ...(item.iconKey !== undefined ? { iconKey: item.iconKey } : {}),
-    ...(item.availableFrom ? { availableFrom: item.availableFrom } : {}),
-    ...(item.availableUntil ? { availableUntil: item.availableUntil } : {}),
+    // A plain JS Date is auto-converted to a Firestore Timestamp on write —
+    // matches what StoreItem.toJson() produces on the Dart side, which is
+    // what firestore.rules' isCatalogItemAvailable() compares against
+    // request.time directly (rules has no string→timestamp parser).
+    ...(item.availableFrom ? { availableFrom: new Date(item.availableFrom) } : {}),
+    ...(item.availableUntil ? { availableUntil: new Date(item.availableUntil) } : {}),
   };
 }
 

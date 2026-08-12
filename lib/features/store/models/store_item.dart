@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:flutter/material.dart';
 
 /// What a [StoreItem] customizes once purchased.
@@ -39,6 +40,15 @@ IconData? iconForKey(String? iconKey) {
   return kStoreIconRegistry[iconKey] ?? kStoreIconFallback;
 }
 
+/// Reads a Firestore [Timestamp] (the format [StoreItem.toJson] writes) or
+/// falls back to parsing an ISO string, for any doc written before this
+/// field switched from an RFC3339 string to a native Timestamp.
+DateTime? _parseDate(dynamic value) {
+  if (value is Timestamp) return value.toDate();
+  if (value is String) return DateTime.tryParse(value);
+  return null;
+}
+
 class StoreItem {
   const StoreItem({
     required this.id,
@@ -69,12 +79,8 @@ class StoreItem {
       isProOnly: json['isProOnly'] as bool? ?? false,
       minLevel: (json['minLevel'] as num?)?.toInt() ?? 1,
       isFeatured: json['isFeatured'] as bool? ?? false,
-      availableFrom: json['availableFrom'] != null
-          ? DateTime.tryParse(json['availableFrom'] as String)
-          : null,
-      availableUntil: json['availableUntil'] != null
-          ? DateTime.tryParse(json['availableUntil'] as String)
-          : null,
+      availableFrom: _parseDate(json['availableFrom']),
+      availableUntil: _parseDate(json['availableUntil']),
     );
   }
 
@@ -135,15 +141,14 @@ class StoreItem {
         'isProOnly': isProOnly,
         'minLevel': minLevel,
         'isFeatured': isFeatured,
-        // .toUtc() before formatting: a local (non-UTC) DateTime's
-        // toIso8601String() has no 'Z'/offset suffix, which isn't strict
-        // RFC3339 — and firestore.rules' timestamp(string) (used to
-        // validate seasonal availability server-side) needs a real offset
-        // to parse reliably.
+        // Stored as a real Firestore Timestamp (not an ISO string) so
+        // firestore.rules' isCatalogItemAvailable() can compare it against
+        // request.time directly — the rules language has no function to
+        // parse a timestamp out of a string.
         if (availableFrom != null)
-          'availableFrom': availableFrom!.toUtc().toIso8601String(),
+          'availableFrom': Timestamp.fromDate(availableFrom!.toUtc()),
         if (availableUntil != null)
-          'availableUntil': availableUntil!.toUtc().toIso8601String(),
+          'availableUntil': Timestamp.fromDate(availableUntil!.toUtc()),
       };
 }
 

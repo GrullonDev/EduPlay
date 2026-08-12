@@ -276,11 +276,12 @@ service cloud.firestore {
     }
 
     // A catalog item with no availableFrom/availableUntil is always
-    // available. Dates are stored as UTC RFC3339 strings (see
-    // StoreItem.toJson) so timestamp() parses them unambiguously.
+    // available. Dates are stored as real Firestore Timestamps (see
+    // StoreItem.toJson) — there is no rules-language function to parse a
+    // string into a timestamp, so comparing directly is the only option.
     function isCatalogItemAvailable(catalogItem) {
-      return (!('availableFrom' in catalogItem) || request.time >= timestamp(catalogItem.availableFrom))
-        && (!('availableUntil' in catalogItem) || request.time <= timestamp(catalogItem.availableUntil));
+      return (!('availableFrom' in catalogItem) || request.time >= catalogItem.availableFrom)
+        && (!('availableUntil' in catalogItem) || request.time <= catalogItem.availableUntil);
     }
 
     function isPurchaseCostAndProValid() {

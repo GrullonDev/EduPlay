@@ -288,7 +288,10 @@ describe('students/{studentId} purchase validation', () => {
   });
 
   it('rejects a purchase of a seasonal item before its availableFrom date', async () => {
-    const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    // A plain JS Date is auto-converted to a Firestore Timestamp on write —
+    // matches what StoreItem.toJson() writes in the app, and what
+    // isCatalogItemAvailable() compares against request.time directly.
+    const future = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await seed(async (db) => {
       await db
         .collection('storeCatalog')
@@ -317,7 +320,7 @@ describe('students/{studentId} purchase validation', () => {
   });
 
   it('rejects a purchase of a seasonal item after its availableUntil date', async () => {
-    const past = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const past = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     await seed(async (db) => {
       await db
         .collection('storeCatalog')
