@@ -21,6 +21,8 @@ void main() {
     RouterPaths.notFound,
     RouterPaths.guestEntry,
     RouterPaths.studentDashboard,
+    RouterPaths.legacyStudentDashboard,
+    RouterPaths.legacySlashStudentDashboard,
     RouterPaths.parentsDashboard,
     RouterPaths.teacherDashboard,
     RouterPaths.natureExplorers,

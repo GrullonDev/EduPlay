@@ -106,16 +106,19 @@ class _ChildPinPageState extends State<ChildPinPage>
         child: SafeArea(
           child: Stack(
             children: [
-              // Back button
-              Positioned(
-                top: 16,
-                left: 16,
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white70, size: 20),
+              // Back button — only shown when there's actually somewhere to
+              // go back to (this page also serves as the app's landing
+              // screen when there's no active session, with nothing to pop).
+              if (Navigator.canPop(context))
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white70, size: 20),
+                  ),
                 ),
-              ),
 
               // Decorative circles
               Positioned(
@@ -255,14 +258,34 @@ class _ChildPinPageState extends State<ChildPinPage>
 
                       const SizedBox(height: 36),
 
-                      // Guest mode link
+                      // No code yet → age-based registration flow
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          RouterPaths.ageGate,
+                        ),
+                        child: Text(
+                          '¿No tienes código? Regístrate →',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                            decorationColor:
+                                Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Play without an account
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(
                           context,
                           RouterPaths.studentDashboard,
                         ),
                         child: Text(
-                          '¿No tienes código? Explora EduPlay →',
+                          'Jugar como invitado →',
                           style: GoogleFonts.nunito(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.45),

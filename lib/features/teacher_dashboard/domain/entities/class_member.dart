@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ClassMember {
   const ClassMember({
     required this.id,
@@ -17,6 +19,31 @@ class ClassMember {
     required this.completedChallengeIds,
     required this.joinedAt,
   });
+
+  factory ClassMember.fromMap(Map<String, dynamic> map, String id) {
+    return ClassMember(
+      id: id,
+      classId: (map['classId'] as String?) ?? '',
+      teacherUid: (map['teacherUid'] as String?) ?? '',
+      className: (map['className'] as String?) ?? '',
+      classSubject: (map['classSubject'] as String?) ?? '',
+      classGradeLevel: (map['classGradeLevel'] as String?) ?? '',
+      displayName: (map['displayName'] as String?) ?? '',
+      email: (map['email'] as String?) ?? '',
+      role: (map['role'] as String?) ?? 'student',
+      studentId: (map['studentId'] as String?) ?? id,
+      childProfileId: (map['childProfileId'] as String?) ?? '',
+      parentUid: (map['parentUid'] as String?) ?? '',
+      age: (map['age'] as num?)?.toInt(),
+      focusSubject: (map['focusSubject'] as String?) ?? '',
+      completedChallengeIds: List<String>.from(
+        (map['completedChallengeIds'] as List?) ?? const [],
+      ),
+      joinedAt: map['joinedAt'] is Timestamp
+          ? (map['joinedAt'] as Timestamp).toDate()
+          : DateTime.now(),
+    );
+  }
 
   final String id;
   final String classId;

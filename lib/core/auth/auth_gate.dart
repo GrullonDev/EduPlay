@@ -2,19 +2,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'package:edu_play/core/auth/independent_student_loader.dart';
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
+import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
+import 'package:edu_play/utils/child_portal_link.dart';
 
 /// Listens to [FirebaseAuth.authStateChanges] and routes the user to the
 /// correct screen without going through the login page when they already
 /// have a valid (persisted) session.
 ///
 /// Role resolution:
-///   • Unauthenticated              → [StudentDashboardPage] (guest, child-first UX)
-///   • UID exists in `parents/{uid}`  → [ParentsDashboardPage]
-///   • UID exists in `teachers/{uid}` → [TeacherDashboardPage]
+///   • Unauthenticated, returning child (saved PIN/shared link) → [StudentDashboardPage]
+///   • Unauthenticated, first visit    → [ChildPinPage] (access screen)
+///   • UID exists in `parents/{uid}`              → [ParentsDashboardPage]
+///   • UID exists in `teachers/{uid}`              → [TeacherDashboardPage]
+///   • UID exists in `independent_students/{uid}` → [IndependentStudentLoader]
 ///   • Unknown role                 → [StudentDashboardPage] (guest)
 class AuthGate extends StatelessWidget {
   /// [auth]/[firestore] default to the app's singletons; tests inject
@@ -55,6 +61,13 @@ class AuthGate extends StatelessWidget {
       return 'teacher';
     }
 
+    final independentStudentDoc =
+        await firestore.collection('independent_students').doc(uid).get();
+    if (independentStudentDoc.exists) {
+      _roleCache[uid] = 'independent_student';
+      return 'independent_student';
+    }
+
     return null;
   }
 
@@ -82,6 +95,8 @@ class AuthGate extends StatelessWidget {
         return const TeacherDashboardPage();
       case 'parent':
         return const ParentsDashboardPage();
+      case 'independent_student':
+        return const IndependentStudentLoader();
       default:
         if (!user.isAnonymous) {
           Future.microtask(() => auth.signOut());
@@ -108,8 +123,9 @@ class AuthGate extends StatelessWidget {
 
         final user = authSnap.data;
 
-        // Not logged in → child dashboard (guest mode, no PIN)
-        if (user == null) return const StudentDashboardPage(username: null);
+        // Not logged in → access screen, unless this is a returning child
+        // (saved PIN or a parent-shared link), who should skip straight in.
+        if (user == null) return const _NoSessionEntry();
 
         // Logged in → resolve role from Firestore
         return FutureBuilder<String?>(
@@ -225,6 +241,41 @@ class _RoleResolutionErrorScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── No-session entry point ─────────────────────────────────────────────────────
+
+/// Decides what an unauthenticated visitor sees first.
+///
+/// A returning child (one who already resolved a PIN before, or who arrived
+/// via a parent-shared link) should never be forced to re-enter their PIN —
+/// they skip straight into [StudentDashboardPage], which resolves their
+/// identity itself. Everyone else lands on [ChildPinPage], the actual access
+/// screen (enter PIN / register / play as guest).
+class _NoSessionEntry extends StatelessWidget {
+  const _NoSessionEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    // Synchronous check first: a parent-shared link embeds both the profile
+    // and PIN directly in the URL fragment.
+    if (childProfileFromUrl() != null && pinFromUrl() != null) {
+      return const StudentDashboardPage(username: null);
+    }
+
+    return FutureBuilder<bool>(
+      future: StudentSessionNavigationService.hasRememberedChildPin(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const _SplashLoader();
+        }
+        if (snap.data == true) {
+          return const StudentDashboardPage(username: null);
+        }
+        return const ChildPinPage();
+      },
     );
   }
 }
