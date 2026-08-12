@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:edu_play/data/datasources/student_datasource.dart'
+    show PurchaseResult;
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show GameSubject;
@@ -8,6 +11,7 @@ import 'package:edu_play/features/progress_recommendations/services/progress_rec
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
+import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/points_service.dart';
 
@@ -46,6 +50,13 @@ class StudentDashboardBloc extends ChangeNotifier {
   List<Map<String, dynamic>> leaderboard = [];
   String myStudentId = '';
   int _guestPoints = 0;
+  Set<String> _guestOwnedItemIds = {};
+  String? _guestEquippedAvatarColorHex;
+  String? _guestEquippedAvatarIcon;
+
+  static const _guestOwnedItemsKey = 'edu_play_guest_owned_item_ids';
+  static const _guestAvatarColorKey = 'edu_play_guest_avatar_color_hex';
+  static const _guestAvatarIconKey = 'edu_play_guest_avatar_icon';
 
   /// Set (once) after [_load] detects the student's level increased since
   /// the last time the dashboard celebrated one — consumed by the UI via
@@ -90,13 +101,17 @@ class StudentDashboardBloc extends ChangeNotifier {
   Map<String, dynamic>? get missionOfTheDay =>
       activeChallenges.isEmpty ? null : activeChallenges.first;
 
-  Set<String> get ownedItemIds =>
-      Set<String>.from(profile?['ownedItemIds'] as List? ?? const []);
+  Set<String> get ownedItemIds => isGuest
+      ? _guestOwnedItemIds
+      : Set<String>.from(profile?['ownedItemIds'] as List? ?? const []);
 
-  String? get equippedAvatarColorHex =>
-      profile?['equippedAvatarColorHex'] as String?;
+  String? get equippedAvatarColorHex => isGuest
+      ? _guestEquippedAvatarColorHex
+      : profile?['equippedAvatarColorHex'] as String?;
 
-  String? get equippedAvatarIcon => profile?['equippedAvatarIcon'] as String?;
+  String? get equippedAvatarIcon => isGuest
+      ? _guestEquippedAvatarIcon
+      : profile?['equippedAvatarIcon'] as String?;
 
   List<String> get unlockedStickerIds => {
         ...stickersUnlockedAtLevel(level).map((s) => s.id),
@@ -114,6 +129,7 @@ class StudentDashboardBloc extends ChangeNotifier {
     try {
       if (isGuest) {
         _guestPoints = await PointsService.getPoints();
+        await _loadGuestStore();
       } else {
         if (childProfile != null) {
           await _studentRepository.setActiveStudentId(childProfile!.id);
@@ -198,6 +214,46 @@ class StudentDashboardBloc extends ChangeNotifier {
   }
 
   Future<void> refresh() => _load();
+
+  Future<void> _loadGuestStore() async {
+    final prefs = await SharedPreferences.getInstance();
+    _guestOwnedItemIds =
+        prefs.getStringList(_guestOwnedItemsKey)?.toSet() ?? {};
+    _guestEquippedAvatarColorHex = prefs.getString(_guestAvatarColorKey);
+    _guestEquippedAvatarIcon = prefs.getString(_guestAvatarIconKey);
+  }
+
+  Future<PurchaseResult> purchaseGuestItem(StoreItem item) async {
+    if (!isGuest) return PurchaseResult.error;
+    if (_guestOwnedItemIds.contains(item.id)) {
+      return PurchaseResult.alreadyOwned;
+    }
+    if (_guestPoints < item.cost) return PurchaseResult.insufficientPoints;
+
+    _guestPoints -= item.cost;
+    _guestOwnedItemIds = {..._guestOwnedItemIds, item.id};
+
+    final prefs = await SharedPreferences.getInstance();
+    await PointsService.setPoints(_guestPoints);
+    await prefs.setStringList(_guestOwnedItemsKey, _guestOwnedItemIds.toList());
+    notifyListeners();
+    return PurchaseResult.success;
+  }
+
+  Future<void> equipGuestItem(StoreItem item) async {
+    if (!isGuest || item.category == StoreCategory.sticker) return;
+    if (!_guestOwnedItemIds.contains(item.id)) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    if (item.category == StoreCategory.avatarColor) {
+      _guestEquippedAvatarColorHex = item.colorHex;
+      await prefs.setString(_guestAvatarColorKey, item.colorHex);
+    } else {
+      _guestEquippedAvatarIcon = item.id;
+      await prefs.setString(_guestAvatarIconKey, item.id);
+    }
+    notifyListeners();
+  }
 
   Future<void> completeChallenge(String challengeId) async {
     final challenge = challenges.cast<Map<String, dynamic>?>().firstWhere(

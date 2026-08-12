@@ -43,11 +43,13 @@ class StoreBloc extends ChangeNotifier {
     lastError = null;
     notifyListeners();
 
-    final result = await _studentRepository.purchaseItem(
-      studentId: dashboardBloc.myStudentId,
-      itemId: item.id,
-      cost: item.cost,
-    );
+    final result = dashboardBloc.isGuest
+        ? await dashboardBloc.purchaseGuestItem(item)
+        : await _studentRepository.purchaseItem(
+            studentId: dashboardBloc.myStudentId,
+            itemId: item.id,
+            cost: item.cost,
+          );
 
     switch (result) {
       case PurchaseResult.success:
@@ -70,13 +72,17 @@ class StoreBloc extends ChangeNotifier {
     isBusy = true;
     notifyListeners();
 
-    final studentId = dashboardBloc.myStudentId;
-    if (item.category == StoreCategory.avatarColor) {
-      await _studentRepository.equipAvatarColor(studentId, item.colorHex);
+    if (dashboardBloc.isGuest) {
+      await dashboardBloc.equipGuestItem(item);
     } else {
-      await _studentRepository.equipAvatarIcon(studentId, item.id);
+      final studentId = dashboardBloc.myStudentId;
+      if (item.category == StoreCategory.avatarColor) {
+        await _studentRepository.equipAvatarColor(studentId, item.colorHex);
+      } else {
+        await _studentRepository.equipAvatarIcon(studentId, item.id);
+      }
+      await dashboardBloc.refresh();
     }
-    await dashboardBloc.refresh();
 
     isBusy = false;
     notifyListeners();
