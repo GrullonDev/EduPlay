@@ -78,17 +78,29 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     if (savedPin != null && savedPin.isNotEmpty) {
       final authOk = await _ensureAnonymousAuth();
       if (authOk) {
-        final profile = await ChildProfilesService.findByPinGlobal(savedPin);
-        if (profile != null) {
-          if (!mounted) return;
-          setState(() {
-            _resolvedProfile = profile;
-            _resolving = false;
-          });
-          return;
+        try {
+          final profile =
+              await ChildProfilesService.findByPinGlobal(savedPin);
+          if (profile != null) {
+            if (!mounted) return;
+            setState(() {
+              _resolvedProfile = profile;
+              _resolving = false;
+            });
+            return;
+          }
+          // Lookup succeeded and genuinely found no profile for this PIN
+          // (e.g. the parent deleted/regenerated it) — only now is it safe
+          // to forget it.
+          await StudentSessionNavigationService.clearChildPin();
+        } catch (_) {
+          // Transient error (offline, permission hiccup): keep the cached
+          // PIN so the next attempt can still resolve the child without
+          // forcing them back to the parent for a new link.
         }
       }
-      await StudentSessionNavigationService.clearChildPin();
+      // Anonymous auth itself failed (offline/disabled): also keep the PIN
+      // cached rather than logging the child out over a connectivity blip.
     }
 
     if (!mounted) return;
