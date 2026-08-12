@@ -42,6 +42,10 @@ import 'package:edu_play/features/sticker_album/domain/repositories/level_progre
 import 'package:edu_play/features/subscription/data/datasources/subscription_datasource.dart';
 import 'package:edu_play/features/subscription/data/repositories/firestore_subscription_repository.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:edu_play/features/store/data/datasources/store_catalog_datasource.dart';
+import 'package:edu_play/features/store/data/repositories/firestore_store_catalog_repository.dart';
+import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
+import 'package:edu_play/features/store/services/store_catalog_cache.dart';
 
 class InjectionContainer {}
 
@@ -118,6 +122,11 @@ void init() {
   if (!sl.isRegistered<TeacherClassesDatasource>()) {
     sl.registerLazySingleton<TeacherClassesDatasource>(
       () => FirestoreTeacherClassesDatasource(),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogDatasource>()) {
+    sl.registerLazySingleton<StoreCatalogDatasource>(
+      () => FirestoreStoreCatalogDatasource(),
     );
   }
 
@@ -198,6 +207,16 @@ void init() {
         datasource: sl(),
         teacherClassesRepository: sl(),
       ),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogRepository>()) {
+    sl.registerLazySingleton<StoreCatalogRepository>(
+      () => FirestoreStoreCatalogRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogCache>()) {
+    sl.registerLazySingleton<StoreCatalogCache>(
+      () => StoreCatalogCache(repository: sl()),
     );
   }
 }
