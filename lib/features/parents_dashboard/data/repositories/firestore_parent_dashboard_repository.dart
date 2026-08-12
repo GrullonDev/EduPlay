@@ -16,6 +16,11 @@ class FirestoreParentDashboardRepository implements ParentDashboardRepository {
   }
 
   @override
+  Future<ParentQuickControls> getQuickControlsForUser(String uid) {
+    return _datasource.getQuickControlsForUser(uid);
+  }
+
+  @override
   Future<void> saveQuickControls(ParentQuickControls controls) {
     return _datasource.saveQuickControls(controls);
   }

@@ -7,6 +7,8 @@ import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls
 abstract class ParentDashboardDatasource {
   Future<ParentQuickControls> getQuickControls();
 
+  Future<ParentQuickControls> getQuickControlsForUser(String uid);
+
   Future<void> saveQuickControls(ParentQuickControls controls);
 
   Future<List<ParentChallenge>> getChallenges();
@@ -32,7 +34,11 @@ class FirestoreParentDashboardDatasource implements ParentDashboardDatasource {
   Future<ParentQuickControls> getQuickControls() async {
     final uid = _uid;
     if (uid == null) return const ParentQuickControls();
+    return getQuickControlsForUser(uid);
+  }
 
+  @override
+  Future<ParentQuickControls> getQuickControlsForUser(String uid) async {
     final doc = await _parentRef(uid).get();
     return ParentQuickControls.fromJson(doc.data() ?? {});
   }
