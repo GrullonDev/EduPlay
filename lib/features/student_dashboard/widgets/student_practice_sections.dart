@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
+import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
+
+/// Mirrors the private `_openGame` helper in catalog_filter_content.dart —
+/// duplicated locally since that one is private to its own file.
+Future<void> _openGame(BuildContext context, String route) async {
+  final dashboardBloc = context.read<StudentDashboardBloc>();
+  await Navigator.pushNamed(context, route);
+  await dashboardBloc.refresh();
+}
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFE53935);
@@ -98,7 +108,7 @@ class _RecommendationTile extends StatelessWidget {
     if (game == null) return const SizedBox.shrink();
 
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, game.route),
+      onTap: () => _openGame(context, game.route),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(10),

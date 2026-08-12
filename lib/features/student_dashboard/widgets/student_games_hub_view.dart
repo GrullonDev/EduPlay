@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
@@ -7,6 +8,14 @@ import 'package:edu_play/features/games_catalog/widgets/catalog_filter_content.d
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
+
+/// Mirrors the private `_openGame` helper in catalog_filter_content.dart —
+/// duplicated locally since that one is private to its own file.
+Future<void> _openGame(BuildContext context, String route) async {
+  final dashboardBloc = context.read<StudentDashboardBloc>();
+  await Navigator.pushNamed(context, route);
+  await dashboardBloc.refresh();
+}
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kGold = Color(0xFFFFD700);
@@ -272,7 +281,7 @@ class _RecentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, game.route),
+      onTap: () => _openGame(context, game.route),
       child: Container(
         width: s.isMobile ? 160 : 190,
         padding: const EdgeInsets.all(14),
