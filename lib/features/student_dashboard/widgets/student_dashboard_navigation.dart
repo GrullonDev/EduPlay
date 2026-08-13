@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -43,34 +44,9 @@ class StudentTopNavBar extends StatelessWidget {
           const SizedBox(width: 16),
 
           // Notification bell
-          InkWell(
-            borderRadius: BorderRadius.circular(20),
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notificaciones próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(4),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Icon(Icons.notifications_outlined,
-                      color: Colors.grey[600], size: 22),
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                          color: _kCoral, shape: BoxShape.circle),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          NotificationsButton(
+            childId: bloc.childProfile?.id,
+            iconColor: Colors.grey[600],
           ),
           const SizedBox(width: 16),
 
@@ -139,8 +115,9 @@ class StudentPointsBadge extends StatelessWidget {
 const _sideNavItems = [
   _SideItem(icon: Icons.dashboard_rounded, label: 'Panel de Control', tab: 0),
   _SideItem(icon: Icons.videogame_asset_rounded, label: 'Mis Juegos', tab: 1),
+  _SideItem(icon: Icons.flag_rounded, label: 'Retos', tab: 5),
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros', tab: 2),
-  if (ReleaseFlags.studentExtraTabsEnabled)
+  if (ReleaseFlags.friendsEnabled)
     _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos', tab: 3),
   if (ReleaseFlags.studentExtraTabsEnabled)
     _SideItem(icon: Icons.storefront_rounded, label: 'Tienda', tab: 4),
@@ -148,15 +125,37 @@ const _sideNavItems = [
 
 /// Kindergarten-age children (<= 5) only ever see "Mis Juegos" — Panel de
 /// Control and Logros are hidden entirely, not just unreachable.
-List<_SideItem> _visibleNavItems(bool isYoungChild) => isYoungChild
-    ? _sideNavItems.where((i) => i.tab == 1).toList()
-    : _sideNavItems;
+///
+/// [activeChallengeCount] feeds a small badge onto the "Retos" item so a
+/// child can tell from the menu alone, without opening the tab, that their
+/// teacher assigned something new.
+List<_SideItem> _visibleNavItems(bool isYoungChild, int activeChallengeCount) {
+  final items = activeChallengeCount > 0
+      ? _sideNavItems
+          .map((i) => i.tab == 5 ? i.copyWith(badge: activeChallengeCount) : i)
+          .toList()
+      : _sideNavItems;
+  return isYoungChild ? items.where((i) => i.tab == 1).toList() : items;
+}
 
 class _SideItem {
-  const _SideItem({required this.icon, required this.label, required this.tab});
+  const _SideItem({
+    required this.icon,
+    required this.label,
+    required this.tab,
+    this.badge,
+  });
   final IconData icon;
   final String label;
   final int tab;
+  final int? badge;
+
+  _SideItem copyWith({int? badge}) => _SideItem(
+        icon: icon,
+        label: label,
+        tab: tab,
+        badge: badge ?? this.badge,
+      );
 }
 
 class StudentSidebar extends StatelessWidget {
@@ -222,7 +221,8 @@ class StudentSidebar extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Nav items
-            for (final item in _visibleNavItems(bloc.isYoungChild))
+            for (final item in _visibleNavItems(
+                bloc.isYoungChild, bloc.activeChallenges.length))
               _SideNavTile(
                 item: item,
                 selected: item.tab == selected,
@@ -330,6 +330,24 @@ class _SideNavTile extends StatelessWidget {
                 ),
               ),
             ),
+            if (item.badge != null && item.badge! > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _kCoral,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${item.badge}',
+                  style: GoogleFonts.nunito(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

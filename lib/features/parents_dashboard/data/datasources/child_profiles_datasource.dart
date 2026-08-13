@@ -74,13 +74,13 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
 
   @override
   Future<ChildProfile?> findByPinGlobal(String pin) async {
-    try {
-      final doc = await _pinsRef.doc(pin).get();
-      if (!doc.exists) return null;
-      return ChildProfile.fromJson(doc.data()!);
-    } catch (_) {
-      return null;
-    }
+    // Let failures (offline, permission-denied) propagate instead of
+    // masquerading as "PIN not found" — callers need to tell a transient
+    // error apart from a genuinely unknown PIN so they don't forget a valid
+    // child session over a network blip.
+    final doc = await _pinsRef.doc(pin).get();
+    if (!doc.exists) return null;
+    return ChildProfile.fromJson(doc.data()!);
   }
 
   @override

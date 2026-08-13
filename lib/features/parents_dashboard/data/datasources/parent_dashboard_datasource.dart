@@ -1,15 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 
 abstract class ParentDashboardDatasource {
   Future<ParentQuickControls> getQuickControls();
 
   Future<void> saveQuickControls(ParentQuickControls controls);
-
-  Future<List<ParentChallenge>> getChallenges();
 }
 
 class FirestoreParentDashboardDatasource implements ParentDashboardDatasource {
@@ -43,19 +40,5 @@ class FirestoreParentDashboardDatasource implements ParentDashboardDatasource {
     if (uid == null) return;
 
     await _parentRef(uid).set(controls.toJson(), SetOptions(merge: true));
-  }
-
-  @override
-  Future<List<ParentChallenge>> getChallenges() async {
-    final uid = _uid;
-    if (uid == null) return [];
-
-    final snap = await _parentRef(uid)
-        .collection('challenges')
-        .orderBy('createdAt', descending: false)
-        .get();
-    return snap.docs
-        .map((doc) => ParentChallenge.fromJson(doc.data()))
-        .toList();
   }
 }

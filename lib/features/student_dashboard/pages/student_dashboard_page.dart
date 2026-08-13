@@ -12,21 +12,10 @@ import 'package:edu_play/features/student_dashboard/pages/student_dashboard_layo
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
-/// Persistence key for a PIN-resolved child, shared with [childPortalUrl]'s
-/// consumers so a returning child (or a parent-shared link) skips PIN entry.
 const kChildPinKey = StudentSessionNavigationService.childPinKey;
 
-/// Entry point for the student "Panel de Control" — the single consolidated
-/// child-facing screen. Provides the gamification profile/challenges/
-/// leaderboard (via [StudentDashboardBloc]) plus the games catalog (via
-/// [MenuProvider]) to the dashboard layout.
-///
-/// When neither [childProfile] nor [username] is supplied (e.g. when built
-/// directly by `AuthGate` for a fresh/anonymous visitor), this page resolves
-/// who's asking on its own, in priority order: a profile embedded in a
-/// parent-shared link, a cached PIN from a previous visit, or — if neither
-/// resolves — a true zero-write guest experience.
 class StudentDashboardPage extends StatefulWidget {
   const StudentDashboardPage({
     super.key,
@@ -37,10 +26,8 @@ class StudentDashboardPage extends StatefulWidget {
 
   final String? username;
 
-  /// Optional ChildProfile passed from the PIN login flow.
   final ChildProfile? childProfile;
 
-  /// Which dashboard tab to land on (0 = Panel de Control, 1 = Mis Juegos).
   final int initialTab;
 
   @override
@@ -52,14 +39,18 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
   bool _resolving = true;
   ChildProfile? _resolvedProfile;
   bool _isGuest = false;
+  bool _routeNormalized = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.childProfile != null || widget.username != null) {
-      // Fast path: identity already known (PIN flow / legacy guest-entry) —
-      // skip async resolution entirely.
+    if (widget.childProfile != null) {
       _resolvedProfile = widget.childProfile;
+      _ensureChildSession(widget.childProfile!).then((_) {
+        if (!mounted) return;
+        setState(() => _resolving = false);
+      });
+    } else if (widget.username != null) {
       _resolving = false;
     } else {
       _resolveEntry();
@@ -87,22 +78,31 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
     if (savedPin != null && savedPin.isNotEmpty) {
       final authOk = await _ensureAnonymousAuth();
       if (authOk) {
-        final profile = await ChildProfilesService.findByPinGlobal(savedPin);
-        if (profile != null) {
-          if (!mounted) return;
-          setState(() {
-            _resolvedProfile = profile;
-            _resolving = false;
-          });
-          return;
+        try {
+          final profile =
+              await ChildProfilesService.findByPinGlobal(savedPin);
+          if (profile != null) {
+            if (!mounted) return;
+            setState(() {
+              _resolvedProfile = profile;
+              _resolving = false;
+            });
+            return;
+          }
+          // Lookup succeeded and genuinely found no profile for this PIN
+          // (e.g. the parent deleted/regenerated it) — only now is it safe
+          // to forget it.
+          await StudentSessionNavigationService.clearChildPin();
+        } catch (_) {
+          // Transient error (offline, permission hiccup): keep the cached
+          // PIN so the next attempt can still resolve the child without
+          // forcing them back to the parent for a new link.
         }
       }
-      // Cached PIN no longer valid (or auth failed) — clear silently and
-      // fall through to guest, matching the previous portal's behavior.
-      await StudentSessionNavigationService.clearChildPin();
+      // Anonymous auth itself failed (offline/disabled): also keep the PIN
+      // cached rather than logging the child out over a connectivity blip.
     }
 
-    // Nothing resolved — true, zero-write guest mode.
     if (!mounted) return;
     setState(() {
       _isGuest = true;
@@ -112,6 +112,28 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
 
   Future<bool> _ensureAnonymousAuth() {
     return _authRepository.ensureAnonymousAuth();
+  }
+
+  Future<void> _ensureChildSession(ChildProfile profile) async {
+    await _ensureAnonymousAuth();
+    await StudentSessionNavigationService.rememberChildPin(profile.pin);
+  }
+
+  void _normalizeRouteIfNeeded() {
+    if (_routeNormalized) return;
+    final routeName = ModalRoute.of(context)?.settings.name;
+    final isLegacy = routeName == RouterPaths.legacyStudentDashboard ||
+        routeName == RouterPaths.legacySlashStudentDashboard;
+    if (!isLegacy) return;
+
+    _routeNormalized = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacementNamed(
+        RouterPaths.studentDashboard,
+        arguments: _resolvedProfile ?? widget.username,
+      );
+    });
   }
 
   @override
@@ -125,6 +147,8 @@ class _StudentDashboardPageState extends State<StudentDashboardPage> {
         ),
       );
     }
+
+    _normalizeRouteIfNeeded();
 
     final registerProvider = context.read<RegisterProvider>();
     final age =

@@ -5,7 +5,9 @@ import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
 import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
+import 'package:edu_play/features/age_gate/pages/age_gate_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/register_student/pages/register_student_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
 import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
 import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
@@ -37,6 +39,7 @@ import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
 import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
 import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
+import 'package:edu_play/features/friends/pages/friends_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -86,6 +89,8 @@ class AppRouter {
       // Legacy alias kept for back-compat
       case RouterPaths.menu:
       case RouterPaths.studentDashboard:
+      case RouterPaths.legacyStudentDashboard:
+      case RouterPaths.legacySlashStudentDashboard:
         // Accepts either a ChildProfile (from PIN flow) or a plain String username
         final args = settings.arguments;
         if (args is ChildProfile) {
@@ -96,6 +101,13 @@ class AppRouter {
         break;
       case RouterPaths.childPin:
         return MaterialPageRoute(builder: (_) => const ChildPinPage());
+      case RouterPaths.ageGate:
+        return MaterialPageRoute(builder: (_) => const AgeGatePage());
+      case RouterPaths.registerStudent:
+        final age = settings.arguments as int? ?? 15;
+        return MaterialPageRoute(
+          builder: (_) => RegisterStudentPage(age: age),
+        );
 
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
@@ -213,6 +225,10 @@ class AppRouter {
         final child = settings.arguments as ChildProfile;
         return MaterialPageRoute(
           builder: (_) => BrowseTeachersPage(child: child),
+        );
+      case RouterPaths.friends:
+        return MaterialPageRoute(
+          builder: (_) => const FriendsPage(),
         );
       default:
         page = const Scaffold(
