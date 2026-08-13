@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Child PIN Entry Page ───────────────────────────────────────────────────────
 // A full-screen numpad where a child enters their 4-digit PIN to access their
-// personal student dashboard. Validates against ChildProfilesService (local
-// SharedPreferences). No backend needed.
+// personal student dashboard. Validates against the global child_pins index
+// via ChildProfilesService, which requires an authenticated (anonymous is
+// fine) session per firestore.rules.
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
@@ -26,6 +30,7 @@ class _ChildPinPageState extends State<ChildPinPage>
   final List<String> _digits = [];
   bool _loading = false;
   bool _hasError = false;
+  String _errorMessage = 'Código incorrecto. Inténtalo de nuevo.';
   late AnimationController _shakeCtrl;
   late Animation<double> _shakeAnim;
 
@@ -71,7 +76,26 @@ class _ChildPinPageState extends State<ChildPinPage>
   Future<void> _validate() async {
     setState(() => _loading = true);
     final pin = _digits.join();
-    final profile = await ChildProfilesService.findByPin(pin);
+
+    // The global child_pins index (unlike the parent-scoped profile list)
+    // requires only an authenticated session per firestore.rules — anonymous
+    // auth is enough, and is exactly what lets a child log in without a
+    // parent ever signing in on this device.
+    final authOk = await sl<AuthRepository>().ensureAnonymousAuth();
+
+    ChildProfile? profile;
+    var networkError = false;
+    if (authOk) {
+      try {
+        profile = await ChildProfilesService.findByPinGlobal(pin);
+      } catch (e) {
+        debugPrint('ChildPinPage._validate findByPinGlobal error: $e');
+        networkError = true;
+      }
+    } else {
+      debugPrint('ChildPinPage._validate ensureAnonymousAuth failed');
+      networkError = true;
+    }
     if (!mounted) return;
 
     if (profile == null) {
@@ -79,6 +103,9 @@ class _ChildPinPageState extends State<ChildPinPage>
       setState(() {
         _loading = false;
         _hasError = true;
+        _errorMessage = networkError
+            ? 'No pudimos verificar tu código. Revisa tu conexión.'
+            : 'Código incorrecto. Inténtalo de nuevo.';
         _digits.clear();
       });
     } else {
@@ -235,7 +262,7 @@ class _ChildPinPageState extends State<ChildPinPage>
                         child: Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            'Código incorrecto. Inténtalo de nuevo.',
+                            _errorMessage,
                             style: GoogleFonts.nunito(
                               fontSize: 12,
                               color: const Color(0xFFFF6B6B),
