@@ -255,7 +255,8 @@ class ImplAuthDatasource implements AuthDatasource {
       try {
         await _firebaseAuth.signInAnonymously().timeout(timeout);
         return true;
-      } catch (_) {
+      } catch (e) {
+        debugPrint('ensureAnonymousAuth attempt $attempt failed: $e');
         if (attempt == 0) {
           await Future.delayed(const Duration(seconds: 1));
         }
