@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:edu_play/core/audio/sound_manager.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/store/widgets/tienda_view.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_dashboard_navigation.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_games_hub_view.dart';
@@ -13,14 +14,8 @@ import 'package:edu_play/utils/dialogs/confetti_burst.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
 
-// ── Tokens ────────────────────────────────────────────────────────────────────
-
 const _kNavy = Color(0xFF1E1B6A);
 const _kBg = Color(0xFFF3F5F9);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Root layout
-// ─────────────────────────────────────────────────────────────────────────────
 
 class StudentDashboardLayout extends StatefulWidget {
   const StudentDashboardLayout({super.key, this.initialTab = 0});
@@ -34,20 +29,10 @@ class StudentDashboardLayout extends StatefulWidget {
 class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
   late int _tab = widget.initialTab;
 
-  /// Set when the user taps a subject shortcut (e.g. the "Lógica & Puzzles"
-  /// card on the home tab) so "Mis Juegos" opens pre-filtered. Cleared on any
-  /// plain tab switch so it never applies to an unrelated visit.
   GameSubject? _pendingSubject;
 
-  /// Kindergarten-age children (<= 5) never see Panel de Control/Logros —
-  /// they always land on (and stay on) the games tab. Computed rather than
-  /// stored so it can't drift out of sync with `bloc.isYoungChild`.
   int _effectiveTab(StudentDashboardBloc bloc) => bloc.isYoungChild ? 1 : _tab;
 
-  /// Guards the level-up celebration to a true one-shot per pending level-up:
-  /// set synchronously (not inside the post-frame callback) so a rebuild
-  /// triggered by `acknowledgeLevelUp()`'s `notifyListeners()` can't race
-  /// into scheduling the dialog a second time.
   bool _celebrationShown = false;
 
   void _maybeShowLevelUpCelebration(StudentDashboardBloc bloc) {
@@ -109,6 +94,8 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return StudentAchievementsView(s: s);
+      case 4:
+        return TiendaView(bloc: bloc, s: s);
       default:
         return StudentHomeView(
           bloc: bloc,
@@ -233,7 +220,3 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Top navigation bar (desktop only)
-// ─────────────────────────────────────────────────────────────────────────────

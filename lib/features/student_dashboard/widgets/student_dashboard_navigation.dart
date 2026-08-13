@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -77,16 +78,25 @@ class StudentTopNavBar extends StatelessWidget {
           // Avatar + name
           CircleAvatar(
             radius: 16,
-            backgroundColor: _kNavy,
-            child: Text(
-              bloc.displayName.isNotEmpty
-                  ? bloc.displayName[0].toUpperCase()
-                  : 'E',
-              style: GoogleFonts.fredoka(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14),
-            ),
+            backgroundColor: bloc.equippedAvatarColorHex != null
+                ? Color(int.parse('0xFF${bloc.equippedAvatarColorHex}'))
+                : _kNavy,
+            child: bloc.equippedAvatarIcon != null &&
+                    avatarIconsById.containsKey(bloc.equippedAvatarIcon)
+                ? Icon(
+                    avatarIconsById[bloc.equippedAvatarIcon],
+                    color: Colors.white,
+                    size: 16,
+                  )
+                : Text(
+                    bloc.displayName.isNotEmpty
+                        ? bloc.displayName[0].toUpperCase()
+                        : 'E',
+                    style: GoogleFonts.fredoka(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
+                  ),
           ),
           const SizedBox(width: 8),
           Text(
@@ -142,7 +152,7 @@ const _sideNavItems = [
   _SideItem(icon: Icons.emoji_events_rounded, label: 'Logros', tab: 2),
   if (ReleaseFlags.studentExtraTabsEnabled)
     _SideItem(icon: Icons.people_alt_rounded, label: 'Amigos', tab: 3),
-  if (ReleaseFlags.studentExtraTabsEnabled)
+  if (ReleaseFlags.storeEnabled)
     _SideItem(icon: Icons.storefront_rounded, label: 'Tienda', tab: 4),
 ];
 

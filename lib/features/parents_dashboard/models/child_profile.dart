@@ -13,6 +13,7 @@ class ChildProfile {
         avatarColorHex: j['avatarColorHex'] as String,
         isOnline: j['isOnline'] as bool? ?? false,
         lastSeen: j['lastSeen'] as String? ?? 'Hace un momento',
+        parentUid: j['parentUid'] as String?,
       );
   const ChildProfile({
     required this.id,
@@ -25,6 +26,7 @@ class ChildProfile {
     required this.avatarColorHex,
     this.isOnline = false,
     this.lastSeen = 'Hace un momento',
+    this.parentUid,
   });
 
   final String id;
@@ -37,6 +39,7 @@ class ChildProfile {
   final String avatarColorHex;
   final bool isOnline;
   final String lastSeen;
+  final String? parentUid;
 
   Color get avatarColor => Color(int.parse('0xFF$avatarColorHex'));
 
@@ -53,6 +56,7 @@ class ChildProfile {
         'avatarColorHex': avatarColorHex,
         'isOnline': isOnline,
         'lastSeen': lastSeen,
+        if (parentUid != null) 'parentUid': parentUid,
       };
 
   ChildProfile copyWith({
@@ -65,6 +69,7 @@ class ChildProfile {
     String? avatarColorHex,
     bool? isOnline,
     String? lastSeen,
+    String? parentUid,
   }) =>
       ChildProfile(
         id: id,
@@ -77,6 +82,7 @@ class ChildProfile {
         avatarColorHex: avatarColorHex ?? this.avatarColorHex,
         isOnline: isOnline ?? this.isOnline,
         lastSeen: lastSeen ?? this.lastSeen,
+        parentUid: parentUid ?? this.parentUid,
       );
 
   /// Generates a random 4-digit PIN string.

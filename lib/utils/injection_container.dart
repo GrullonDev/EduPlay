@@ -31,14 +31,21 @@ import 'package:edu_play/features/settings/data/repositories/firestore_settings_
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/settings_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
+import 'package:edu_play/features/teacher_dashboard/data/datasources/teacher_classes_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_teacher_classes_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 import 'package:edu_play/features/sticker_album/data/datasources/level_progress_datasource.dart';
 import 'package:edu_play/features/sticker_album/data/repositories/local_level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/subscription/data/datasources/subscription_datasource.dart';
 import 'package:edu_play/features/subscription/data/repositories/firestore_subscription_repository.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:edu_play/features/store/data/datasources/store_catalog_datasource.dart';
+import 'package:edu_play/features/store/data/repositories/firestore_store_catalog_repository.dart';
+import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
+import 'package:edu_play/features/store/services/store_catalog_cache.dart';
 
 class InjectionContainer {}
 
@@ -112,6 +119,16 @@ void init() {
       () => FirestoreClassroomChallengesDatasource(),
     );
   }
+  if (!sl.isRegistered<TeacherClassesDatasource>()) {
+    sl.registerLazySingleton<TeacherClassesDatasource>(
+      () => FirestoreTeacherClassesDatasource(),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogDatasource>()) {
+    sl.registerLazySingleton<StoreCatalogDatasource>(
+      () => FirestoreStoreCatalogDatasource(),
+    );
+  }
 
   // Repositories
   if (!sl.isRegistered<AdminDashboardRepository>()) {
@@ -179,12 +196,27 @@ void init() {
       () => FirestoreSubscriptionRepository(datasource: sl()),
     );
   }
+  if (!sl.isRegistered<TeacherClassesRepository>()) {
+    sl.registerLazySingleton<TeacherClassesRepository>(
+      () => FirestoreTeacherClassesRepository(datasource: sl()),
+    );
+  }
   if (!sl.isRegistered<ClassroomChallengesRepository>()) {
     sl.registerLazySingleton<ClassroomChallengesRepository>(
       () => FirestoreClassroomChallengesRepository(
         datasource: sl(),
         teacherClassesRepository: sl(),
       ),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogRepository>()) {
+    sl.registerLazySingleton<StoreCatalogRepository>(
+      () => FirestoreStoreCatalogRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogCache>()) {
+    sl.registerLazySingleton<StoreCatalogCache>(
+      () => StoreCatalogCache(repository: sl()),
     );
   }
 }
