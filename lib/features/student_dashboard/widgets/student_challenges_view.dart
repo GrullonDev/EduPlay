@@ -27,7 +27,9 @@ class StudentChallengesView extends StatelessWidget {
       onRefresh: bloc.refresh,
       child: CustomScrollView(
         slivers: [
-          SizedBox(height: s.isMobile ? 12 : 24),
+          SliverToBoxAdapter(
+            child: SizedBox(height: s.isMobile ? 12 : 24),
+          ),
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(
