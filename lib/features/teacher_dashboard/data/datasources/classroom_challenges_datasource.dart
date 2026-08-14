@@ -56,27 +56,36 @@ class FirestoreClassroomChallengesDatasource
   ) async {
     if (classes.isEmpty) return [];
 
+    // Called on every student dashboard load — guard against a stalled
+    // gRPC channel hanging the caller forever instead of falling back to
+    // "no classroom challenges today".
     final results = <ClassroomChallenge>[];
     for (final teacherClass in classes) {
-      final snap = await _challengeCol(teacherClass.id)
-          .orderBy('createdAt', descending: true)
-          .get();
-      results.addAll(
-        snap.docs.map(
-          (doc) => ClassroomChallenge(
-            id: doc.id,
-            classId: teacherClass.id,
-            className: teacherClass.name,
-            title: (doc.data()['title'] as String?) ?? 'Reto',
-            subjectKey: (doc.data()['subjectKey'] as String?) ?? 'math',
-            status: (doc.data()['status'] as String?) ?? 'active',
-            dueDate: doc.data()['dueDate'] as String?,
-            createdAt: doc.data()['createdAt'] is Timestamp
-                ? (doc.data()['createdAt'] as Timestamp).toDate()
-                : DateTime.now(),
+      try {
+        final snap = await _challengeCol(teacherClass.id)
+            .orderBy('createdAt', descending: true)
+            .get()
+            .timeout(const Duration(seconds: 8));
+        results.addAll(
+          snap.docs.map(
+            (doc) => ClassroomChallenge(
+              id: doc.id,
+              classId: teacherClass.id,
+              className: teacherClass.name,
+              title: (doc.data()['title'] as String?) ?? 'Reto',
+              subjectKey: (doc.data()['subjectKey'] as String?) ?? 'math',
+              status: (doc.data()['status'] as String?) ?? 'active',
+              dueDate: doc.data()['dueDate'] as String?,
+              createdAt: doc.data()['createdAt'] is Timestamp
+                  ? (doc.data()['createdAt'] as Timestamp).toDate()
+                  : DateTime.now(),
+            ),
           ),
-        ),
-      );
+        );
+      } catch (e) {
+        // Skip this class's challenges on a transient error rather than
+        // failing the whole dashboard load.
+      }
     }
     return results;
   }

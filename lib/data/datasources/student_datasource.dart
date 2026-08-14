@@ -10,6 +10,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StudentDatasource {
   static const _studentIdKey = 'student_id';
 
+  // A stalled gRPC channel (e.g. right after a fresh anonymous sign-in) can
+  // leave a Firestore `.get()` pending forever instead of throwing, which
+  // would otherwise hang the caller's loading state indefinitely.
+  static const _fetchTimeout = Duration(seconds: 8);
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _students =>
@@ -38,7 +43,7 @@ class StudentDatasource {
   }) async {
     try {
       final doc = _students.doc(studentId);
-      final snapshot = await doc.get();
+      final snapshot = await doc.get().timeout(_fetchTimeout);
       if (!snapshot.exists) {
         await doc.set({
           'name': name,
@@ -65,7 +70,7 @@ class StudentDatasource {
 
   Future<Map<String, dynamic>?> getProfile(String studentId) async {
     try {
-      final snapshot = await _students.doc(studentId).get();
+      final snapshot = await _students.doc(studentId).get().timeout(_fetchTimeout);
       if (!snapshot.exists) return null;
       return {...snapshot.data()!, 'id': snapshot.id};
     } catch (e) {
@@ -130,7 +135,8 @@ class StudentDatasource {
       final snapshot = await _students
           .orderBy('points', descending: true)
           .limit(limit)
-          .get();
+          .get()
+          .timeout(_fetchTimeout);
       return snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
     } catch (e) {
       debugPrint('StudentDatasource.getLeaderboard error: $e');

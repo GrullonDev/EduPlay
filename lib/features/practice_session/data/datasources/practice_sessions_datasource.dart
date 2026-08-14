@@ -69,11 +69,18 @@ class FirestorePracticeSessionsDatasource
   Future<List<PracticeSession>> getAllSessions() async {
     final uid = _uid;
     if (uid == null) return [];
-    final snap = await _col
-        .where('parentUid', isEqualTo: uid)
-        .orderBy('createdAt', descending: true)
-        .get();
-    return snap.docs.map(_fromDoc).toList();
+    // Called on every student dashboard load (via progress recommendations)
+    // — guard against a stalled gRPC channel hanging the caller forever.
+    try {
+      final snap = await _col
+          .where('parentUid', isEqualTo: uid)
+          .orderBy('createdAt', descending: true)
+          .get()
+          .timeout(const Duration(seconds: 8));
+      return snap.docs.map(_fromDoc).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   @override

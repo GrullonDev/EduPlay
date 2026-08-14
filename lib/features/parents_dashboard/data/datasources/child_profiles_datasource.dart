@@ -78,7 +78,11 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
     // masquerading as "PIN not found" — callers need to tell a transient
     // error apart from a genuinely unknown PIN so they don't forget a valid
     // child session over a network blip.
-    final doc = await _pinsRef.doc(pin).get();
+    // Timeout: a stalled gRPC channel right after a fresh anonymous sign-in
+    // can leave this Future pending forever instead of throwing, which would
+    // otherwise hang the caller's loading state indefinitely.
+    final doc =
+        await _pinsRef.doc(pin).get().timeout(const Duration(seconds: 8));
     if (!doc.exists) return null;
     return ChildProfile.fromJson(doc.data()!);
   }
