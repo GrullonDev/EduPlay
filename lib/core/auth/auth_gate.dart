@@ -45,24 +45,37 @@ class AuthGate extends StatelessWidget {
   @visibleForTesting
   Future<String?> resolveRoleForTest(String uid) => _resolveRole(uid);
 
+  static const _roleLookupTimeout = Duration(seconds: 8);
+
   Future<String?> _resolveRole(String uid) async {
     final cached = _roleCache[uid];
     if (cached != null) return cached;
 
-    final parentDoc = await firestore.collection('parents').doc(uid).get();
+    final parentDoc = await firestore
+        .collection('parents')
+        .doc(uid)
+        .get()
+        .timeout(_roleLookupTimeout);
     if (parentDoc.exists) {
       _roleCache[uid] = 'parent';
       return 'parent';
     }
 
-    final teacherDoc = await firestore.collection('teachers').doc(uid).get();
+    final teacherDoc = await firestore
+        .collection('teachers')
+        .doc(uid)
+        .get()
+        .timeout(_roleLookupTimeout);
     if (teacherDoc.exists) {
       _roleCache[uid] = 'teacher';
       return 'teacher';
     }
 
-    final independentStudentDoc =
-        await firestore.collection('independent_students').doc(uid).get();
+    final independentStudentDoc = await firestore
+        .collection('independent_students')
+        .doc(uid)
+        .get()
+        .timeout(_roleLookupTimeout);
     if (independentStudentDoc.exists) {
       _roleCache[uid] = 'independent_student';
       return 'independent_student';
@@ -77,8 +90,12 @@ class AuthGate extends StatelessWidget {
   Widget _buildForRole(User user, String? role) {
     // Unknown role — sign out to avoid an infinite loop.
     if (role == null) {
-      // Anonymous sign-in is used by the child portal — leave it alone.
-      if (user.isAnonymous) return const _SplashLoader();
+      // Anonymous sign-in is used by the child portal. A child's anonymous
+      // session persists across app restarts, so `user` is already non-null
+      // here on every return visit — route them exactly as a fresh,
+      // unauthenticated visitor would be (remembered PIN → dashboard,
+      // otherwise the PIN entry screen) instead of a dead-end spinner.
+      if (user.isAnonymous) return const _NoSessionEntry();
       Future.microtask(() => auth.signOut());
       return const StudentDashboardPage(username: null);
     }
