@@ -228,7 +228,7 @@ class _BuilderCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Custom Report Builder',
+            'Generador de Reportes Personalizados',
             style: GoogleFonts.fredoka(
               fontSize: 18,
               color: Colors.white,

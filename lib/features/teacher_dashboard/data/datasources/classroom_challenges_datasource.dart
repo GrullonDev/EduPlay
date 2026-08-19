@@ -10,6 +10,10 @@ abstract class ClassroomChallengesDatasource {
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   });
 
   Future<List<ClassroomChallenge>> getChallengesForClasses(
@@ -40,12 +44,20 @@ class FirestoreClassroomChallengesDatasource
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   }) async {
     await _challengeCol(classId).add({
       'title': title,
       'subjectKey': subjectKey,
       'dueDate': dueDate,
       'status': status,
+      'instructions': instructions,
+      'evaluationCriteria': evaluationCriteria,
+      'targetGameRoute': targetGameRoute,
+      'targetScore': targetScore,
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -79,6 +91,11 @@ class FirestoreClassroomChallengesDatasource
               createdAt: doc.data()['createdAt'] is Timestamp
                   ? (doc.data()['createdAt'] as Timestamp).toDate()
                   : DateTime.now(),
+              instructions: doc.data()['instructions'] as String?,
+              evaluationCriteria:
+                  doc.data()['evaluationCriteria'] as String?,
+              targetGameRoute: doc.data()['targetGameRoute'] as String?,
+              targetScore: (doc.data()['targetScore'] as num?)?.toInt(),
             ),
           ),
         );

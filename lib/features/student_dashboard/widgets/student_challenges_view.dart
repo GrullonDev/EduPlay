@@ -143,6 +143,11 @@ class _ChallengeCard extends StatelessWidget {
     final subjectKey = challenge['subject_key'] as String?;
     final subject = subjectKey != null ? subjectByKey(subjectKey) : null;
     final isCompleted = challenge['status'] == 'completed';
+    final instructions = challenge['instructions'] as String?;
+    final evaluationCriteria = challenge['evaluation_criteria'] as String?;
+    final targetGameRoute = challenge['target_game_route'] as String?;
+    final targetScore = (challenge['target_score'] as num?)?.toInt();
+    final hasLinkedGame = targetGameRoute != null && targetScore != null;
 
     return Container(
       width: double.infinity,
@@ -189,6 +194,30 @@ class _ChallengeCard extends StatelessWidget {
                     decorationColor: Colors.grey,
                   ),
                 ),
+                if (instructions != null && instructions.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    instructions,
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: Colors.grey.shade700,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+                if (evaluationCriteria != null &&
+                    evaluationCriteria.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Criterio: $evaluationCriteria',
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey.shade500,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 8,
@@ -201,6 +230,11 @@ class _ChallengeCard extends StatelessWidget {
                         icon: Icons.event_rounded,
                         label: 'Antes del ${_formatDate(dueDate)}',
                       ),
+                    if (hasLinkedGame)
+                      _Chip(
+                        icon: Icons.flag_circle_rounded,
+                        label: 'Meta: $targetScore pts',
+                      ),
                   ],
                 ),
               ],
@@ -209,6 +243,29 @@ class _ChallengeCard extends StatelessWidget {
           const SizedBox(width: 8),
           if (isCompleted)
             const Icon(Icons.check_circle_rounded, color: _kGreen, size: 26)
+          else if (hasLinkedGame)
+            // Completion is verified automatically when the student reaches
+            // targetScore on targetGameRoute (see StudentRepository.recordScore)
+            // — no manual "Completar" button for these, so it can't be gamed.
+            OutlinedButton.icon(
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(targetGameRoute),
+              icon: const Icon(Icons.play_arrow_rounded, size: 16),
+              label: Text(
+                'Jugar',
+                style: GoogleFonts.nunito(
+                    fontSize: 12, fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _kNavy,
+                side: BorderSide(color: Colors.grey.shade300),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            )
           else
             OutlinedButton(
               onPressed: () => onComplete(id),

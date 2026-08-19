@@ -8,6 +8,10 @@ abstract class ClassroomChallengesRepository {
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   });
 
   Future<List<ClassroomChallenge>> getChallengesForClasses(

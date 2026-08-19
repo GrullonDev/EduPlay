@@ -28,6 +28,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
   List<Map<String, dynamic>> students = [];
   List<double> weeklyTotals = [];
   List<SubjectPerformance> subjectPerformance = [];
+  List<SkillPerformance> skillPerformance = [];
   List<Map<String, dynamic>> challenges = [];
 
   int get totalStudents => students.length;
@@ -110,6 +111,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
             days: 28),
         _studentRepository.getWeeklyScoreTotalsForStudents(linkedStudentIds),
         _studentRepository.getSubjectPerformanceForStudents(linkedStudentIds),
+        _studentRepository.getSkillPerformanceForStudents(linkedStudentIds),
         _classroomChallengesRepository.getChallengesForClasses(classes),
       ]);
 
@@ -117,7 +119,11 @@ class TeacherDashboardBloc extends ChangeNotifier {
       final recentScores = results[1] as List<Map<String, dynamic>>;
       weeklyTotals = results[2] as List<double>;
       subjectPerformance = results[3] as List<SubjectPerformance>;
-      challenges = (results[4] as List<ClassroomChallenge>)
+      skillPerformance = (results[4] as List<SkillPerformance>)
+          .where((p) => p.hasData)
+          .toList()
+        ..sort((a, b) => b.totalAnswers.compareTo(a.totalAnswers));
+      challenges = (results[5] as List<ClassroomChallenge>)
           .map((c) => c.toTeacherMap())
           .toList();
 
@@ -142,12 +148,20 @@ class TeacherDashboardBloc extends ChangeNotifier {
     required String title,
     required String subjectKey,
     String? dueDate,
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   }) async {
     await _classroomChallengesRepository.createChallenge(
       classId: classId,
       title: title,
       subjectKey: subjectKey,
       dueDate: dueDate,
+      instructions: instructions,
+      evaluationCriteria: evaluationCriteria,
+      targetGameRoute: targetGameRoute,
+      targetScore: targetScore,
     );
     await _load();
   }
