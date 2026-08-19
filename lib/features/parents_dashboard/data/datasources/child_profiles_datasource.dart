@@ -96,11 +96,19 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
   }) async {
     final uid = _uid;
 
+    // Checked against the global `child_pins` index (not just this parent's
+    // own kids) — two children under different parents could otherwise be
+    // assigned the same code, and the second one's write to `child_pins`
+    // would then be silently rejected by security rules (see class doc).
     String pin;
-    final usedPins = (await getProfiles()).map((p) => p.pin).toSet();
+    var attempts = 0;
     do {
       pin = ChildProfile.generatePin();
-    } while (usedPins.contains(pin));
+      attempts++;
+      if (attempts > 20) {
+        throw StateError('Could not generate a unique PIN after 20 attempts.');
+      }
+    } while ((await _pinsRef.doc(pin).get()).exists);
 
     final docRef = uid != null
         ? _profilesRef(uid).doc()
