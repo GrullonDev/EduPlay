@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games/core/game_metadata.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 /// Shared gameplay state machine every minigame's controller extends.
@@ -24,6 +25,11 @@ abstract class GameSessionController extends ChangeNotifier {
   int _score = 0;
   int _lives = 0;
 
+  /// Per-skill correct/total tally for the current session. Subclasses call
+  /// `skillTracker.record(skillId, correct: ...)` after grading each answer
+  /// so [submitScore] can report concrete skill mastery, not just points.
+  final SkillTracker skillTracker = SkillTracker();
+
   int get score => _score;
   int get lives => _lives;
 
@@ -39,6 +45,7 @@ abstract class GameSessionController extends ChangeNotifier {
   void startGame() {
     _score = 0;
     _lives = initialLives;
+    skillTracker.reset();
     notifyListeners();
   }
 
@@ -75,6 +82,8 @@ abstract class GameSessionController extends ChangeNotifier {
       subjectKey: metadata.subjectKey,
       gameTitle: metadata.title,
       score: _score,
+      skills: skillTracker.tallies,
+      gameRoute: metadata.route,
     );
   }
 }
