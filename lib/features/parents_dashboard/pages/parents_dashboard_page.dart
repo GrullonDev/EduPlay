@@ -259,7 +259,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                       Navigator.of(ctx).pushNamed(RouterPaths.createSession),
                   icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
                   label: Text(
-                    'Start Session',
+                    'Iniciar Sesión',
                     style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(

@@ -76,11 +76,11 @@ class EduPlayNavBar extends StatelessWidget {
   ];
 
   static const _studentTabs = [
-    (label: 'Learn', tab: StudentTab.learn, route: ''),
-    (label: 'Games', tab: StudentTab.games, route: RouterPaths.gamesCatalog),
-    (label: 'Classroom', tab: StudentTab.classroom, route: ''),
+    (label: 'Aprender', tab: StudentTab.learn, route: ''),
+    (label: 'Juegos', tab: StudentTab.games, route: RouterPaths.gamesCatalog),
+    (label: 'Clase', tab: StudentTab.classroom, route: ''),
     (
-      label: 'Reports',
+      label: 'Reportes',
       tab: StudentTab.reports,
       route: RouterPaths.progressReports
     ),

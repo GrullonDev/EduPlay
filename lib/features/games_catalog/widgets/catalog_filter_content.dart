@@ -1295,7 +1295,7 @@ class _GameListTile extends StatelessWidget {
             onPressed: () => Navigator.pushNamed(context, game.route),
             icon: const Icon(Icons.play_circle_outline_rounded, size: 16),
             label: Text(
-              'Play',
+              'Jugar',
               style:
                   GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13),
             ),
