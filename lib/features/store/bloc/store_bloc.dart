@@ -1,13 +1,16 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/core/analytics/analytics_service.dart';
-import 'package:edu_play/data/datasources/student_datasource.dart'
-    show PurchaseResult;
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/store/services/store_catalog_cache.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/injection_container.dart';
+
+import 'package:edu_play/data/datasources/student_datasource.dart'
+    show PurchaseResult;
 
 /// Category-ish filters for the Tienda catalog grid — the first three mirror
 /// [StoreCategory] 1:1, the last two ("pro", "owned") cut across categories.

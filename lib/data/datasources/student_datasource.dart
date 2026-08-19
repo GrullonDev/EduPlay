@@ -1,5 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
+
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Firestore-backed datasource for the student gamification profile
@@ -9,11 +12,29 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// on the web build where the local sqflite database is unavailable.
 class StudentDatasource {
   StudentDatasource({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestoreOverride = firestore;
 
   static const _studentIdKey = 'student_id';
 
-  final FirebaseFirestore _firestore;
+  // A stalled gRPC channel (e.g. right after a fresh anonymous sign-in) can
+  // leave a Firestore `.get()` pending forever instead of throwing, which
+  // would otherwise hang the caller's loading state indefinitely.
+  static const _fetchTimeout = Duration(seconds: 8);
+
+  static FirebaseFirestore? _firestoreForTest;
+
+  /// Overrides the Firestore instance used by every [StudentDatasource],
+  /// so tests can inject a `FakeFirebaseFirestore` instead of hitting the
+  /// real backend. Mirrors the pattern in `FriendsService`.
+  @visibleForTesting
+  static void useFirestoreForTest(FirebaseFirestore? firestore) {
+    _firestoreForTest = firestore;
+  }
+
+  final FirebaseFirestore? _firestoreOverride;
+
+  FirebaseFirestore get _firestore =>
+      _firestoreOverride ?? _firestoreForTest ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _students =>
       _firestore.collection('students');
@@ -42,7 +63,7 @@ class StudentDatasource {
   }) async {
     try {
       final doc = _students.doc(studentId);
-      final snapshot = await doc.get();
+      final snapshot = await doc.get().timeout(_fetchTimeout);
       if (!snapshot.exists) {
         await doc.set({
           'name': name,
@@ -71,7 +92,8 @@ class StudentDatasource {
 
   Future<Map<String, dynamic>?> getProfile(String studentId) async {
     try {
-      final snapshot = await _students.doc(studentId).get();
+      final snapshot =
+          await _students.doc(studentId).get().timeout(_fetchTimeout);
       if (!snapshot.exists) return null;
       return {...snapshot.data()!, 'id': snapshot.id};
     } catch (e) {
@@ -86,6 +108,7 @@ class StudentDatasource {
     required String subjectLabel,
     required String gameTitle,
     required int score,
+    Map<String, dynamic>? skills,
   }) async {
     try {
       final doc = _students.doc(studentId);
@@ -125,9 +148,70 @@ class StudentDatasource {
         'gameTitle': gameTitle,
         'score': score,
         'date': Timestamp.fromDate(now),
+        if (skills != null && skills.isNotEmpty) 'skills': skills,
       });
     } catch (e) {
       debugPrint('StudentDatasource.recordScore error: $e');
+    }
+  }
+
+  /// Marks the streak as active again today without changing its count —
+  /// called after the child passes the streak-recovery quiz.
+  Future<void> recoverStreak(String studentId) async {
+    try {
+      await _students.doc(studentId).set(
+        {'lastPlayedDate': _dateKey(DateTime.now())},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('StudentDatasource.recoverStreak error: $e');
+    }
+  }
+
+  /// Resets the streak to zero — called after the child fails the
+  /// streak-recovery quiz (or declines and lets it lapse further); a fresh
+  /// streak then starts the next time they actually play a game.
+  Future<void> resetStreak(String studentId) async {
+    try {
+      await _students.doc(studentId).set(
+        {'streak': 0},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('StudentDatasource.resetStreak error: $e');
+    }
+  }
+
+  /// Bumps the streak the moment the child succeeds at something today —
+  /// called on a game's first correct answer, independent of whether that
+  /// game session ever reaches a formal "game over" (some games only ever
+  /// persist a score once the player loses, which meant a child who played
+  /// well and simply left never got credit). Safe to call repeatedly in the
+  /// same day — a no-op once `lastPlayedDate` is already today.
+  Future<void> markPlayedToday(String studentId) async {
+    try {
+      final doc = _students.doc(studentId);
+      final now = DateTime.now();
+      final today = _dateKey(now);
+      final yesterday = _dateKey(now.subtract(const Duration(days: 1)));
+
+      await _firestore.runTransaction((tx) async {
+        final snapshot = await tx.get(doc);
+        final data = snapshot.data();
+        final lastPlayedDate = data?['lastPlayedDate'] as String?;
+        if (lastPlayedDate == today) return;
+
+        final currentStreak = (data?['streak'] as num?)?.toInt() ?? 0;
+        final streak = lastPlayedDate == yesterday ? currentStreak + 1 : 1;
+
+        tx.set(
+          doc,
+          {'streak': streak, 'lastPlayedDate': today},
+          SetOptions(merge: true),
+        );
+      });
+    } catch (e) {
+      debugPrint('StudentDatasource.markPlayedToday error: $e');
     }
   }
 
@@ -136,7 +220,8 @@ class StudentDatasource {
       final snapshot = await _students
           .orderBy('points', descending: true)
           .limit(limit)
-          .get();
+          .get()
+          .timeout(_fetchTimeout);
       return snapshot.docs.map((d) => {...d.data(), 'id': d.id}).toList();
     } catch (e) {
       debugPrint('StudentDatasource.getLeaderboard error: $e');

@@ -1,14 +1,22 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Child PIN Entry Page ───────────────────────────────────────────────────────
 // A full-screen numpad where a child enters their 4-digit PIN to access their
-// personal student dashboard. Validates against ChildProfilesService (local
-// SharedPreferences). No backend needed.
+// personal student dashboard. Validates against the global child_pins index
+// via ChildProfilesService, which requires an authenticated (anonymous is
+// fine) session per firestore.rules.
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kNavyDark = Color(0xFF14125A);
@@ -26,6 +34,7 @@ class _ChildPinPageState extends State<ChildPinPage>
   final List<String> _digits = [];
   bool _loading = false;
   bool _hasError = false;
+  String _errorMessage = 'Código incorrecto. Inténtalo de nuevo.';
   late AnimationController _shakeCtrl;
   late Animation<double> _shakeAnim;
 
@@ -71,7 +80,26 @@ class _ChildPinPageState extends State<ChildPinPage>
   Future<void> _validate() async {
     setState(() => _loading = true);
     final pin = _digits.join();
-    final profile = await ChildProfilesService.findByPin(pin);
+
+    // The global child_pins index (unlike the parent-scoped profile list)
+    // requires only an authenticated session per firestore.rules — anonymous
+    // auth is enough, and is exactly what lets a child log in without a
+    // parent ever signing in on this device.
+    final authOk = await sl<AuthRepository>().ensureAnonymousAuth();
+
+    ChildProfile? profile;
+    var networkError = false;
+    if (authOk) {
+      try {
+        profile = await ChildProfilesService.findByPinGlobal(pin);
+      } catch (e) {
+        debugPrint('ChildPinPage._validate findByPinGlobal error: $e');
+        networkError = true;
+      }
+    } else {
+      debugPrint('ChildPinPage._validate ensureAnonymousAuth failed');
+      networkError = true;
+    }
     if (!mounted) return;
 
     if (profile == null) {
@@ -79,6 +107,9 @@ class _ChildPinPageState extends State<ChildPinPage>
       setState(() {
         _loading = false;
         _hasError = true;
+        _errorMessage = networkError
+            ? 'No pudimos verificar tu código. Revisa tu conexión.'
+            : 'Código incorrecto. Inténtalo de nuevo.';
         _digits.clear();
       });
     } else {
@@ -106,16 +137,19 @@ class _ChildPinPageState extends State<ChildPinPage>
         child: SafeArea(
           child: Stack(
             children: [
-              // Back button
-              Positioned(
-                top: 16,
-                left: 16,
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white70, size: 20),
+              // Back button — only shown when there's actually somewhere to
+              // go back to (this page also serves as the app's landing
+              // screen when there's no active session, with nothing to pop).
+              if (Navigator.canPop(context))
+                Positioned(
+                  top: 16,
+                  left: 16,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white70, size: 20),
+                  ),
                 ),
-              ),
 
               // Decorative circles
               Positioned(
@@ -232,7 +266,7 @@ class _ChildPinPageState extends State<ChildPinPage>
                         child: Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Text(
-                            'Código incorrecto. Inténtalo de nuevo.',
+                            _errorMessage,
                             style: GoogleFonts.nunito(
                               fontSize: 12,
                               color: const Color(0xFFFF6B6B),
@@ -255,14 +289,34 @@ class _ChildPinPageState extends State<ChildPinPage>
 
                       const SizedBox(height: 36),
 
-                      // Guest mode link
+                      // No code yet → age-based registration flow
+                      GestureDetector(
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          RouterPaths.ageGate,
+                        ),
+                        child: Text(
+                          '¿No tienes código? Regístrate →',
+                          style: GoogleFonts.nunito(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.underline,
+                            decorationColor:
+                                Colors.white.withValues(alpha: 0.4),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Play without an account
                       GestureDetector(
                         onTap: () => Navigator.pushNamed(
                           context,
                           RouterPaths.studentDashboard,
                         ),
                         child: Text(
-                          '¿No tienes código? Explora EduPlay →',
+                          'Jugar como invitado →',
                           style: GoogleFonts.nunito(
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.45),

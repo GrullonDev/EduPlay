@@ -1,6 +1,8 @@
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
 abstract class ChildProfilesDatasource {
@@ -74,13 +76,17 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
 
   @override
   Future<ChildProfile?> findByPinGlobal(String pin) async {
-    try {
-      final doc = await _pinsRef.doc(pin).get();
-      if (!doc.exists) return null;
-      return ChildProfile.fromJson(doc.data()!);
-    } catch (_) {
-      return null;
-    }
+    // Let failures (offline, permission-denied) propagate instead of
+    // masquerading as "PIN not found" — callers need to tell a transient
+    // error apart from a genuinely unknown PIN so they don't forget a valid
+    // child session over a network blip.
+    // Timeout: a stalled gRPC channel right after a fresh anonymous sign-in
+    // can leave this Future pending forever instead of throwing, which would
+    // otherwise hang the caller's loading state indefinitely.
+    final doc =
+        await _pinsRef.doc(pin).get().timeout(const Duration(seconds: 8));
+    if (!doc.exists) return null;
+    return ChildProfile.fromJson(doc.data()!);
   }
 
   @override
@@ -92,11 +98,19 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
   }) async {
     final uid = _uid;
 
+    // Checked against the global `child_pins` index (not just this parent's
+    // own kids) — two children under different parents could otherwise be
+    // assigned the same code, and the second one's write to `child_pins`
+    // would then be silently rejected by security rules (see class doc).
     String pin;
-    final usedPins = (await getProfiles()).map((p) => p.pin).toSet();
+    var attempts = 0;
     do {
       pin = ChildProfile.generatePin();
-    } while (usedPins.contains(pin));
+      attempts++;
+      if (attempts > 20) {
+        throw StateError('Could not generate a unique PIN after 20 attempts.');
+      }
+    } while ((await _pinsRef.doc(pin).get()).exists);
 
     final docRef = uid != null
         ? _profilesRef(uid).doc()

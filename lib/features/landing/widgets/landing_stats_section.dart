@@ -1,9 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/utils/app_theme.dart';
+// Project imports:
 import 'package:edu_play/features/landing/models/landing_game_info.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
+import 'package:edu_play/utils/app_theme.dart';
 
 /// Highlight bar with quick facts about EduPlay's catalog and community.
 class LandingStatsSection extends StatelessWidget {

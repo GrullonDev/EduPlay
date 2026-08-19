@@ -1,4 +1,4 @@
-import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 
 abstract class ParentDashboardRepository {
@@ -12,6 +12,4 @@ abstract class ParentDashboardRepository {
   Future<ParentQuickControls> getQuickControlsForUser(String uid);
 
   Future<void> saveQuickControls(ParentQuickControls controls);
-
-  Future<List<ParentChallenge>> getChallenges();
 }

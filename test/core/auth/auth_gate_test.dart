@@ -1,7 +1,10 @@
-import 'package:edu_play/core/auth/auth_gate.dart';
+// Package imports:
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/core/auth/auth_gate.dart';
 
 // Regression coverage for the role-resolution logic behind the "parent
 // dashboard silently logs out on navigation" fix: AuthGate._resolveRole must

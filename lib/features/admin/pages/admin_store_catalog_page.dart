@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+// Project imports:
 import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/store/services/store_catalog_cache.dart';

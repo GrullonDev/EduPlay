@@ -1,8 +1,12 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/core/config/release_flags.dart';
+// Project imports:
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -60,22 +64,41 @@ class LoginBloc extends ChangeNotifier {
         password: password,
       );
 
+      if (user == null) {
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      final role = await _resolveRole(user.uid);
+
       isLoading = false;
       notifyListeners();
 
       if (!_context.mounted) return;
 
-      if (user != null) {
-        final wantsTeacherDashboard =
-            ReleaseFlags.teacherExperienceEnabled && userType == 'teacher';
-        Navigator.pushNamedAndRemoveUntil(
-          _context,
-          wantsTeacherDashboard
-              ? RouterPaths.teacherDashboard
-              : RouterPaths.parentsDashboard,
-          (route) => false,
-        );
+      if (role == null) {
+        _showError('Cuenta no encontrada',
+            'No pudimos verificar el tipo de cuenta. Contacta a soporte.');
+        return;
       }
+
+      if (userType != null && userType != role) {
+        final roleLabel = role == 'teacher' ? 'profesor' : 'padre/madre';
+        _showError(
+          'Cuenta de $roleLabel',
+          'Esta cuenta está registrada como $roleLabel. Inicia sesión desde esa opción.',
+        );
+        return;
+      }
+
+      Navigator.pushNamedAndRemoveUntil(
+        _context,
+        role == 'teacher'
+            ? RouterPaths.teacherDashboard
+            : RouterPaths.parentsDashboard,
+        (route) => false,
+      );
     } on FirebaseAuthException catch (e) {
       isLoading = false;
       notifyListeners();
@@ -90,6 +113,18 @@ class LoginBloc extends ChangeNotifier {
       _showError('Error de conexión',
           'No se pudo conectar. Verifica tu conexión a internet e intenta de nuevo.');
     }
+  }
+
+  Future<String?> _resolveRole(String uid) async {
+    final firestore = FirebaseFirestore.instance;
+
+    final parentDoc = await firestore.collection('parents').doc(uid).get();
+    if (parentDoc.exists) return 'parent';
+
+    final teacherDoc = await firestore.collection('teachers').doc(uid).get();
+    if (teacherDoc.exists) return 'teacher';
+
+    return null;
   }
 
   static (String, String) _messageForCode(String code) {

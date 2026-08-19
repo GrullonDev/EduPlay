@@ -1,14 +1,21 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/shared/widgets/skill_performance_grid.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
@@ -28,6 +35,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
   List<ChildProfile> _profiles = [];
   List<PracticeSession> _sessions = [];
   Map<String, ChildGameplayStats> _stats = {};
+  List<SkillPerformance> _skillPerformance = [];
   String _parentName = 'Mamá';
   int _selectedChild = 0; // index into _profiles; -1 = all children
   bool _loadingProfiles = true;
@@ -40,6 +48,25 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
     _loadProfilesThenStats();
     _loadSessions();
     _loadParentName();
+  }
+
+  Future<void> _loadSkillPerformance() async {
+    if (_profiles.isEmpty) {
+      setState(() => _skillPerformance = []);
+      return;
+    }
+    final performance = await sl<StudentRepository>()
+        .getSkillPerformanceForStudents([_selectedProfileId]);
+    if (!mounted) return;
+    setState(() {
+      _skillPerformance = performance.where((p) => p.hasData).toList()
+        ..sort((a, b) => b.totalAnswers.compareTo(a.totalAnswers));
+    });
+  }
+
+  void _onSelectChild(int index) {
+    setState(() => _selectedChild = index);
+    _loadSkillPerformance();
   }
 
   Future<void> _loadParentName() async {
@@ -61,6 +88,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
       _stats = stats;
       _loadingStats = false;
     });
+    await _loadSkillPerformance();
   }
 
   Future<void> _loadSessions() async {
@@ -198,8 +226,7 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                               _ChildSelector(
                                 profiles: _profiles,
                                 selectedIndex: _selectedChild,
-                                onSelect: (i) =>
-                                    setState(() => _selectedChild = i),
+                                onSelect: _onSelectChild,
                               ),
                               const SizedBox(height: 28),
                             ],
@@ -212,6 +239,21 @@ class _ProgressReportsPageState extends State<ProgressReportsPage> {
                               avgScore: _avgScore,
                             ),
                             const SizedBox(height: 28),
+
+                            // ── Skills breakdown ────────────────────────────────
+                            if (_skillPerformance.isNotEmpty) ...[
+                              _SectionLabel(
+                                  'Habilidades — $_selectedName'),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Qué domina y qué le cuesta más, no solo puntos.',
+                                style: GoogleFonts.nunito(
+                                    fontSize: 12, color: Colors.grey[500]),
+                              ),
+                              const SizedBox(height: 16),
+                              SkillPerformanceGrid(items: _skillPerformance),
+                              const SizedBox(height: 28),
+                            ],
 
                             // ── Top games breakdown ────────────────────────────
                             if (_gameScores.isNotEmpty) ...[

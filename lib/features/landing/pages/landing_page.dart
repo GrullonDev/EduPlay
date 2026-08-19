@@ -1,12 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
-import 'package:edu_play/features/landing/widgets/landing_navbar.dart';
-import 'package:edu_play/features/landing/widgets/landing_hero_section.dart';
-import 'package:edu_play/features/landing/widgets/landing_stats_section.dart';
+// Project imports:
 import 'package:edu_play/features/landing/widgets/landing_families_section.dart';
-import 'package:edu_play/features/landing/widgets/landing_games_section.dart';
-import 'package:edu_play/features/landing/widgets/landing_testimonials_section.dart';
 import 'package:edu_play/features/landing/widgets/landing_footer.dart';
+import 'package:edu_play/features/landing/widgets/landing_games_section.dart';
+import 'package:edu_play/features/landing/widgets/landing_hero_section.dart';
+import 'package:edu_play/features/landing/widgets/landing_navbar.dart';
+import 'package:edu_play/features/landing/widgets/landing_stats_section.dart';
+import 'package:edu_play/features/landing/widgets/landing_testimonials_section.dart';
 
 /// Public landing page presenting EduPlay to students, families and
 /// teachers, with navigation to play, register or log in.

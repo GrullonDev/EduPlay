@@ -2,9 +2,12 @@
 // against fake_cloud_firestore, so these exercise the exact same code path
 // production purchases run through — not a reimplementation of it.
 
-import 'package:edu_play/data/datasources/student_datasource.dart';
+// Package imports:
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/data/datasources/student_datasource.dart';
 
 void main() {
   late FakeFirebaseFirestore firestore;

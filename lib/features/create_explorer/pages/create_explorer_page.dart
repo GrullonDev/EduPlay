@@ -1,15 +1,19 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:edu_play/utils/child_portal_link.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -33,29 +37,29 @@ const _kAvatarIcons = [
 // ── Interest options ──────────────────────────────────────────────────────────
 
 const _kInterests = [
-  (icon: Icons.calculate_rounded, label: 'Math & Numbers'),
-  (icon: Icons.menu_book_rounded, label: 'Storytelling'),
-  (icon: Icons.science_rounded, label: 'Space & Sci'),
-  (icon: Icons.edit_rounded, label: 'Art & Drawing'),
-  (icon: Icons.music_note_rounded, label: 'Music'),
-  (icon: Icons.sports_soccer_rounded, label: 'Sports'),
-  (icon: Icons.translate_rounded, label: 'Languages'),
-  (icon: Icons.extension_rounded, label: 'Puzzles'),
+  (icon: Icons.calculate_rounded, label: 'Matemáticas y Números'),
+  (icon: Icons.menu_book_rounded, label: 'Cuentos'),
+  (icon: Icons.science_rounded, label: 'Espacio y Ciencia'),
+  (icon: Icons.edit_rounded, label: 'Arte y Dibujo'),
+  (icon: Icons.music_note_rounded, label: 'Música'),
+  (icon: Icons.sports_soccer_rounded, label: 'Deportes'),
+  (icon: Icons.translate_rounded, label: 'Idiomas'),
+  (icon: Icons.extension_rounded, label: 'Rompecabezas'),
 ];
 
 // ── Grade levels ──────────────────────────────────────────────────────────────
 
 const _kGradeLevels = [
-  'Kindergarten',
-  'Grade 1 (6 years)',
-  'Grade 2 (7 years)',
-  'Grade 3 (8 years)',
-  'Grade 4 (9 years)',
-  'Grade 5 (10 years)',
-  'Grade 6 (11 years)',
-  'Grade 7 (12 years)',
-  'Grade 8 (13 years)',
-  'Grade 9 (14 years)',
+  'Preescolar',
+  'Grado 1 (6 años)',
+  'Grado 2 (7 años)',
+  'Grado 3 (8 años)',
+  'Grado 4 (9 años)',
+  'Grado 5 (10 años)',
+  'Grado 6 (11 años)',
+  'Grado 7 (12 años)',
+  'Grado 8 (13 años)',
+  'Grado 9 (14 años)',
 ];
 
 // ── Entry point ───────────────────────────────────────────────────────────────
@@ -110,7 +114,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
     if (_gradeLevel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select an Age / Grade Level',
+          content: Text('Selecciona una edad / grado',
               style: GoogleFonts.nunito()),
           backgroundColor: _kRed,
           behavior: SnackBarBehavior.floating,
@@ -249,7 +253,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Create an Explorer!',
+                                    '¡Crea un Explorador!',
                                     style: GoogleFonts.fredoka(
                                       fontSize: 30,
                                       fontWeight: FontWeight.w700,
@@ -258,7 +262,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    "Let's set up a profile for your little learner to start their educational quest.",
+                                    'Vamos a crear un perfil para que tu pequeño explorador comience su aventura educativa.',
                                     textAlign: TextAlign.center,
                                     style: GoogleFonts.nunito(
                                       fontSize: 14,
@@ -301,7 +305,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                   const SizedBox(height: 28),
 
                                   // Avatar picker
-                                  const _SectionLabel(label: 'Pick an Avatar'),
+                                  const _SectionLabel(label: 'Elige un Avatar'),
                                   const SizedBox(height: 12),
                                   Wrap(
                                     spacing: 10,
@@ -321,7 +325,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                   const SizedBox(height: 28),
 
                                   // Interests
-                                  const _SectionLabel(label: 'Interests'),
+                                  const _SectionLabel(label: 'Intereses'),
                                   const SizedBox(height: 12),
                                   GridView.builder(
                                     shrinkWrap: true,
@@ -381,7 +385,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                                               ),
                                             )
                                           : Text(
-                                              'Create Profile',
+                                              'Crear Perfil',
                                               style: GoogleFonts.fredoka(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.w600,
@@ -413,7 +417,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                       ),
                       const Spacer(),
                       Text(
-                        'Parent Guide',
+                        'Guía para Padres',
                         style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: Colors.grey[400],
@@ -422,7 +426,7 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                       ),
                       const SizedBox(width: 20),
                       Text(
-                        'Privacy',
+                        'Privacidad',
                         style: GoogleFonts.nunito(
                             fontSize: 11,
                             color: Colors.grey[400],
@@ -468,7 +472,7 @@ class _ExplorerNavBar extends StatelessWidget {
             icon: const Icon(Icons.close_rounded,
                 size: 16, color: Color(0xFF666666)),
             label: Text(
-              'Exit Setup',
+              'Salir',
               style: GoogleFonts.nunito(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -519,7 +523,7 @@ class _NameField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Child's name",
+          'Nombre del niño',
           style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -530,8 +534,9 @@ class _NameField extends StatelessWidget {
         TextFormField(
           controller: ctrl,
           style: GoogleFonts.nunito(fontSize: 14),
-          validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
-          decoration: _inputDec('e.g. Charlie'),
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+          decoration: _inputDec('ej. Carlitos'),
         ),
       ],
     );
@@ -549,7 +554,7 @@ class _GradeDropdown extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Age / Grade Level',
+          'Edad / Grado',
           style: GoogleFonts.nunito(
             fontSize: 13,
             fontWeight: FontWeight.w700,
@@ -560,7 +565,7 @@ class _GradeDropdown extends StatelessWidget {
         DropdownButtonFormField<String>(
           initialValue: value,
           hint: Text(
-            'Select level...',
+            'Selecciona un grado...',
             style: GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
           ),
           style:

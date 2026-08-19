@@ -10,10 +10,15 @@
 // store catalog) are peripheral to what these tests check, so hand-rolled
 // fakes keep setup simple.
 
+// Package imports:
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/student_datasource.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
-import 'package:edu_play/features/parents_dashboard/models/parent_challenge.dart';
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
@@ -26,7 +31,78 @@ import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_ch
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+
+class FakeAuthRepository implements AuthRepository {
+  @override
+  Future<User?> registerParent({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+    required String age,
+    required List<String> children,
+  }) async =>
+      null;
+
+  @override
+  Future<User?> loginParent(
+          {required String email, required String password}) async =>
+      null;
+
+  @override
+  Future<User?> registerIndependentStudent({
+    required String email,
+    required String password,
+    required String name,
+    required int age,
+    String? guardianEmail,
+  }) async =>
+      null;
+
+  @override
+  Future<bool> isChildRegistered(String name) async => false;
+
+  @override
+  Future<void> registerChild(String name, String age) async {}
+
+  @override
+  Future<void> logout() async {}
+
+  @override
+  User? getCurrentUser() => null;
+
+  @override
+  String? getCurrentUserUid() => 'test-user';
+
+  @override
+  String? getCurrentUserEmail() => null;
+
+  @override
+  String? getCurrentUserDisplayName() => null;
+
+  @override
+  bool isCurrentUserAnonymous() => true;
+
+  @override
+  bool isCurrentUserEmailVerified() => true;
+
+  @override
+  Future<void> reloadCurrentUser() async {}
+
+  @override
+  Future<void> sendCurrentUserEmailVerification() async {}
+
+  @override
+  Future<bool> ensureAnonymousAuth(
+          {Duration timeout = const Duration(seconds: 8)}) async =>
+      true;
+
+  @override
+  Future<void> setSessionPersistence({required bool rememberSession}) async {}
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {}
+}
 
 class FakeLevelProgressRepository implements LevelProgressRepository {
   final Map<String, int> _levels = {};
@@ -40,7 +116,8 @@ class FakeLevelProgressRepository implements LevelProgressRepository {
   }
 }
 
-class FakeClassroomChallengesRepository implements ClassroomChallengesRepository {
+class FakeClassroomChallengesRepository
+    implements ClassroomChallengesRepository {
   @override
   Future<void> createChallenge({
     required String classId,
@@ -48,6 +125,10 @@ class FakeClassroomChallengesRepository implements ClassroomChallengesRepository
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   }) async {}
 
   @override
@@ -84,7 +165,8 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
   Future<Subscription> getSubscription() async => _subscription;
 
   @override
-  Future<Subscription> getSubscriptionForUser(String uid) async => _subscription;
+  Future<Subscription> getSubscriptionForUser(String uid) async =>
+      _subscription;
 
   @override
   Stream<Subscription> watchSubscription() => Stream.value(_subscription);
@@ -118,9 +200,6 @@ class FakeParentDashboardRepository implements ParentDashboardRepository {
   Future<void> saveQuickControls(ParentQuickControls controls) async {
     _controls = controls;
   }
-
-  @override
-  Future<List<ParentChallenge>> getChallenges() async => [];
 }
 
 class FakeStoreCatalogRepository implements StoreCatalogRepository {
@@ -148,8 +227,10 @@ FakeFirebaseFirestore registerTestFakes({
   List<StoreItem>? catalogItems,
 }) {
   final firestore = FakeFirebaseFirestore();
+  sl.registerLazySingleton<AuthRepository>(() => FakeAuthRepository());
   sl.registerLazySingleton<StudentRepository>(
-    () => StudentRepository(datasource: StudentDatasource(firestore: firestore)),
+    () =>
+        StudentRepository(datasource: StudentDatasource(firestore: firestore)),
   );
   sl.registerLazySingleton<LevelProgressRepository>(
       () => FakeLevelProgressRepository());

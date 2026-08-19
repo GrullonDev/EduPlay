@@ -1,3 +1,4 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 /// Common page shell for a minigame: a [GameHeader] as the app bar over a

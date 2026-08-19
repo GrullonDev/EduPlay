@@ -1,7 +1,12 @@
-import 'package:edu_play/features/register_child/bloc/register_child_bloc.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:edu_play/features/register_child/bloc/register_child_bloc.dart';
 
 class RegisterChildLayout extends StatelessWidget {
   const RegisterChildLayout({super.key});

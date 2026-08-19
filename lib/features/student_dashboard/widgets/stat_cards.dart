@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/utils/app_theme.dart';
 
 /// Row of small stat cards: current streak, level/XP progress and active

@@ -1,5 +1,8 @@
-import 'package:audioplayers/audioplayers.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
+
+// Package imports:
+import 'package:audioplayers/audioplayers.dart';
 
 class SoundManager {
   factory SoundManager() => _instance;

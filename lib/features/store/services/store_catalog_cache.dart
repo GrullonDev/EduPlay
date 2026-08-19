@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Project imports:
 import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 

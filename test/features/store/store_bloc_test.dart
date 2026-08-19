@@ -8,13 +8,15 @@
 // emulator's rules-unit-testing tool (Node-based), out of scope for this
 // Dart suite; see the PR notes for how to check it manually.
 
+// Package imports:
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Project imports:
 import 'package:edu_play/features/store/bloc/store_bloc.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'test_support.dart';
 
 StoreItem _item(String id) => allStoreItems.firstWhere((i) => i.id == id);

@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
@@ -1308,7 +1312,7 @@ class _GameListTile extends StatelessWidget {
             onPressed: () => _openGame(context, game.route),
             icon: const Icon(Icons.play_circle_outline_rounded, size: 16),
             label: Text(
-              'Play',
+              'Jugar',
               style:
                   GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 13),
             ),

@@ -1,6 +1,9 @@
+// Package imports:
+import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('StudentRepository level/xp math', () {

@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/store/models/store_item.dart';
 
 abstract class StoreCatalogRepository {

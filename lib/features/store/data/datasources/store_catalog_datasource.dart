@@ -1,6 +1,10 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Project imports:
 import 'package:edu_play/features/store/models/store_item.dart';
 
 abstract class StoreCatalogDatasource {

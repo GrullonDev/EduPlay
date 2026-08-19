@@ -1,7 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 
 class RegisterParentsChildForm extends StatelessWidget {

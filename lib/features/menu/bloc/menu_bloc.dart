@@ -1,6 +1,9 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/features/menu/models/game.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class MenuProvider with ChangeNotifier {

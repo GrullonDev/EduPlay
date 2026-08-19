@@ -1,6 +1,11 @@
+// Dart imports:
+import 'dart:math';
+
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/settings/domain/entities/account_security_info.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 
@@ -15,6 +20,10 @@ abstract class AccountSecurityDatasource {
   Future<void> signOut();
 
   Future<void> deleteAccount({required String password});
+
+  Future<String?> getGuardianEmailOnFile();
+
+  Future<void> requestDeletionWithGuardianConsent({required String password});
 }
 
 class FirebaseAccountSecurityDatasource implements AccountSecurityDatasource {
@@ -96,6 +105,19 @@ class FirebaseAccountSecurityDatasource implements AccountSecurityDatasource {
             await _firestore.collection('child_pins').doc(pin).delete();
           } catch (_) {}
         }
+        // The child's actual gameplay record (points, streak, per-game
+        // score history) lives in a separate top-level `students/{id}`
+        // doc, keyed by the same profile id — deleting only the profile
+        // left this orphaned, which meant a parent deleting their account
+        // didn't actually erase their children's data.
+        try {
+          final studentDoc = _firestore.collection('students').doc(doc.id);
+          final scoresSnap = await studentDoc.collection('scores').get();
+          for (final scoreDoc in scoresSnap.docs) {
+            await scoreDoc.reference.delete();
+          }
+          await studentDoc.delete();
+        } catch (_) {}
         await doc.reference.delete();
       }
 
@@ -117,11 +139,67 @@ class FirebaseAccountSecurityDatasource implements AccountSecurityDatasource {
       }
 
       await _firestore.collection('parents').doc(uid).delete();
+      // No-op for a parent account (doc never existed); actually deletes the
+      // role marker for an independent student calling this same method.
+      await _firestore.collection('independent_students').doc(uid).delete();
       await _firestore.collection('subscriptions').doc(uid).delete();
       await user.delete();
     } on FirebaseAuthException catch (e) {
       throw AccountSecurityException(e.code, e.message);
     }
+  }
+
+  @override
+  Future<String?> getGuardianEmailOnFile() async {
+    final uid = _user?.uid;
+    if (uid == null) return null;
+    final doc =
+        await _firestore.collection('independent_students').doc(uid).get();
+    final email = doc.data()?['guardianEmail'] as String?;
+    return (email == null || email.isEmpty) ? null : email;
+  }
+
+  @override
+  Future<void> requestDeletionWithGuardianConsent({
+    required String password,
+  }) async {
+    final user = _requireUser();
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(credential);
+
+      final uid = user.uid;
+      final studentDoc =
+          await _firestore.collection('independent_students').doc(uid).get();
+      final guardianEmail = studentDoc.data()?['guardianEmail'] as String?;
+      if (guardianEmail == null || guardianEmail.isEmpty) {
+        throw const AccountSecurityException('no-guardian-email');
+      }
+
+      await _firestore.collection('deletion_requests').add({
+        'uid': uid,
+        'studentName': studentDoc.data()?['name'] ?? 'Estudiante',
+        'guardianEmail': guardianEmail,
+        'status': 'pending',
+        'token': _generateToken(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } on FirebaseAuthException catch (e) {
+      throw AccountSecurityException(e.code, e.message);
+    }
+  }
+
+  /// A 128-bit random hex token embedded in the guardian's approve/deny
+  /// email links — required (alongside the request id) before the Cloud
+  /// Function that resolves the request will act on it, so the link can't
+  /// be guessed from the request id alone.
+  String _generateToken() {
+    final random = Random.secure();
+    return List.generate(32, (_) => random.nextInt(16).toRadixString(16))
+        .join();
   }
 
   User _requireUser() {

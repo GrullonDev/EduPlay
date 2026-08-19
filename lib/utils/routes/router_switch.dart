@@ -1,42 +1,49 @@
-import 'package:edu_play/core/analytics/analytics_service.dart';
-import 'package:edu_play/core/config/release_flags.dart';
-import 'package:edu_play/features/games/core/game_registry.dart';
-import 'package:edu_play/features/main/main_page.dart';
-import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
-import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
-import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
-import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
-import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
-import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
-import 'package:edu_play/features/settings/pages/settings_page.dart';
-import 'package:edu_play/features/progress_reports/pages/progress_reports_page.dart';
-import 'package:edu_play/features/create_explorer/pages/create_explorer_page.dart';
-import 'package:edu_play/features/practice_session/pages/create_session_page.dart';
-import 'package:edu_play/features/practice_session/pages/session_entry_page.dart';
-import 'package:edu_play/features/practice_session/pages/practice_kiosk_page.dart';
-import 'package:edu_play/features/practice_session/models/practice_session.dart';
-import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
+import 'package:edu_play/core/analytics/analytics_service.dart';
+import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/admin/pages/admin_dashboard_page.dart';
+import 'package:edu_play/features/age_gate/pages/age_gate_page.dart';
+import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
+import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
+import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
+import 'package:edu_play/features/create_explorer/pages/create_explorer_page.dart';
+import 'package:edu_play/features/friends/pages/friends_page.dart';
+import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
+import 'package:edu_play/features/games/core/game_registry.dart';
+import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
 import 'package:edu_play/features/landing/pages/landing_page.dart';
+import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
+import 'package:edu_play/features/legal/pages/terms_of_service_page.dart';
 import 'package:edu_play/features/login/pages/login_page.dart';
 import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
+import 'package:edu_play/features/main/main_page.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
-import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
+import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
+import 'package:edu_play/features/parent_guide/pages/parent_guide_page.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
+import 'package:edu_play/features/practice_session/models/practice_session.dart';
+import 'package:edu_play/features/practice_session/pages/create_session_page.dart';
+import 'package:edu_play/features/practice_session/pages/practice_kiosk_page.dart';
+import 'package:edu_play/features/practice_session/pages/session_entry_page.dart';
+import 'package:edu_play/features/progress_reports/pages/progress_reports_page.dart';
 import 'package:edu_play/features/register_child/pages/register_child_page.dart';
 import 'package:edu_play/features/register_parents/pages/register_parents_page.dart';
-import 'package:edu_play/features/guest/pages/guest_entry_page.dart';
-import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
+import 'package:edu_play/features/register_student/pages/register_student_page.dart';
+import 'package:edu_play/features/settings/pages/independent_student_account_page.dart';
+import 'package:edu_play/features/settings/pages/settings_page.dart';
+import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
+import 'package:edu_play/features/streak_recovery/pages/streak_recovery_quiz_page.dart';
+import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
+import 'package:edu_play/features/teacher_assignment/pages/browse_teachers_page.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/join_class_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 import 'package:edu_play/features/teacher_registration/pages/teacher_registration_page.dart';
-import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
-import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
 import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
 import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
-import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
-import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
-import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -86,6 +93,8 @@ class AppRouter {
       // Legacy alias kept for back-compat
       case RouterPaths.menu:
       case RouterPaths.studentDashboard:
+      case RouterPaths.legacyStudentDashboard:
+      case RouterPaths.legacySlashStudentDashboard:
         // Accepts either a ChildProfile (from PIN flow) or a plain String username
         final args = settings.arguments;
         if (args is ChildProfile) {
@@ -96,7 +105,22 @@ class AppRouter {
         break;
       case RouterPaths.childPin:
         return MaterialPageRoute(builder: (_) => const ChildPinPage());
+      case RouterPaths.ageGate:
+        return MaterialPageRoute(builder: (_) => const AgeGatePage());
+      case RouterPaths.registerStudent:
+        final age = settings.arguments as int? ?? 15;
+        return MaterialPageRoute(
+          builder: (_) => RegisterStudentPage(age: age),
+        );
 
+      case RouterPaths.independentStudentAccount:
+        return MaterialPageRoute(
+          builder: (_) => const IndependentStudentAccountPage(),
+        );
+      case RouterPaths.streakRecoveryQuiz:
+        final profile = settings.arguments as ChildProfile;
+        page = StreakRecoveryQuizPage(childProfile: profile);
+        break;
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
         page = MathAdventurePage(userName: userName);
@@ -214,10 +238,14 @@ class AppRouter {
         return MaterialPageRoute(
           builder: (_) => BrowseTeachersPage(child: child),
         );
+      case RouterPaths.friends:
+        return MaterialPageRoute(
+          builder: (_) => const FriendsPage(),
+        );
       default:
         page = const Scaffold(
           body: Center(
-            child: Text('Page not found'),
+            child: Text('Página no encontrada'),
           ),
         );
         break;

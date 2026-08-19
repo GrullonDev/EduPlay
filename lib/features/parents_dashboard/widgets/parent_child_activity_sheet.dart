@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';

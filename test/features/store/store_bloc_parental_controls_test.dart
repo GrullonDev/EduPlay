@@ -11,15 +11,18 @@
 
 import 'package:edu_play/data/datasources/student_datasource.dart'
     show PurchaseResult;
+
+// Package imports:
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 import 'package:edu_play/features/store/bloc/store_bloc.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'test_support.dart';
 
 StoreItem _item(String id) => allStoreItems.firstWhere((i) => i.id == id);

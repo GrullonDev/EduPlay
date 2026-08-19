@@ -1,18 +1,29 @@
+// Dart imports:
 import 'dart:math' show max;
-import 'package:edu_play/data/repositories/auth_repository.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
+import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/alumnos_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/friends_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/utils/injection_container.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
@@ -37,9 +48,12 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
     _NavItem(icon: Icons.groups_rounded, label: 'Mis Clases'),
+    _NavItem(icon: Icons.school_rounded, label: 'Alumnos'),
     _NavItem(icon: Icons.emoji_events_rounded, label: 'Retos'),
     _NavItem(icon: Icons.bar_chart_rounded, label: 'Rendimiento'),
     _NavItem(icon: Icons.description_rounded, label: 'Informes'),
+    if (ReleaseFlags.friendsEnabled)
+      _NavItem(icon: Icons.people_alt_rounded, label: 'Amigos'),
   ];
 
   @override
@@ -86,10 +100,12 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
                   searchHint: const [
                     'Buscar alumnos, retos...',
                     'Buscar clase...',
+                    'Buscar alumno...',
                     'Buscar reto...',
                     'Buscar alumno...',
                     'Buscar informes...',
-                  ][_selectedIndex.clamp(0, 4)],
+                    'Buscar amigos...',
+                  ][_selectedIndex.clamp(0, 6)],
                 ),
                 Expanded(
                   child: bloc.isLoading
@@ -104,18 +120,27 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
     );
   }
 
+  void _goToTab(int index) => setState(() => _selectedIndex = index);
+
   Widget _buildBody(TeacherDashboardBloc bloc) {
     switch (_selectedIndex) {
       case 0:
-        return _OverviewPanel(bloc: bloc);
+        return _OverviewPanel(bloc: bloc, onNavigateTab: _goToTab);
       case 1:
-        return const MisClasesPanel();
+        return MisClasesPanel(onViewRoster: () => _goToTab(2));
       case 2:
-        return RetosPanel(bloc: bloc);
+        return AlumnosPanel(onNavigateTab: _goToTab);
       case 3:
+        return RetosPanel(bloc: bloc);
+      case 4:
         return RendimientoPanel(bloc: bloc);
-      default:
+      case 5:
         return InformesPanel(bloc: bloc);
+      case 6:
+        if (ReleaseFlags.friendsEnabled) return FriendsPanel(bloc: bloc);
+        return _OverviewPanel(bloc: bloc, onNavigateTab: _goToTab);
+      default:
+        return _OverviewPanel(bloc: bloc, onNavigateTab: _goToTab);
     }
   }
 }
@@ -222,9 +247,9 @@ class _Sidebar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Divider(height: 24),
-                // Nuevo Reporte → switches to Informes tab (index 4)
+                // Nuevo Reporte → switches to Informes tab (index 5)
                 ElevatedButton.icon(
-                  onPressed: () => onSelect(4),
+                  onPressed: () => onSelect(5),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text(
                     'Nuevo Reporte',
@@ -371,14 +396,8 @@ class _TopBar extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           // Icons
-          _TopIcon(
-            Icons.notifications_none_rounded,
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Notificaciones próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
+          NotificationsButton(
+            iconColor: Colors.grey.shade600,
           ),
           const SizedBox(width: 4),
           _TopIcon(
@@ -418,9 +437,10 @@ class _TopIcon extends StatelessWidget {
 // ── Overview Panel ────────────────────────────────────────────────────────────
 
 class _OverviewPanel extends StatelessWidget {
-  const _OverviewPanel({required this.bloc});
+  const _OverviewPanel({required this.bloc, required this.onNavigateTab});
 
   final TeacherDashboardBloc bloc;
+  final ValueChanged<int> onNavigateTab;
 
   @override
   Widget build(BuildContext context) {
@@ -434,6 +454,19 @@ class _OverviewPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Quick actions
+          _QuickActionsRow(
+            onAssignChallenge: () => onNavigateTab(3),
+            onGroupMessage: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mensajería grupal próximamente.'),
+                duration: Duration(seconds: 2),
+              ),
+            ),
+            onExportData: () => _exportRosterCsv(context, bloc),
+          ),
+          const SizedBox(height: 20),
+
           // Greeting row
           _GreetingRow(),
           const SizedBox(height: 24),
@@ -1254,6 +1287,107 @@ class _SubjectBar extends StatelessWidget {
           ],
         ),
       );
+}
+
+// ── Quick actions ─────────────────────────────────────────────────────────────
+
+class _QuickActionsRow extends StatelessWidget {
+  const _QuickActionsRow({
+    required this.onAssignChallenge,
+    required this.onGroupMessage,
+    required this.onExportData,
+  });
+
+  final VoidCallback onAssignChallenge;
+  final VoidCallback onGroupMessage;
+  final VoidCallback onExportData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        ElevatedButton.icon(
+          onPressed: onAssignChallenge,
+          icon: const Icon(Icons.rocket_launch_rounded, size: 17),
+          label: Text('Asignar Reto Rápido',
+              style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _kNavy,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: onGroupMessage,
+          icon: const Icon(Icons.campaign_outlined, size: 17, color: _kNavy),
+          label: Text('Mensaje Grupal',
+              style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w700, color: _kNavy)),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.grey.shade300),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        OutlinedButton.icon(
+          onPressed: onExportData,
+          icon:
+              const Icon(Icons.file_download_outlined, size: 17, color: _kNavy),
+          label: Text('Exportar Datos',
+              style: GoogleFonts.nunito(
+                  fontWeight: FontWeight.w700, color: _kNavy)),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.grey.shade300),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _exportRosterCsv(
+    BuildContext context, TeacherDashboardBloc bloc) async {
+  if (bloc.students.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Aún no hay alumnos para exportar.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
+
+  final buffer = StringBuffer('Nombre,Edad,Clase,Retos completados,Ingresó\n');
+  for (final s in bloc.students) {
+    final name = (s['name'] as String? ?? '').replaceAll(',', ' ');
+    final age = s['age']?.toString() ?? '';
+    final className = (s['className'] as String? ?? '').replaceAll(',', ' ');
+    final completed =
+        (s['completedChallengeIds'] as List?)?.length.toString() ?? '0';
+    final joinedAt = s['joinedAt'];
+    final joinedLabel = joinedAt is DateTime
+        ? '${joinedAt.day.toString().padLeft(2, '0')}/${joinedAt.month.toString().padLeft(2, '0')}/${joinedAt.year}'
+        : '';
+    buffer.writeln('$name,$age,$className,$completed,$joinedLabel');
+  }
+
+  await Clipboard.setData(ClipboardData(text: buffer.toString()));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Datos copiados (CSV). Pégalos en Excel o Google Sheets.'),
+      duration: Duration(seconds: 3),
+    ),
+  );
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

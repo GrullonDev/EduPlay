@@ -1,12 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:edu_play/data/repositories/auth_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/login/bloc/login_bloc.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 

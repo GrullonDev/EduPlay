@@ -1,12 +1,16 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/parents_dashboard/domain/repositories/child_profiles_repository.dart';
-import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
+// Project imports:
 import 'package:edu_play/features/onboarding/widgets/onboarding_wizard.dart';
-import 'package:edu_play/features/parents_dashboard/widgets/parent_active_sessions_card.dart';
+import 'package:edu_play/features/parents_dashboard/domain/repositories/child_profiles_repository.dart';
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+import 'package:edu_play/features/parents_dashboard/services/parent_child_stats_service.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_achievement_card.dart';
+import 'package:edu_play/features/parents_dashboard/widgets/parent_active_sessions_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_challenges_card.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_child_profiles_grid.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_empty_profiles.dart';
@@ -17,9 +21,9 @@ import 'package:edu_play/features/parents_dashboard/widgets/parent_session_histo
 import 'package:edu_play/features/parents_dashboard/widgets/parent_tier_badge.dart';
 import 'package:edu_play/features/parents_dashboard/widgets/parent_weekly_summary_card.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -260,7 +264,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                       Navigator.of(ctx).pushNamed(RouterPaths.createSession),
                   icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
                   label: Text(
-                    'Start Session',
+                    'Iniciar Sesión',
                     style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -336,7 +340,10 @@ class _OverviewBodyState extends State<_OverviewBody> {
                       ),
                     ),
                     const SizedBox(width: 20),
-                    const Expanded(flex: 6, child: ParentChallengesCard()),
+                    Expanded(
+                      flex: 6,
+                      child: ParentChallengesCard(profiles: widget.profiles),
+                    ),
                   ],
                 ),
               )
@@ -345,7 +352,7 @@ class _OverviewBodyState extends State<_OverviewBody> {
                   ParentAchievementCard(
                       profiles: widget.profiles, stats: _stats),
                   const SizedBox(height: 20),
-                  const ParentChallengesCard(),
+                  ParentChallengesCard(profiles: widget.profiles),
                 ],
               ),
         const SizedBox(height: 28),

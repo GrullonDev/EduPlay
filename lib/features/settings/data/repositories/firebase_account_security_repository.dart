@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/settings/data/datasources/account_security_datasource.dart';
 import 'package:edu_play/features/settings/domain/entities/account_security_info.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
@@ -31,5 +32,15 @@ class FirebaseAccountSecurityRepository implements AccountSecurityRepository {
   @override
   Future<void> deleteAccount({required String password}) {
     return datasource.deleteAccount(password: password);
+  }
+
+  @override
+  Future<String?> getGuardianEmailOnFile() {
+    return datasource.getGuardianEmailOnFile();
+  }
+
+  @override
+  Future<void> requestDeletionWithGuardianConsent({required String password}) {
+    return datasource.requestDeletionWithGuardianConsent(password: password);
   }
 }

@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/settings/data/datasources/settings_datasource.dart';
 import 'package:edu_play/features/settings/domain/entities/notification_preferences.dart';
 import 'package:edu_play/features/settings/domain/entities/parent_settings_profile.dart';

@@ -1,11 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/features/games/core/game_metadata.dart';
 import 'package:edu_play/features/games/core/game_module.dart';
 import 'package:edu_play/features/games/number_ninja/pages/number_ninja_page.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
+
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show AgeRange, Difficulty;
-import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// Single source of truth for Number Ninja's identity — reused by the
 /// controller (to know what to submit scores as) and by [GameRegistry]

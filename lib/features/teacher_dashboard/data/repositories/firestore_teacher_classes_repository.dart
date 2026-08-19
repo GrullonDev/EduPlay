@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/data/datasources/teacher_classes_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
@@ -69,6 +70,14 @@ class FirestoreTeacherClassesRepository implements TeacherClassesRepository {
 
   @override
   Future<void> deleteClass(String classId) => datasource.deleteClass(classId);
+
+  @override
+  Future<void> removeMember({
+    required String classId,
+    required String memberId,
+  }) {
+    return datasource.removeMember(classId: classId, memberId: memberId);
+  }
 
   @override
   Future<void> joinClass({
