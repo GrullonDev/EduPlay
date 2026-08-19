@@ -133,8 +133,15 @@ void init() {
     );
   }
   if (!sl.isRegistered<StudentRepository>()) {
+    // Lazily resolved: by the time this factory actually runs (first
+    // `sl<StudentRepository>()` call at runtime), every registration below
+    // — including ClassroomChallengesRepository — has already happened, so
+    // registration order here doesn't matter.
     sl.registerLazySingleton<StudentRepository>(
-      () => StudentRepository(datasource: sl()),
+      () => StudentRepository(
+        datasource: sl(),
+        challengesRepository: sl(),
+      ),
     );
   }
   if (!sl.isRegistered<ChildProfilesRepository>()) {

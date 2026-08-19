@@ -1,6 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:edu_play/data/datasources/student_datasource.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/shared/data/subject_catalog.dart';
+import 'package:flutter/foundation.dart';
 
 /// Average performance for a subject over the last 7 days, plus the
 /// previous 7 days for trend comparison.
@@ -25,11 +29,44 @@ class SubjectPerformance {
   double get trendDelta => percentage - previousAverageScore.clamp(0, 100);
 }
 
+/// Accuracy for one concrete skill (e.g. "suma", "vocabulario") over the
+/// last 7 days, plus the previous 7 days for trend comparison. Unlike
+/// [SubjectPerformance] — which proxies a percentage from raw points —
+/// this is a real correct/total accuracy, computed from the `skills` map
+/// games pass to [StudentRepository.recordScore].
+class SkillPerformance {
+  const SkillPerformance({
+    required this.skill,
+    required this.accuracy,
+    required this.previousAccuracy,
+    required this.totalAnswers,
+    required this.hasData,
+  });
+
+  final Skill skill;
+  final double accuracy; // 0–1
+  final double previousAccuracy; // 0–1
+  final int totalAnswers;
+  final bool hasData;
+
+  double get percentage => (accuracy * 100).clamp(0, 100);
+
+  double get trendDelta => percentage - (previousAccuracy * 100).clamp(0, 100);
+}
+
 class StudentRepository {
-  StudentRepository({required StudentDatasource datasource})
-      : _datasource = datasource;
+  StudentRepository({
+    required StudentDatasource datasource,
+    ClassroomChallengesRepository? challengesRepository,
+  })  : _datasource = datasource,
+        _challengesRepository = challengesRepository;
 
   final StudentDatasource _datasource;
+
+  /// Optional so tests/call sites that don't care about classroom
+  /// challenges can construct a [StudentRepository] without one. When
+  /// absent, [recordScore] simply skips the auto-completion check.
+  final ClassroomChallengesRepository? _challengesRepository;
 
   static int levelForPoints(int points) => (points ~/ 100) + 1;
 
@@ -82,6 +119,8 @@ class StudentRepository {
     required String subjectKey,
     required String gameTitle,
     required int score,
+    Map<String, SkillTally>? skills,
+    String? gameRoute,
   }) async {
     final id = await _datasource.getOrCreateStudentId();
     final subject = subjectByKey(subjectKey);
@@ -91,7 +130,51 @@ class StudentRepository {
       subjectLabel: subject.label,
       gameTitle: gameTitle,
       score: score,
+      skills: skills?.map((key, value) => MapEntry(key, value.toMap())),
     );
+
+    if (gameRoute != null) {
+      await _autoCompleteChallenges(
+        studentId: id,
+        gameRoute: gameRoute,
+        score: score,
+      );
+    }
+  }
+
+  /// Marks any active, unlinked-completion classroom challenge that targets
+  /// [gameRoute] as completed once the student reaches its target score —
+  /// this is what makes teacher challenge completion verifiable instead of
+  /// a manual self-reported button.
+  Future<void> _autoCompleteChallenges({
+    required String studentId,
+    required String gameRoute,
+    required int score,
+  }) async {
+    final repo = _challengesRepository;
+    if (repo == null) return;
+
+    try {
+      final challenges = await repo.getChallengesForStudent(studentId);
+      final matches = challenges.where(
+        (c) =>
+            c.status == 'active' &&
+            !c.completed &&
+            c.targetGameRoute == gameRoute &&
+            c.targetScore != null &&
+            score >= c.targetScore! &&
+            c.memberId != null,
+      );
+      for (final challenge in matches) {
+        await repo.completeChallenge(
+          classId: challenge.classId,
+          memberId: challenge.memberId!,
+          challengeId: challenge.id,
+        );
+      }
+    } catch (e) {
+      debugPrint('StudentRepository._autoCompleteChallenges error: $e');
+    }
   }
 
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 10}) =>
@@ -151,6 +234,23 @@ class StudentRepository {
     return _subjectPerformanceFromScores(scores);
   }
 
+  /// Accuracy per skill (e.g. "Suma 90% · Resta 65%") for the signed-in
+  /// student, aggregated only over score entries that actually carried a
+  /// `skills` map — older entries recorded before this existed are simply
+  /// skipped rather than counted as failures.
+  Future<List<SkillPerformance>> getSkillPerformance() async {
+    final scores = await _datasource.getRecentScores(days: 14);
+    return _skillPerformanceFromScores(scores);
+  }
+
+  Future<List<SkillPerformance>> getSkillPerformanceForStudents(
+    List<String> studentIds,
+  ) async {
+    final scores =
+        await _datasource.getRecentScoresForStudents(studentIds, days: 14);
+    return _skillPerformanceFromScores(scores);
+  }
+
   List<double> _weeklyTotalsFromScores(
     List<Map<String, dynamic>> scores, {
     int weeks = 4,
@@ -205,6 +305,55 @@ class StudentRepository {
         hasData: curr != null && curr.isNotEmpty,
       );
     }).toList();
+  }
+
+  List<SkillPerformance> _skillPerformanceFromScores(
+    List<Map<String, dynamic>> scores,
+  ) {
+    final now = DateTime.now();
+    // skillKey -> [correct, total] pairs, one per score entry that touched it.
+    final current = <String, List<List<int>>>{};
+    final previous = <String, List<List<int>>>{};
+
+    for (final entry in scores) {
+      final date = _toDate(entry['date']);
+      final skills = entry['skills'] as Map<String, dynamic>?;
+      if (date == null || skills == null || skills.isEmpty) continue;
+
+      final diffDays = now.difference(date).inDays;
+      final bucket = diffDays < 7 ? current : previous;
+      if (diffDays >= 14) continue;
+
+      for (final skillEntry in skills.entries) {
+        final tally = skillEntry.value as Map<String, dynamic>?;
+        if (tally == null) continue;
+        final correct = (tally['correct'] as num?)?.toInt() ?? 0;
+        final total = (tally['total'] as num?)?.toInt() ?? 0;
+        if (total == 0) continue;
+        (bucket[skillEntry.key] ??= []).add([correct, total]);
+      }
+    }
+
+    final skillKeys = {...current.keys, ...previous.keys};
+    return skillKeys.map((key) {
+      final curr = current[key];
+      final prev = previous[key];
+      return SkillPerformance(
+        skill: skillByKey(key),
+        accuracy: _accuracy(curr),
+        previousAccuracy: _accuracy(prev),
+        totalAnswers: curr?.fold<int>(0, (acc, pair) => acc + pair[1]) ?? 0,
+        hasData: curr != null && curr.isNotEmpty,
+      );
+    }).toList()
+      ..sort((a, b) => b.totalAnswers.compareTo(a.totalAnswers));
+  }
+
+  double _accuracy(List<List<int>>? pairs) {
+    if (pairs == null || pairs.isEmpty) return 0;
+    final correct = pairs.fold<int>(0, (acc, pair) => acc + pair[0]);
+    final total = pairs.fold<int>(0, (acc, pair) => acc + pair[1]);
+    return total == 0 ? 0 : correct / total;
   }
 
   double _average(List<double>? values) {

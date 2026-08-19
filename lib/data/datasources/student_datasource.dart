@@ -15,7 +15,18 @@ class StudentDatasource {
   // would otherwise hang the caller's loading state indefinitely.
   static const _fetchTimeout = Duration(seconds: 8);
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static FirebaseFirestore? _firestoreForTest;
+
+  /// Overrides the Firestore instance used by every [StudentDatasource],
+  /// so tests can inject a `FakeFirebaseFirestore` instead of hitting the
+  /// real backend. Mirrors the pattern in `FriendsService`.
+  @visibleForTesting
+  static void useFirestoreForTest(FirebaseFirestore? firestore) {
+    _firestoreForTest = firestore;
+  }
+
+  FirebaseFirestore get _firestore =>
+      _firestoreForTest ?? FirebaseFirestore.instance;
 
   CollectionReference<Map<String, dynamic>> get _students =>
       _firestore.collection('students');
@@ -85,6 +96,7 @@ class StudentDatasource {
     required String subjectLabel,
     required String gameTitle,
     required int score,
+    Map<String, dynamic>? skills,
   }) async {
     try {
       final doc = _students.doc(studentId);
@@ -124,6 +136,7 @@ class StudentDatasource {
         'gameTitle': gameTitle,
         'score': score,
         'date': Timestamp.fromDate(now),
+        if (skills != null && skills.isNotEmpty) 'skills': skills,
       });
     } catch (e) {
       debugPrint('StudentDatasource.recordScore error: $e');
