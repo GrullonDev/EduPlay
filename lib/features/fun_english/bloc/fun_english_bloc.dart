@@ -34,6 +34,7 @@ class FunEnglishProvider with ChangeNotifier {
   int _score = 0;
   int _lives = 3;
   int _level = 1;
+  bool _playedTodayMarked = false;
   String _currentQuestion = ''; // The word to translate/match
   final String _currentImage = '';
   List<String> _currentOptions = [];
@@ -170,6 +171,12 @@ class FunEnglishProvider with ChangeNotifier {
       _score += 10;
       _updateLevel();
       if (_score % 50 == 0) _showReward();
+      // First correct answer of the session keeps the streak alive right
+      // away — don't make the child wait until they run out of lives.
+      if (!_playedTodayMarked) {
+        _playedTodayMarked = true;
+        sl<StudentRepository>().markPlayedToday();
+      }
     } else {
       final correctText = _currentItem[_targetLang] ??
           _currentOptions[_correctAnswerIndex];

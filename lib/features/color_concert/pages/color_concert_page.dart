@@ -40,6 +40,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
   int _score = 0;
   bool _isPlayingSequence = false;
   bool _isGameActive = false;
+  bool _playedTodayMarked = false;
   int? _activeLightIndex; // Currently lit up button
   String _message = '¡Bienvenido al Concierto!';
 
@@ -72,6 +73,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
       _score = 0;
       _message = '¡Atento!';
       _isGameActive = true;
+      _playedTodayMarked = false;
       skillTracker.reset();
     });
     Future.delayed(const Duration(seconds: 1), _nextRound);
@@ -165,6 +167,12 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
         _score++;
         _message = '¡Correcto!';
       });
+      // First completed round of the session keeps the streak alive right
+      // away, instead of waiting for the player to eventually fail.
+      if (!_playedTodayMarked) {
+        _playedTodayMarked = true;
+        sl<StudentRepository>().markPlayedToday();
+      }
       Future.delayed(const Duration(seconds: 1), _nextRound);
     }
   }

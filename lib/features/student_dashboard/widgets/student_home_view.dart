@@ -57,6 +57,7 @@ class StudentHomeView extends StatelessWidget {
           // Stat cards
           StudentStatCardsRow(
             streak: bloc.streak,
+            streakAtRisk: bloc.isStreakAtRisk,
             level: bloc.level,
             xpIntoLevel: bloc.xpIntoLevel,
             xpProgress: bloc.xpProgress,

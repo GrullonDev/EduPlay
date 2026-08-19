@@ -143,6 +143,66 @@ class StudentDatasource {
     }
   }
 
+  /// Marks the streak as active again today without changing its count —
+  /// called after the child passes the streak-recovery quiz.
+  Future<void> recoverStreak(String studentId) async {
+    try {
+      await _students.doc(studentId).set(
+        {'lastPlayedDate': _dateKey(DateTime.now())},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('StudentDatasource.recoverStreak error: $e');
+    }
+  }
+
+  /// Resets the streak to zero — called after the child fails the
+  /// streak-recovery quiz (or declines and lets it lapse further); a fresh
+  /// streak then starts the next time they actually play a game.
+  Future<void> resetStreak(String studentId) async {
+    try {
+      await _students.doc(studentId).set(
+        {'streak': 0},
+        SetOptions(merge: true),
+      );
+    } catch (e) {
+      debugPrint('StudentDatasource.resetStreak error: $e');
+    }
+  }
+
+  /// Bumps the streak the moment the child succeeds at something today —
+  /// called on a game's first correct answer, independent of whether that
+  /// game session ever reaches a formal "game over" (some games only ever
+  /// persist a score once the player loses, which meant a child who played
+  /// well and simply left never got credit). Safe to call repeatedly in the
+  /// same day — a no-op once `lastPlayedDate` is already today.
+  Future<void> markPlayedToday(String studentId) async {
+    try {
+      final doc = _students.doc(studentId);
+      final now = DateTime.now();
+      final today = _dateKey(now);
+      final yesterday = _dateKey(now.subtract(const Duration(days: 1)));
+
+      await _firestore.runTransaction((tx) async {
+        final snapshot = await tx.get(doc);
+        final data = snapshot.data();
+        final lastPlayedDate = data?['lastPlayedDate'] as String?;
+        if (lastPlayedDate == today) return;
+
+        final currentStreak = (data?['streak'] as num?)?.toInt() ?? 0;
+        final streak = lastPlayedDate == yesterday ? currentStreak + 1 : 1;
+
+        tx.set(
+          doc,
+          {'streak': streak, 'lastPlayedDate': today},
+          SetOptions(merge: true),
+        );
+      });
+    } catch (e) {
+      debugPrint('StudentDatasource.markPlayedToday error: $e');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 10}) async {
     try {
       final snapshot = await _students

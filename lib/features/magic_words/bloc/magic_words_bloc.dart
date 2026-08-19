@@ -50,6 +50,7 @@ class MagicWordsProvider with ChangeNotifier {
   int _score = 0;
   int _lives = 3;
   int _level = 1;
+  bool _playedTodayMarked = false;
 
   // Game State
   String _targetWord = '';
@@ -305,6 +306,12 @@ class MagicWordsProvider with ChangeNotifier {
     if (_score % 50 == 0) {
       _showReward('¡Excelente!', '¡Has ganado puntos extras!');
     }
+    // First correct answer of the session keeps the streak alive right
+    // away — don't make the child wait until they run out of lives.
+    if (!_playedTodayMarked) {
+      _playedTodayMarked = true;
+      sl<StudentRepository>().markPlayedToday();
+    }
   }
 
   void _nextLevel() {
@@ -386,6 +393,7 @@ class MagicWordsProvider with ChangeNotifier {
     _score = 0;
     _lives = 3;
     _level = 1;
+    _playedTodayMarked = false;
     skillTracker.reset();
     notifyListeners(); // reset state first so UI reflects new game
 

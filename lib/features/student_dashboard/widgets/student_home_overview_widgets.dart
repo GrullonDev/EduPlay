@@ -243,6 +243,7 @@ class StudentStatCardsRow extends StatelessWidget {
     required this.xpProgress,
     required this.activeChallenges,
     required this.s,
+    this.streakAtRisk = false,
   });
   final int streak;
   final int level;
@@ -251,15 +252,22 @@ class StudentStatCardsRow extends StatelessWidget {
   final int activeChallenges;
   final ScreenSize s;
 
+  /// True once the streak has gone 2+ days without play — rendered gray
+  /// ("paused") instead of the usual fiery orange until it's either
+  /// recovered or a fresh streak starts.
+  final bool streakAtRisk;
+
   @override
   Widget build(BuildContext context) {
     final cards = [
       _StatCard(
         icon: Icons.local_fire_department_rounded,
-        iconColor: const Color(0xFFFF7043),
-        bgColor: const Color(0xFFFFF3F0),
+        iconColor: streakAtRisk ? Colors.grey[400]! : const Color(0xFFFF7043),
+        bgColor: streakAtRisk ? Colors.grey[100]! : const Color(0xFFFFF3F0),
         title: 'Racha Actual',
-        value: '$streak ${streak == 1 ? 'día' : 'días'} seguidos',
+        value: streakAtRisk
+            ? 'Racha en pausa'
+            : '$streak ${streak == 1 ? 'día' : 'días'} seguidos',
         child: null,
       ),
       _StatCard(

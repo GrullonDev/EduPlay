@@ -41,4 +41,6 @@ class RouterPaths {
   static const termsOfService = '/terms-of-service';
   static const browseTeachers = '/browse-teachers';
   static const friends = '/friends';
+  static const streakRecoveryQuiz = '/streak-recovery';
+  static const independentStudentAccount = '/my-account';
 }

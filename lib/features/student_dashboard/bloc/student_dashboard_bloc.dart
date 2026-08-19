@@ -8,6 +8,7 @@ import 'package:edu_play/features/games_catalog/models/catalog_game.dart'
     show GameSubject;
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/progress_recommendations/services/progress_recommendations_service.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
@@ -50,6 +51,15 @@ class StudentDashboardBloc extends ChangeNotifier {
   GameSubject? weakestSubject;
   bool get isYoungChild => childProfile != null && childProfile!.age <= 5;
 
+  /// True for a self-registered teen (15+) with their own email/password
+  /// account — as opposed to a PIN-based child under a parent, who has no
+  /// login of their own. Only independent students get an account/settings
+  /// entry point (e.g. to delete their own account).
+  bool get isIndependentStudent =>
+      childProfile != null &&
+      !isGuest &&
+      !_authRepository.isCurrentUserAnonymous();
+
   String get displayName =>
       profile?['name'] as String? ??
       childProfile?.name ??
@@ -72,6 +82,39 @@ class StudentDashboardBloc extends ChangeNotifier {
       isGuest ? _guestPoints : (profile?['points'] as num?)?.toInt() ?? 0;
 
   int get streak => (profile?['streak'] as num?)?.toInt() ?? 0;
+
+  /// Days since `lastPlayedDate` (yyyy-MM-dd), or a large number if that
+  /// field is missing/unparseable — treated the same as "long overdue".
+  int get daysSinceLastPlayed {
+    final raw = profile?['lastPlayedDate'] as String?;
+    if (raw == null) return 999;
+    final parts = raw.split('-');
+    if (parts.length != 3) return 999;
+    final date = DateTime(
+      int.tryParse(parts[0]) ?? 0,
+      int.tryParse(parts[1]) ?? 1,
+      int.tryParse(parts[2]) ?? 1,
+    );
+    final today = DateTime.now();
+    final todayAtMidnight = DateTime(today.year, today.month, today.day);
+    return todayAtMidnight.difference(date).inDays;
+  }
+
+  /// True once a streak has gone 2+ days without play — the child hasn't
+  /// lost it yet, but it's paused until they either play normally (which
+  /// resets it to a fresh streak of 1) or recover it via the streak-recovery
+  /// quiz. Guests have no persistent streak, so they're excluded.
+  bool get isStreakAtRisk =>
+      childProfile != null && !isGuest && streak > 0 && daysSinceLastPlayed >= 2;
+
+  /// True if the streak-recovery dialog should be shown right now: the
+  /// streak is at risk and the child hasn't already been prompted today.
+  Future<bool> get shouldPromptStreakRecovery async {
+    if (!isStreakAtRisk) return false;
+    final prompted = await StudentSessionNavigationService
+        .wasStreakRecoveryPromptedToday(childProfile!.id);
+    return !prompted;
+  }
 
   int get level => StudentRepository.levelForPoints(points);
 

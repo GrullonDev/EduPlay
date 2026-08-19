@@ -177,6 +177,21 @@ class StudentRepository {
     }
   }
 
+  Future<void> markPlayedToday() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.markPlayedToday(id);
+  }
+
+  Future<void> recoverStreak() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.recoverStreak(id);
+  }
+
+  Future<void> resetStreak() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.resetStreak(id);
+  }
+
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 10}) =>
       _datasource.getLeaderboard(limit: limit);
 

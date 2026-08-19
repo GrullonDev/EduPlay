@@ -40,6 +40,8 @@ import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
 import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
 import 'package:edu_play/features/friends/pages/friends_page.dart';
+import 'package:edu_play/features/settings/pages/independent_student_account_page.dart';
+import 'package:edu_play/features/streak_recovery/pages/streak_recovery_quiz_page.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 class AppRouter {
@@ -109,6 +111,14 @@ class AppRouter {
           builder: (_) => RegisterStudentPage(age: age),
         );
 
+      case RouterPaths.independentStudentAccount:
+        return MaterialPageRoute(
+          builder: (_) => const IndependentStudentAccountPage(),
+        );
+      case RouterPaths.streakRecoveryQuiz:
+        final profile = settings.arguments as ChildProfile;
+        page = StreakRecoveryQuizPage(childProfile: profile);
+        break;
       case RouterPaths.mathAdventure:
         final userName = settings.arguments as String?;
         page = MathAdventurePage(userName: userName);
