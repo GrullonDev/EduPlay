@@ -1,7 +1,8 @@
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
-import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 
 class FirestoreClassroomChallengesRepository

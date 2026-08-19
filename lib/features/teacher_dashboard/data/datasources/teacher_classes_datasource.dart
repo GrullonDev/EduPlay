@@ -1,8 +1,11 @@
+// Dart imports:
 import 'dart:math';
 
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 

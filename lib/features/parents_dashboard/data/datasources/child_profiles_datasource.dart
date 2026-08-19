@@ -1,6 +1,8 @@
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
 abstract class ChildProfilesDatasource {
@@ -175,11 +177,11 @@ class FirestoreChildProfilesDatasource implements ChildProfilesDatasource {
   @override
   Future<String> getParentName() async {
     final uid = _uid;
-    if (uid == null) return 'MamÃ¡';
+    if (uid == null) return 'Mamá';
 
     final doc = await _firestore.collection('parents').doc(uid).get();
-    if (!doc.exists) return 'MamÃ¡';
-    return (doc.data()?['firstName'] as String?) ?? 'MamÃ¡';
+    if (!doc.exists) return 'Mamá';
+    return (doc.data()?['firstName'] as String?) ?? 'Mamá';
   }
 
   @override

@@ -1,8 +1,11 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
@@ -12,6 +15,7 @@ import 'package:edu_play/features/practice_session/services/practice_sessions_se
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/shared/widgets/skill_performance_grid.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);

@@ -1,11 +1,15 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/utils/app_theme.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
+// Project imports:
 import 'package:edu_play/features/landing/models/landing_game_info.dart';
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
+import 'package:edu_play/utils/app_theme.dart';
+import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// Showcase grid of the EduPlay game catalog.
 class LandingGamesSection extends StatelessWidget {

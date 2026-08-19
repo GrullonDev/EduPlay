@@ -1,15 +1,19 @@
-import 'package:edu_play/core/auth/auth_gate.dart';
-import 'package:edu_play/utils/app_theme.dart';
-import 'package:edu_play/data/repositories/auth_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
+// Package imports:
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:edu_play/core/auth/auth_gate.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
-import 'package:edu_play/utils/routes/router_switch.dart';
 import 'package:edu_play/l10n/app_localizations.dart';
+import 'package:edu_play/utils/app_theme.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/routes/router_switch.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

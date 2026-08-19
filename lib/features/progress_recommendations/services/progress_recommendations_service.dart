@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';

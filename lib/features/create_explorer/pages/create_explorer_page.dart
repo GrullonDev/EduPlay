@@ -1,15 +1,19 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:edu_play/utils/child_portal_link.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
+import 'package:edu_play/utils/child_portal_link.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);

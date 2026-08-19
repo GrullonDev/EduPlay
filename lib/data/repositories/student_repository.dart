@@ -1,10 +1,18 @@
+// Flutter imports:
+import 'package:flutter/foundation.dart';
+
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/student_datasource.dart';
 import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/store/models/purchase_transaction.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/shared/data/subject_catalog.dart';
-import 'package:flutter/foundation.dart';
+import 'package:edu_play/utils/points_service.dart';
 
 /// Average performance for a subject over the last 7 days, plus the
 /// previous 7 days for trend comparison.
@@ -81,6 +89,7 @@ class StudentRepository {
     required String name,
     required int age,
     String? avatar,
+    String? parentUid,
   }) async {
     final id = await _datasource.getOrCreateStudentId();
     await _datasource.ensureProfile(
@@ -88,6 +97,7 @@ class StudentRepository {
       name: name,
       age: age,
       avatar: avatar,
+      parentUid: parentUid,
     );
   }
 
@@ -96,12 +106,14 @@ class StudentRepository {
     required String name,
     required int age,
     String? avatar,
+    String? parentUid,
   }) {
     return _datasource.ensureProfile(
       studentId: studentId,
       name: name,
       age: age,
       avatar: avatar,
+      parentUid: parentUid,
     );
   }
 
@@ -115,6 +127,107 @@ class StudentRepository {
   Future<Map<String, dynamic>?> getStudentProfile(String studentId) =>
       _datasource.getProfile(studentId);
 
+  /// Spends [cost] points on [itemId] for the given student. See
+  /// [PurchaseResult] for how the Tienda UI should react to each outcome.
+  Future<PurchaseResult> purchaseItem({
+    required String studentId,
+    required String itemId,
+    required String itemName,
+    required int cost,
+  }) =>
+      _datasource.purchaseItem(
+        studentId: studentId,
+        itemId: itemId,
+        itemName: itemName,
+        cost: cost,
+      );
+
+  Future<void> equipAvatarColor(String studentId, String colorHex) =>
+      _datasource.equipAvatar(studentId: studentId, colorHex: colorHex);
+
+  Future<void> equipAvatarIcon(String studentId, String iconId) =>
+      _datasource.equipAvatar(studentId: studentId, iconId: iconId);
+
+  /// Clears the equipped avatar color and/or icon, reverting to the default
+  /// avatar (solid navy circle + initial).
+  Future<void> unequipAvatar(
+    String studentId, {
+    bool clearColor = false,
+    bool clearIcon = false,
+  }) =>
+      _datasource.unequipAvatar(
+        studentId: studentId,
+        clearColor: clearColor,
+        clearIcon: clearIcon,
+      );
+
+  /// Submits [itemId] for parent approval instead of spending points right
+  /// away. See [PurchaseResult.pendingApproval].
+  Future<PurchaseResult> requestPurchase({
+    required String studentId,
+    required String itemId,
+    required int cost,
+  }) =>
+      _datasource.requestPurchase(
+          studentId: studentId, itemId: itemId, cost: cost);
+
+  Future<PurchaseResult> approvePendingPurchase({
+    required String studentId,
+    required String itemId,
+    required String itemName,
+  }) =>
+      _datasource.approvePendingPurchase(
+        studentId: studentId,
+        itemId: itemId,
+        itemName: itemName,
+      );
+
+  Future<void> rejectPendingPurchase({
+    required String studentId,
+    required String itemId,
+  }) =>
+      _datasource.rejectPendingPurchase(studentId: studentId, itemId: itemId);
+
+  /// Spending history, newest first — see [PurchaseTransaction].
+  Future<List<PurchaseTransaction>> getTransactions(
+    String studentId, {
+    int limit = 50,
+  }) async {
+    final rows = await _datasource.getTransactions(studentId, limit: limit);
+    return rows.map((row) {
+      final createdAt = row['createdAt'];
+      return PurchaseTransaction(
+        itemId: row['itemId'] as String? ?? '',
+        itemName: row['itemName'] as String? ?? '',
+        cost: (row['cost'] as num?)?.toInt() ?? 0,
+        balanceBefore: (row['balanceBefore'] as num?)?.toInt() ?? 0,
+        balanceAfter: (row['balanceAfter'] as num?)?.toInt() ?? 0,
+        createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
+        type: PurchaseTransactionType.values.firstWhere(
+          (t) => t.name == row['type'],
+          orElse: () => PurchaseTransactionType.purchase,
+        ),
+      );
+    }).toList();
+  }
+
+  /// Sum of transaction costs within the last [days] days — used to enforce
+  /// a parent-configured spend limit without trusting a mutable running
+  /// total that could drift out of sync with the actual ledger.
+  Future<int> getSpentInWindow(String studentId, {required int days}) async {
+    final transactions = await getTransactions(studentId, limit: 200);
+    final cutoff = DateTime.now().subtract(Duration(days: days));
+    return transactions
+        .where((t) => t.createdAt.isAfter(cutoff))
+        .fold<int>(0, (total, t) => total + t.cost);
+  }
+
+  Future<void> syncGuestPoints({
+    required String studentId,
+    required int points,
+  }) =>
+      _datasource.syncGuestPoints(studentId: studentId, points: points);
+
   Future<void> recordScore({
     required String subjectKey,
     required String gameTitle,
@@ -122,6 +235,22 @@ class StudentRepository {
     Map<String, SkillTally>? skills,
     String? gameRoute,
   }) async {
+    // Guests have no Firebase Auth session (see AuthGate), so a Firestore
+    // write here would always be denied by the rules — and silently
+    // swallowed by the datasource's try/catch, meaning the score was never
+    // saved anywhere. Guest points live in PointsService instead (that's
+    // what the guest-mode dashboard/store read from), so route there.
+    var shouldStoreGuestPoints = false;
+    try {
+      shouldStoreGuestPoints = FirebaseAuth.instance.currentUser == null;
+    } on FirebaseException catch (e) {
+      if (e.code != 'no-app') rethrow;
+    }
+    if (shouldStoreGuestPoints) {
+      await PointsService.addPoints(score);
+      return;
+    }
+
     final id = await _datasource.getOrCreateStudentId();
     final subject = subjectByKey(subjectKey);
     await _datasource.recordScore(

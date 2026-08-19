@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';

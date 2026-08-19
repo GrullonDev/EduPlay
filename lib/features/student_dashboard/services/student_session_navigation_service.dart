@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Project imports:
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// Keeps the child-facing navigation flow independent from individual games.

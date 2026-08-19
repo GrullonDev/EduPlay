@@ -1,10 +1,13 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games/core/models/skill_result.dart';
 import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
 import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
 import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:flutter/material.dart';
 
 enum DrawMode { pen, eraser, sticker }
 

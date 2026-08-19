@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// A school subject, used to classify games and challenges across both

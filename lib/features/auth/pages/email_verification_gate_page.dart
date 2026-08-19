@@ -1,14 +1,18 @@
+// Dart imports:
 import 'dart:async';
 
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/data/repositories/auth_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
-
+// Project imports:
 import 'package:edu_play/core/auth/independent_student_loader.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);

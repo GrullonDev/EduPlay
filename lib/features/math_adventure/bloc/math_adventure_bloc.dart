@@ -1,14 +1,18 @@
+// Dart imports:
 import 'dart:math';
 
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games/core/models/skill_result.dart';
 import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
 import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
-import 'package:flutter/material.dart';
 
 class MathAdventureProvider with ChangeNotifier {
   MathAdventureProvider({

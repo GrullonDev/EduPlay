@@ -1,6 +1,8 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:math';
 
+// Project imports:
 import 'package:edu_play/features/games/core/game_metadata.dart';
 import 'package:edu_play/features/games/core/game_session_controller.dart';
 import 'package:edu_play/features/games/number_ninja/number_ninja_module.dart';

@@ -1,11 +1,15 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/settings/widgets/settings_section_card.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/features/subscription/models/subscription.dart';
 import 'package:edu_play/features/subscription/services/stripe_service.dart';
-import 'package:edu_play/features/settings/widgets/settings_section_card.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);

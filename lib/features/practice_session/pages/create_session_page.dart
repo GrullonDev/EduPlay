@@ -1,20 +1,24 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
-import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:edu_play/l10n/app_localizations.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/l10n/app_localizations.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

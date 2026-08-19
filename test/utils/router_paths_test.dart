@@ -1,8 +1,11 @@
 // Ensures all RouterPaths constants are unique — duplicate route strings would
 // cause silent navigation bugs that are hard to trace at runtime.
 
-import 'package:edu_play/utils/routes/router_paths.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 void main() {
   // Collect all route strings via reflection-free manual list.

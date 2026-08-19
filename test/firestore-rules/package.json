@@ -1,0 +1,12 @@
+{
+  "name": "eduplay-firestore-rules-tests",
+  "private": true,
+  "description": "firestore.rules coverage via the Firebase emulator (@firebase/rules-unit-testing) — separate from the Dart test suite since fake_cloud_firestore has no rules engine.",
+  "scripts": {
+    "test": "firebase emulators:exec --project eduplay-rules-test --only firestore \"mocha store.rules.test.js --timeout 20000\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "mocha": "^10.7.3"
+  }
+}

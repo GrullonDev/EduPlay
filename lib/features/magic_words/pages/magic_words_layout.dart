@@ -1,9 +1,15 @@
 import 'package:edu_play/features/magic_words/bloc/magic_words_bloc.dart'
     show MagicWordsProvider, MagicWordMode;
-import 'package:edu_play/utils/responsive.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:edu_play/utils/responsive.dart';
 
 class MagicWordsLayout extends StatelessWidget {
   const MagicWordsLayout({super.key});

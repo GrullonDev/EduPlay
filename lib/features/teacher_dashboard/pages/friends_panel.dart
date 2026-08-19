@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/features/friends/pages/friends_view.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
 

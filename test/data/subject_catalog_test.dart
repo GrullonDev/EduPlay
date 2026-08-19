@@ -3,8 +3,11 @@
 // mismatch between subjectCatalog and subjectGameRoutes (e.g. from a typo
 // in a subject key) would only surface as a silent runtime fallback.
 
-import 'package:edu_play/shared/data/subject_catalog.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/shared/data/subject_catalog.dart';
 
 void main() {
   group('subjectCatalog', () {

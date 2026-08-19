@@ -1,13 +1,17 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);

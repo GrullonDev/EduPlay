@@ -1,7 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Project imports:
 import 'package:edu_play/core/auth/independent_student_loader.dart';
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';

@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
 import 'package:edu_play/features/games/core/widgets/game_header.dart';
 import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';

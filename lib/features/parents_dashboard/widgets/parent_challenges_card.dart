@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';

@@ -1,10 +1,14 @@
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';
 
 abstract class ParentDashboardDatasource {
   Future<ParentQuickControls> getQuickControls();
+
+  Future<ParentQuickControls> getQuickControlsForUser(String uid);
 
   Future<void> saveQuickControls(ParentQuickControls controls);
 }
@@ -29,7 +33,11 @@ class FirestoreParentDashboardDatasource implements ParentDashboardDatasource {
   Future<ParentQuickControls> getQuickControls() async {
     final uid = _uid;
     if (uid == null) return const ParentQuickControls();
+    return getQuickControlsForUser(uid);
+  }
 
+  @override
+  Future<ParentQuickControls> getQuickControlsForUser(String uid) async {
     final doc = await _parentRef(uid).get();
     return ParentQuickControls.fromJson(doc.data() ?? {});
   }

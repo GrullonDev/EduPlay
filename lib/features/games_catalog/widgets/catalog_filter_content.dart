@@ -1,7 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+// Package imports:
+import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
 import 'package:edu_play/utils/responsive.dart';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -11,6 +17,17 @@ import 'package:edu_play/utils/responsive.dart';
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
 const _kCoral = Color(0xFFFF6E6C);
+
+/// Pushes a game's route and, on return, refreshes [StudentDashboardBloc] so
+/// points/streak/level earned during play (guest or registered) show up
+/// immediately in the Panel de Control / Tienda instead of staying stale
+/// until the app restarts. This hub view always lives inside the dashboard's
+/// provider tree (see StudentDashboardLayout), so the bloc is always found.
+Future<void> _openGame(BuildContext context, String route) async {
+  final dashboardBloc = context.read<StudentDashboardBloc>();
+  await Navigator.pushNamed(context, route);
+  await dashboardBloc.refresh();
+}
 
 // ── Filter panel ──────────────────────────────────────────────────────────────
 
@@ -672,7 +689,7 @@ class _HeroCard extends StatelessWidget {
                 Row(
                   children: [
                     ElevatedButton.icon(
-                      onPressed: () => Navigator.pushNamed(context, game.route),
+                      onPressed: () => _openGame(context, game.route),
                       icon: const Icon(Icons.play_arrow_rounded, size: 18),
                       label: Text(
                         'Jugar ahora',
@@ -1149,7 +1166,7 @@ class _GameCard extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: () => Navigator.pushNamed(context, game.route),
+                    onPressed: () => _openGame(context, game.route),
                     icon:
                         const Icon(Icons.play_circle_outline_rounded, size: 16),
                     label: Text(
@@ -1292,7 +1309,7 @@ class _GameListTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           OutlinedButton.icon(
-            onPressed: () => Navigator.pushNamed(context, game.route),
+            onPressed: () => _openGame(context, game.route),
             icon: const Icon(Icons.play_circle_outline_rounded, size: 16),
             label: Text(
               'Jugar',

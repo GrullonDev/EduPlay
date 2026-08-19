@@ -11,11 +11,13 @@
 // features_friends_service_test.dart / auth_gate_test.dart) via the
 // StudentDatasource.useFirestoreForTest hook added alongside these tests.
 
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Project imports:
 import 'package:edu_play/data/datasources/student_datasource.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games/core/models/skill_result.dart';

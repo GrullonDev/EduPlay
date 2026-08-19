@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/features/legal/pages/legal_shared.dart';
 
 const _kLastUpdated = '24 de junio de 2026';

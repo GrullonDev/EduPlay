@@ -1,4 +1,7 @@
+// Package imports:
 import 'package:firebase_auth/firebase_auth.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/auth_datasource.dart';
 
 abstract class AuthRepository {

@@ -1,7 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/features/math_adventure/bloc/math_adventure_bloc.dart';
 import 'package:edu_play/features/math_adventure/widgets/math_adventure_game_area.dart';
 import 'package:edu_play/features/math_adventure/widgets/math_adventure_header.dart';

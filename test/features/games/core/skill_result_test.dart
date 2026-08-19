@@ -2,8 +2,11 @@
 // every game controller uses to report concrete mastery (not just points) to
 // StudentRepository.recordScore. Pure logic, no Firestore involved.
 
-import 'package:edu_play/features/games/core/models/skill_result.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/features/games/core/models/skill_result.dart';
 
 void main() {
   group('SkillTally', () {

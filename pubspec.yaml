@@ -39,6 +39,7 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   fake_cloud_firestore: ^3.1.0
   firebase_auth_mocks: ^0.14.2
+  tidy_imports: ^1.2.0
 
 dependency_overrides:
   intl: ^0.20.2

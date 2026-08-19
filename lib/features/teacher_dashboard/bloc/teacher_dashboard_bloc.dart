@@ -1,8 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
-import 'package:edu_play/data/repositories/student_repository.dart';
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';

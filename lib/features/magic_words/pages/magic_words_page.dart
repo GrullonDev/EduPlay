@@ -1,8 +1,13 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:edu_play/features/magic_words/bloc/magic_words_bloc.dart';
 import 'package:edu_play/features/magic_words/pages/magic_words_layout.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MagicWordsPage extends StatelessWidget {
   const MagicWordsPage({super.key, this.onScoreUpdate});

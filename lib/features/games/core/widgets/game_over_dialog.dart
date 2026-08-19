@@ -1,8 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
-import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+// Project imports:
 import 'package:edu_play/features/games/core/models/skill_result.dart';
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
+import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 
 /// Shared "game over" dialog. Score persistence already happened in
 /// `GameSessionController.onGameOver()` by the time this shows — this is

@@ -1,8 +1,11 @@
+// Flutter imports:
+import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/core/audio/sound_manager.dart';
 import 'package:edu_play/features/sticker_album/models/sticker.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
-import 'package:flutter/material.dart';
 
 class StickerAlbumPage extends StatelessWidget {
   const StickerAlbumPage({super.key, required this.unlockedIds});

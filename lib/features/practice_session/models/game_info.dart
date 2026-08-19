@@ -1,3 +1,4 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 /// Catalog entry for a game that can be assigned to a practice session.

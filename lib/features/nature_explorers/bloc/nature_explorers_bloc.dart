@@ -1,5 +1,10 @@
+// Dart imports:
 import 'dart:math';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/games/core/models/skill_result.dart';
 import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
@@ -229,4 +234,3 @@ class NatureExplorersProvider with ChangeNotifier {
     super.dispose();
   }
 }
-

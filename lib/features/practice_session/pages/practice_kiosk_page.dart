@@ -1,25 +1,28 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
-import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
-import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
-import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
-import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
-import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
-import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
-import 'package:edu_play/features/sticker_album/models/sticker.dart';
-import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
-
-import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
+import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
+import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
+import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
-import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
+import 'package:edu_play/features/sticker_album/models/sticker.dart';
+import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
+import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
+import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
 import 'package:edu_play/l10n/app_localizations.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

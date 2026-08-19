@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/settings/domain/entities/account_security_info.dart';
 
 class AccountSecurityException implements Exception {

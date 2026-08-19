@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Project imports:
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';

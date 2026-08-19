@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/friends/models/friend_request.dart';
 import 'package:edu_play/features/friends/services/friends_service.dart';
