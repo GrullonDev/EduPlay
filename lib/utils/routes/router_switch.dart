@@ -233,7 +233,7 @@ class AppRouter {
       default:
         page = const Scaffold(
           body: Center(
-            child: Text('Page not found'),
+            child: Text('Página no encontrada'),
           ),
         );
         break;
