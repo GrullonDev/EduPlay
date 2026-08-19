@@ -23,6 +23,7 @@ class RegisterStudentBloc with ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController guardianEmailController = TextEditingController();
 
   bool loading = false;
   String? errorMessage;
@@ -42,11 +43,14 @@ class RegisterStudentBloc with ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
+    final guardianEmail = guardianEmailController.text.trim();
+
     final user = await authRepository.registerIndependentStudent(
       email: email,
       password: password,
       name: name,
       age: age,
+      guardianEmail: guardianEmail.isEmpty ? null : guardianEmail,
     );
 
     if (user == null) {
@@ -77,6 +81,7 @@ class RegisterStudentBloc with ChangeNotifier {
     nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    guardianEmailController.dispose();
     super.dispose();
   }
 }

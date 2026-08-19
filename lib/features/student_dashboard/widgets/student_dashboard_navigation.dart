@@ -259,6 +259,15 @@ class StudentSidebar extends StatelessWidget {
 
             _divider(),
 
+            if (bloc.isIndependentStudent)
+              _SideFooterTile(
+                icon: Icons.manage_accounts_rounded,
+                label: 'Mi cuenta',
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  RouterPaths.independentStudentAccount,
+                ),
+              ),
             _SideFooterTile(
               icon: Icons.help_outline_rounded,
               label: 'Ayuda',

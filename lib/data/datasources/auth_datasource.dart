@@ -29,6 +29,7 @@ abstract class AuthDatasource {
     required String password,
     required String name,
     required int age,
+    String? guardianEmail,
   });
 
   Future<bool> isChildRegistered(String name);
@@ -113,6 +114,7 @@ class ImplAuthDatasource implements AuthDatasource {
     required String password,
     required String name,
     required int age,
+    String? guardianEmail,
   }) async {
     try {
       UserCredential userCredential =
@@ -129,6 +131,12 @@ class ImplAuthDatasource implements AuthDatasource {
           'email': email,
           'age': age,
           'role': 'independent_student', // used by AuthGate to route back after reload
+          // Optional, self-reported — the only way an independent student
+          // (no parent account on file) can be offered a parental-consent
+          // step before deleting their own account. Absent means account
+          // deletion is immediate/self-serve, same as before.
+          if (guardianEmail != null && guardianEmail.isNotEmpty)
+            'guardianEmail': guardianEmail,
           'onboardingComplete': false,
           'notificationPrefs': {
             'emailSessionComplete': true,

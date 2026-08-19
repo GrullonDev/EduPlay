@@ -32,4 +32,14 @@ class FirebaseAccountSecurityRepository implements AccountSecurityRepository {
   Future<void> deleteAccount({required String password}) {
     return datasource.deleteAccount(password: password);
   }
+
+  @override
+  Future<String?> getGuardianEmailOnFile() {
+    return datasource.getGuardianEmailOnFile();
+  }
+
+  @override
+  Future<void> requestDeletionWithGuardianConsent({required String password}) {
+    return datasource.requestDeletionWithGuardianConsent(password: password);
+  }
 }

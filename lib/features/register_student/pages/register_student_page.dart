@@ -137,6 +137,26 @@ class _RegisterStudentLayoutState extends State<_RegisterStudentLayout> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 14),
+                  _LabeledField(
+                    label: 'Correo de tu padre/madre/tutor (opcional)',
+                    child: TextField(
+                      controller: bloc.guardianEmailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: _inputDecoration('tutor@ejemplo.com'),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Si lo agregas, le pediremos su aprobación antes de '
+                    'eliminar tu cuenta en el futuro — así nadie puede '
+                    'borrar tus datos sin que tu familia se entere.',
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                      height: 1.4,
+                    ),
+                  ),
                   if (bloc.errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Text(

@@ -21,6 +21,7 @@ abstract class AuthRepository {
     required String password,
     required String name,
     required int age,
+    String? guardianEmail,
   });
 
   Future<bool> isChildRegistered(String name);
@@ -72,12 +73,14 @@ class ImplAuthRepository implements AuthRepository {
     required String password,
     required String name,
     required int age,
+    String? guardianEmail,
   }) {
     return _authDatasource.registerIndependentStudent(
       email: email,
       password: password,
       name: name,
       age: age,
+      guardianEmail: guardianEmail,
     );
   }
 
