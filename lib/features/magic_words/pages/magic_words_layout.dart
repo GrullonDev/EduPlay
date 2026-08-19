@@ -1,4 +1,5 @@
-import 'package:edu_play/features/magic_words/bloc/magic_words_bloc.dart';
+import 'package:edu_play/features/magic_words/bloc/magic_words_bloc.dart'
+    show MagicWordsProvider, MagicWordMode;
 import 'package:edu_play/utils/responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -70,7 +71,19 @@ class MagicWordsLayout extends StatelessWidget {
                                 color: const Color(0xFF2196F3),
                               ),
                               const SizedBox(height: 20),
-                              if (bloc.age > 8) ...[
+                              if (bloc.mode == MagicWordMode.sentence) ...[
+                                Text(
+                                  bloc.sentenceText,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.nunito(
+                                    fontSize: scrambleFontSize,
+                                    color: const Color(0xFF2D3142),
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                              ] else if (bloc.age > 8) ...[
                                 Text(
                                   'Ordena: ${bloc.scrambledLetters.join(" ")}',
                                   textAlign: TextAlign.center,

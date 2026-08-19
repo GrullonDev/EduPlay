@@ -1,14 +1,31 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
+import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
 import 'package:edu_play/features/nature_explorers/repositories/nature_explorers_repository.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 class NatureItem {
-  NatureItem({required this.name, required this.icon, required this.color});
+  NatureItem({
+    required this.name,
+    required this.icon,
+    required this.color,
+    this.category = 'naturaleza',
+    this.funFact = '',
+  });
   final String name;
   final IconData icon;
   final Color color;
+
+  /// Conceptual category (e.g. "cielo", "animales") used to pick
+  /// harder-to-tell-apart distractors as the level goes up.
+  final String category;
+
+  /// Short factual note shown when the player misses this item.
+  final String funFact;
 }
 
 class NatureExplorersProvider with ChangeNotifier {
@@ -17,10 +34,16 @@ class NatureExplorersProvider with ChangeNotifier {
     required this.age,
     required NatureExplorersRepository repository,
   }) : _repository = repository {
-    _init();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
   final BuildContext context;
   final int age;
+
+  /// Per-skill correct/total tally for the current session, sent alongside
+  /// the score when the game ends.
+  final SkillTracker skillTracker = SkillTracker();
+
+  static const String _skillId = 'ciencias_naturales';
 
   int _score = 0;
   int _level = 1;
@@ -29,6 +52,7 @@ class NatureExplorersProvider with ChangeNotifier {
   String _feedbackMessage = '';
   Color _feedbackColor = Colors.transparent;
   bool _isCorrect = false;
+  bool _isBusy = false;
 
   int get score => _score;
   int get level => _level;
@@ -51,6 +75,18 @@ class NatureExplorersProvider with ChangeNotifier {
     try {
       _allItems = await _repository.getItems();
       if (_allItems.isNotEmpty) {
+        if (!context.mounted) return;
+        await showGameObjectiveIntro(
+          context,
+          gameTitle: 'Exploradores de la Naturaleza',
+          objective:
+              'Vas a identificar elementos de la naturaleza: se te dirá un '
+              'nombre (un animal, una planta, algo del cielo o un '
+              'elemento) y deberás tocar el ícono que le corresponde entre '
+              'varias opciones parecidas.',
+          difficultyLabel: _difficultyLabel(),
+        );
+        if (!context.mounted) return;
         _startNewLevel();
       }
     } catch (e) {
@@ -59,6 +95,12 @@ class NatureExplorersProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  String _difficultyLabel() {
+    if (age < 6) return 'Principiante';
+    if (age <= 8) return 'Intermedio';
+    return 'Avanzado';
   }
 
   void _startNewLevel() {
@@ -74,22 +116,59 @@ class NatureExplorersProvider with ChangeNotifier {
     // Ensure we don't try to take more items than available
     numberOfItems = min(numberOfItems, _allItems.length);
 
-    // Shuffle and pick items
-    var availableItems = List<NatureItem>.from(_allItems)..shuffle();
-    _currentItems = availableItems.take(numberOfItems).toList();
-
-    // Pick a target
-    if (_currentItems.isNotEmpty) {
-      _targetName = _currentItems[Random().nextInt(_currentItems.length)].name;
-    }
+    // Pick a target first, then build the grid around it so distractor
+    // difficulty (not just grid size) can scale with the level.
+    final target = _allItems[Random().nextInt(_allItems.length)];
+    _targetName = target.name;
+    _currentItems = _pickItemsForLevel(target, numberOfItems);
 
     notifyListeners();
   }
 
-  void checkItem(NatureItem item) {
-    if (_isCorrect) return; // Prevent clicking after success
+  /// Builds the grid shown to the player: the target plus distractors.
+  /// As the level rises, distractors are increasingly drawn from the
+  /// target's own category (e.g. confusing "Sol" with "Luna" and
+  /// "Estrella") instead of random unrelated items, so telling the right
+  /// icon apart gets genuinely harder — not just more crowded.
+  List<NatureItem> _pickItemsForLevel(NatureItem target, int count) {
+    final sameCategory = _allItems
+        .where((i) => i.category == target.category && i.name != target.name)
+        .toList()
+      ..shuffle();
+    final otherCategory = _allItems
+        .where((i) => i.category != target.category)
+        .toList()
+      ..shuffle();
+
+    // Similarity bias grows from ~17% at level 1 to 100% at level 6+.
+    final similarityBias = min(_level, 6) / 6;
+    final desiredSimilar = ((count - 1) * similarityBias).round();
+
+    final chosen = <NatureItem>[target];
+    chosen.addAll(sameCategory.take(desiredSimilar));
+    final remainingSlots = count - chosen.length;
+    if (remainingSlots > 0) {
+      chosen.addAll(otherCategory.take(remainingSlots));
+    }
+
+    // Small category pools may leave the grid short; top up with whatever
+    // items haven't been used yet.
+    if (chosen.length < count) {
+      final used = chosen.map((i) => i.name).toSet();
+      final leftover =
+          _allItems.where((i) => !used.contains(i.name)).toList()..shuffle();
+      chosen.addAll(leftover.take(count - chosen.length));
+    }
+
+    chosen.shuffle();
+    return chosen;
+  }
+
+  Future<void> checkItem(NatureItem item) async {
+    if (_isCorrect || _isBusy) return; // Prevent clicking mid-round
 
     if (item.name == _targetName) {
+      skillTracker.record(_skillId, correct: true);
       _score += 10;
       _level++;
       _feedbackMessage = '¡Correcto! ¡Muy bien!';
@@ -102,24 +181,39 @@ class NatureExplorersProvider with ChangeNotifier {
         _startNewLevel();
       });
     } else {
-      _feedbackMessage = 'Inténtalo de nuevo';
-      _feedbackColor = Colors.red;
+      skillTracker.record(_skillId, correct: false);
+      _isBusy = true;
+      NatureItem? target;
+      for (final candidate in _allItems) {
+        if (candidate.name == _targetName) {
+          target = candidate;
+          break;
+        }
+      }
       notifyListeners();
 
-      // Clear error message after a short delay
-      Future.delayed(const Duration(seconds: 1), () {
-        if (!_isCorrect) {
-          _feedbackMessage = '';
-          _feedbackColor = Colors.transparent;
-          notifyListeners();
-        }
-      });
+      await showAnswerExplanation(
+        context,
+        isCorrect: false,
+        correctAnswerText: _targetName,
+        explanation: (target != null && target.funFact.isNotEmpty)
+            ? target.funFact
+            : 'Ese no era el elemento correcto. ¡Sigue buscando!',
+        skillLabel: skillByKey(_skillId).label,
+      );
+      if (!context.mounted) return;
+
+      _isBusy = false;
+      _feedbackMessage = '';
+      _feedbackColor = Colors.transparent;
+      notifyListeners();
     }
   }
 
   void resetGame() {
     _score = 0;
     _level = 1;
+    skillTracker.reset();
     _startNewLevel();
   }
 
@@ -129,7 +223,10 @@ class NatureExplorersProvider with ChangeNotifier {
       subjectKey: 'science',
       gameTitle: 'Exploradores de la Naturaleza',
       score: _score,
+      skills: skillTracker.tallies,
+      gameRoute: '/nature-explorers',
     );
     super.dispose();
   }
 }
+
