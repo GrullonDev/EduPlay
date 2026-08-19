@@ -12,11 +12,11 @@
 
 // Package imports:
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Project imports:
 import 'package:edu_play/data/datasources/student_datasource.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/parent_quick_controls.dart';

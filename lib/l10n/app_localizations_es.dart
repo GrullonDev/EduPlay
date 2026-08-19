@@ -1,3 +1,8 @@
+// ignore: unused_import
+
+// Package imports:
+import 'package:intl/intl.dart' as intl;
+
 // Project imports:
 import 'app_localizations.dart';
 
