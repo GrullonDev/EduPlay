@@ -420,22 +420,30 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
                             fontSize: 11, color: Colors.grey[400]),
                       ),
                       const Spacer(),
-                      Text(
-                        'Guía para Padres',
-                        style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            color: Colors.grey[400],
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.grey[400]),
+                      InkWell(
+                        onTap: () => Navigator.pushNamed(
+                            context, RouterPaths.parentGuide),
+                        child: Text(
+                          'Guía para Padres',
+                          style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              color: Colors.grey[400],
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.grey[400]),
+                        ),
                       ),
                       const SizedBox(width: 20),
-                      Text(
-                        'Privacidad',
-                        style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            color: Colors.grey[400],
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.grey[400]),
+                      InkWell(
+                        onTap: () => Navigator.pushNamed(
+                            context, RouterPaths.privacyPolicy),
+                        child: Text(
+                          'Privacidad',
+                          style: GoogleFonts.nunito(
+                              fontSize: 11,
+                              color: Colors.grey[400],
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.grey[400]),
+                        ),
                       ),
                     ],
                   ),

@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 // Package imports:
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +8,10 @@ import 'package:google_fonts/google_fonts.dart';
 // Project imports:
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/shared/services/newsletter_service.dart';
+import 'package:edu_play/shared/widgets/parent_help_sheet.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -259,7 +263,11 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _ResourceDetailSheet(resource: r),
+      builder: (_) => _ResourceDetailSheet(
+        resource: r,
+        isBookmarked: _bookmarked.contains(r.title),
+        onToggleBookmark: () => _toggleBookmark(r.title),
+      ),
     );
   }
 
@@ -273,17 +281,23 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
     });
   }
 
-  void _downloadWorksheet(_Resource r) {
+  Future<void> _downloadWorksheet(_Resource r) async {
+    // There's no real PDF/print asset behind these worksheets, so instead of
+    // claiming a file was "downloaded", copy the real description to the
+    // clipboard — an honest action the parent can actually paste and use.
+    await Clipboard.setData(
+      ClipboardData(text: '${r.title}\n\n${r.fullContent}'),
+    );
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.download_done_rounded,
-                color: Colors.white, size: 18),
+            const Icon(Icons.copy_rounded, color: Colors.white, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                '"${r.title}" descargado correctamente.',
+                '"${r.title}" copiado. Pégalo en un documento para imprimirlo.',
                 style: GoogleFonts.nunito(fontWeight: FontWeight.w600),
               ),
             ),
@@ -307,7 +321,7 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
     );
   }
 
-  void _subscribe() {
+  Future<void> _subscribe() async {
     final email = _newsletterEmailCtrl.text.trim();
     final emailRegex = RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$');
     if (!emailRegex.hasMatch(email)) {
@@ -324,6 +338,27 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
       );
       return;
     }
+
+    try {
+      await NewsletterService.subscribe(email: email, source: 'parent_guide');
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'No se pudo completar la suscripción. Intenta de nuevo.',
+              style: GoogleFonts.nunito()),
+          backgroundColor: _kRed,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
     setState(() => _subscribed = true);
     _newsletterEmailCtrl.clear();
   }
@@ -377,7 +412,7 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
                   ),
 
                   // Footer
-                  const _GuideFooter(),
+                  _GuideFooter(onScrollToLibrary: _scrollToLibrary),
                 ],
               ),
             ),
@@ -905,12 +940,7 @@ class _LibrarySection extends StatelessWidget {
                       icon: Icons.print_rounded, title: 'Fichas Imprimibles'),
                   const Spacer(),
                   TextButton(
-                    onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Más fichas próximamente.'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    ),
+                    onPressed: () => onFilterTap(3),
                     child: Text(
                       'Ver todas',
                       style: GoogleFonts.nunito(
@@ -1464,8 +1494,14 @@ class _ContentTypeBadge extends StatelessWidget {
 // ── Resource detail bottom sheet ──────────────────────────────────────────────
 
 class _ResourceDetailSheet extends StatelessWidget {
-  const _ResourceDetailSheet({required this.resource});
+  const _ResourceDetailSheet({
+    required this.resource,
+    required this.isBookmarked,
+    required this.onToggleBookmark,
+  });
   final _Resource resource;
+  final bool isBookmarked;
+  final VoidCallback onToggleBookmark;
 
   @override
   Widget build(BuildContext context) {
@@ -1647,13 +1683,15 @@ class _ResourceDetailSheet extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () {
+                        final wasBookmarked = isBookmarked;
+                        onToggleBookmark();
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              isVideo
-                                  ? 'Video guardado en tu lista.'
-                                  : 'Abriendo recurso...',
+                              wasBookmarked
+                                  ? 'Quitado de tu lista.'
+                                  : 'Guardado en tu lista.',
                               style: GoogleFonts.nunito(),
                             ),
                             backgroundColor: resource.color,
@@ -1665,9 +1703,9 @@ class _ResourceDetailSheet extends StatelessWidget {
                         );
                       },
                       child: Text(
-                        isVideo
-                            ? 'Guardar en mi lista'
-                            : 'Leer recurso completo',
+                        isBookmarked
+                            ? 'Quitar de mi lista'
+                            : 'Guardar en mi lista',
                         style: GoogleFonts.nunito(
                             fontWeight: FontWeight.w700, fontSize: 15),
                       ),
@@ -1983,7 +2021,33 @@ class _NewsletterSection extends StatelessWidget {
 // ── Footer ────────────────────────────────────────────────────────────────────
 
 class _GuideFooter extends StatelessWidget {
-  const _GuideFooter();
+  const _GuideFooter({required this.onScrollToLibrary});
+  final VoidCallback onScrollToLibrary;
+
+  void _onResourcesTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, RouterPaths.registerTeacher);
+        break;
+      case 1:
+        onScrollToLibrary();
+        break;
+      case 2:
+        showParentHelpSheet(context);
+        break;
+    }
+  }
+
+  void _onLegalTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, RouterPaths.privacyPolicy);
+        break;
+      case 1:
+        Navigator.pushNamed(context, RouterPaths.termsOfService);
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2022,73 +2086,27 @@ class _GuideFooter extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Expanded(
+                Expanded(
                   flex: 2,
-                  child: _FooterCol('Recursos', [
-                    'Recursos para maestros',
-                    'Guía para padres',
-                    'Soporte',
-                  ]),
-                ),
-                const Expanded(
-                  flex: 2,
-                  child: _FooterCol('Legal', [
-                    'Política de privacidad',
-                    'Términos de servicio',
-                  ]),
+                  child: _FooterCol(
+                    'Recursos',
+                    const [
+                      'Recursos para maestros',
+                      'Guía para padres',
+                      'Soporte',
+                    ],
+                    onTap: (i) => _onResourcesTap(context, i),
+                  ),
                 ),
                 Expanded(
                   flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'DESCARGA LA APP',
-                        style: GoogleFonts.nunito(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.apple_rounded,
-                                color: Colors.white, size: 18),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Disponible en',
-                                  style: GoogleFonts.nunito(
-                                      fontSize: 9,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.6)),
-                                ),
-                                Text(
-                                  'App Store',
-                                  style: GoogleFonts.nunito(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                  child: _FooterCol(
+                    'Legal',
+                    const [
+                      'Política de privacidad',
+                      'Términos de servicio',
                     ],
+                    onTap: (i) => _onLegalTap(context, i),
                   ),
                 ),
               ],
@@ -2105,11 +2123,21 @@ class _GuideFooter extends StatelessWidget {
                       color: Colors.white),
                 ),
                 const SizedBox(height: 20),
-                const _FooterCol('Recursos',
-                    ['Recursos para maestros', 'Guía para padres', 'Soporte']),
+                _FooterCol(
+                  'Recursos',
+                  const [
+                    'Recursos para maestros',
+                    'Guía para padres',
+                    'Soporte'
+                  ],
+                  onTap: (i) => _onResourcesTap(context, i),
+                ),
                 const SizedBox(height: 16),
-                const _FooterCol('Legal',
-                    ['Política de privacidad', 'Términos de servicio']),
+                _FooterCol(
+                  'Legal',
+                  const ['Política de privacidad', 'Términos de servicio'],
+                  onTap: (i) => _onLegalTap(context, i),
+                ),
               ],
             ),
           const SizedBox(height: 32),
@@ -2129,9 +2157,10 @@ class _GuideFooter extends StatelessWidget {
 }
 
 class _FooterCol extends StatelessWidget {
-  const _FooterCol(this.title, this.links);
+  const _FooterCol(this.title, this.links, {this.onTap});
   final String title;
   final List<String> links;
+  final ValueChanged<int>? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -2148,14 +2177,17 @@ class _FooterCol extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        for (final link in links)
+        for (var i = 0; i < links.length; i++)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              link,
-              style: GoogleFonts.nunito(
-                fontSize: 13,
-                color: Colors.white.withValues(alpha: 0.65),
+            child: InkWell(
+              onTap: onTap == null ? null : () => onTap!(i),
+              child: Text(
+                links[i],
+                style: GoogleFonts.nunito(
+                  fontSize: 13,
+                  color: Colors.white.withValues(alpha: 0.65),
+                ),
               ),
             ),
           ),
