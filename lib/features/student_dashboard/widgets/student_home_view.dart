@@ -310,34 +310,35 @@ class _StudentFriendsCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 14),
-
-          // Challenge notification
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEEDF8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Text('🎯', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    pending.isNotEmpty
-                        ? '¡Luna te ha enviado un reto de ${pending['title'] ?? 'Matemáticas'}!'
-                        : '¡Luna te ha enviado un reto de Matemáticas!',
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: _kNavy,
+          // Pending-challenge notification — only shown when there's a real
+          // active challenge to report (no fabricated "friend sent you a
+          // challenge" copy when there isn't one).
+          if (pending.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEEEDF8),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Text('🎯', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '¡Tienes un reto pendiente: ${pending['title'] ?? 'nuevo reto'}!',
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
 
           if (challenges.isNotEmpty) ...[
             const SizedBox(height: 12),
