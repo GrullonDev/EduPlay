@@ -23,6 +23,15 @@
  *     is the ONE place a deletion_requests doc may ever be resolved) and,
  *     on approve, performs the actual account/data deletion.
  *
+ *  6. createRecurrenteCheckout     – Callable; see payments/recurrente.js.
+ *     Creates a Recurrente checkout link and a matching orders/{orderId}
+ *     doc in Firestore (status PENDING).
+ *
+ *  7. recurrenteWebhook            – HTTP; see payments/recurrente.js.
+ *     Recurrente's payment-confirmation callback. Marks the order PAID and
+ *     credits the purchase (subscription upgrade today; store items are a
+ *     documented no-op pending a target write, see accreditOrder()).
+ *
  * Environment config (set via Firebase Secret Manager or .env):
  *   STRIPE_SECRET_KEY           – sk_live_… or sk_test_…
  *   STRIPE_WEBHOOK_SECRET       – whsec_… from Stripe dashboard
@@ -30,6 +39,8 @@
  *   SENDGRID_API_KEY            – SG.…
  *   SENDGRID_FROM_EMAIL         – noreply@yourdomain.com
  *   APP_URL                     – https://your-app.web.app
+ *   RECURRENTE_SECRET_KEY_TEST  – sk_test_…
+ *   RECURRENTE_SECRET_KEY       – sk_live_…
  */
 
 'use strict';
@@ -41,6 +52,8 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 const db = admin.firestore();
+
+const { createRecurrenteCheckout, recurrenteWebhook } = require('./payments/recurrente');
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Stripe is still on hold below. SendGrid is active but only for
@@ -467,3 +480,10 @@ exports.resolveDeletion = onRequest(async (req, res) => {
     return res.status(500).send(htmlPage('Error', 'No pudimos completar la eliminación. Intenta de nuevo más tarde.'));
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6-7. Recurrente payments (createRecurrenteCheckout, recurrenteWebhook)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.createRecurrenteCheckout = createRecurrenteCheckout;
+exports.recurrenteWebhook = recurrenteWebhook;

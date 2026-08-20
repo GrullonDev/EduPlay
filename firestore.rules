@@ -264,6 +264,17 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── Orders (Recurrente payments) ─────────────────────────────────────────
+    // Top-level collection: orders/{orderId}. Written only via the Admin SDK
+    // by Cloud Functions — createRecurrenteCheckout creates it PENDING,
+    // recurrenteWebhook marks it PAID — which bypasses these rules, so the
+    // client never creates/updates it directly. It only ever reads its own
+    // order to poll status (e.g. RecurrenteCheckoutScreen's live listener).
+    match /orders/{orderId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow write: if false;
+    }
+
     // ── Friend codes ──────────────────────────────────────────────────────────
     // Global code → owner identity lookup, readable by any authenticated user
     // so a friend's code can be resolved. Write is restricted to the owner,
