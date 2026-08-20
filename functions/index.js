@@ -8,9 +8,10 @@
  *
  *  2. stripeWebhook                – ON HOLD, see above.
  *
- *  3. onSessionComplete            – Firestore trigger; fires when a
- *     practice_sessions document transitions isActive: true → false and
- *     sends an email to the parent via SendGrid.
+ *  3. onSessionComplete            – ON HOLD, commented out below in the
+ *     "onSessionComplete (on hold)" section. Firestore trigger; would fire
+ *     when a practice_sessions document transitions isActive: true → false
+ *     and send an email to the parent via SendGrid.
  *
  *  4. onDeletionRequestCreated     – Firestore trigger; fires when an
  *     independent student (who has a guardian email on file) requests
@@ -33,9 +34,8 @@
 
 'use strict';
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onRequest } = require('firebase-functions/v2/https');
-const { onDocumentUpdated, onDocumentCreated } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 
@@ -43,7 +43,12 @@ admin.initializeApp();
 const db = admin.firestore();
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
-// (none active right now — SendGrid and Stripe are both on hold below)
+// Stripe is still on hold below. SendGrid is active but only for
+// onDeletionRequestCreated (guardian-consent emails) — onSessionComplete
+// stays disabled in its own "on hold" section further down.
+const SENDGRID_API_KEY    = defineSecret('SENDGRID_API_KEY');
+const SENDGRID_FROM_EMAIL = defineSecret('SENDGRID_FROM_EMAIL');
+const APP_URL             = defineSecret('APP_URL');
 
 /* ── Stripe (on hold) ──────────────────────────────────────────────────────────
  * Not being turned on yet. Kept here, disabled, rather than deleted, so the
@@ -184,17 +189,9 @@ exports.stripeWebhook = onRequest(
 
 */ // ── end Stripe (on hold) ─────────────────────────────────────────────────
 
-/* ── SendGrid email (on hold) ──────────────────────────────────────────────────
- * Not being turned on yet either. Both functions below (and the exported
- * `resolveDeletion` at the bottom of this file still deploys without them —
- * it doesn't send email itself) are disabled together with their secrets.
- * To re-enable: delete this opening "/*" and the matching closing "*\/"
- * below, and move the three SendGrid/APP_URL defineSecret(...) calls back
- * out of this comment into the "── Secrets ──" section above.
-
-const SENDGRID_API_KEY      = defineSecret('SENDGRID_API_KEY');
-const SENDGRID_FROM_EMAIL   = defineSecret('SENDGRID_FROM_EMAIL');
-const APP_URL               = defineSecret('APP_URL');
+/* ── onSessionComplete (on hold) ─────────────────────────────────────────────
+ * Not being turned on yet. Kept here, disabled, rather than deleted. To
+ * re-enable: delete this opening "/*" and the matching closing "*\/" below.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. onSessionComplete – email parent when child finishes a practice session
@@ -304,6 +301,8 @@ exports.onSessionComplete = onDocumentUpdated(
   }
 );
 
+*/ // ── end onSessionComplete (on hold) ─────────────────────────────────────
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. onDeletionRequestCreated – email the guardian an approve/deny link
 // ─────────────────────────────────────────────────────────────────────────────
@@ -379,18 +378,9 @@ exports.onDeletionRequestCreated = onDocumentCreated(
   }
 );
 
-*/ // ── end SendGrid email (on hold) ─────────────────────────────────────────
-
 // ─────────────────────────────────────────────────────────────────────────────
 // 5. resolveDeletion – approve/deny link target; performs the actual deletion
 // ─────────────────────────────────────────────────────────────────────────────
-//
-// NOTE: with onDeletionRequestCreated above disabled, a deletion_requests
-// doc created by requestDeletionWithGuardianConsent() will sit at
-// status:'pending' forever — no email goes out, so the guardian never gets
-// a link to click, and this function (which only *reacts* to that link)
-// never gets called. Re-enable the SendGrid section above for the
-// independent-student deletion flow to actually work end to end.
 
 exports.resolveDeletion = onRequest(async (req, res) => {
   const { id, token, action } = req.query;
