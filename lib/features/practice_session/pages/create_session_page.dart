@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 // Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
@@ -104,7 +105,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void _showSessionCreated(PracticeSession session) {
     final url = session.sessionUrl(
-      Uri.base.origin.isEmpty ? 'http://localhost:8080' : Uri.base.origin,
+      Uri.base.origin.isEmpty ? AppUrls.webBase : Uri.base.origin,
     );
     showDialog(
       context: context,

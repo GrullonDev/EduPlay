@@ -5,10 +5,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
 String childPortalUrl(ChildProfile profile) {
-  final origin = kIsWeb ? Uri.base.origin : 'http://localhost:3000';
+  final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
   final encoded = base64Url.encode(utf8.encode(jsonEncode(profile.toJson())));
   return '$origin/#/student-dashboard?pin=${profile.pin}&d=$encoded';
 }
