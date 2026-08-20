@@ -1,9 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
+
+// Project imports:
 import 'package:edu_play/features/nature_explorers/bloc/nature_explorers_bloc.dart';
 import 'package:edu_play/features/nature_explorers/pages/nature_explorers_layout.dart';
 import 'package:edu_play/features/nature_explorers/repositories/nature_explorers_repository.dart';
+import 'package:edu_play/features/register/bloc/register_bloc.dart';
 
 class NatureExplorersPage extends StatelessWidget {
   const NatureExplorersPage({super.key});

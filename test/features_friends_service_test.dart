@@ -1,8 +1,11 @@
+// Package imports:
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
 import 'package:edu_play/features/friends/models/friend_identity.dart';
 import 'package:edu_play/features/friends/models/friend_request.dart';
 import 'package:edu_play/features/friends/services/friends_service.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late FakeFirebaseFirestore firestore;

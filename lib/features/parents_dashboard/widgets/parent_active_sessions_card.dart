@@ -1,7 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -38,7 +42,7 @@ class ParentActiveSessionsCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Active Sessions',
+                    'Sesiones Activas',
                     style: GoogleFonts.fredoka(
                       color: Colors.white,
                       fontSize: 15,
@@ -75,7 +79,7 @@ class ParentActiveSessionsCard extends StatelessWidget {
                     const Text('🎮', style: TextStyle(fontSize: 28)),
                     const SizedBox(height: 6),
                     Text(
-                      'No active sessions',
+                      'No hay sesiones activas',
                       style: GoogleFonts.nunito(
                         color: Colors.white54,
                         fontSize: 12,
@@ -96,7 +100,7 @@ class ParentActiveSessionsCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'Start Session',
+                          'Iniciar Sesión',
                           style: GoogleFonts.nunito(
                             color: _kCoral,
                             fontWeight: FontWeight.w700,
@@ -159,7 +163,7 @@ class _SessionRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Active',
+                  'Activa',
                   style: GoogleFonts.nunito(
                     color: const Color(0xFF27AE60),
                     fontSize: 10,
@@ -171,7 +175,7 @@ class _SessionRow extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'PIN: ${session.pin}  •  ${session.totalCount} games',
+            'PIN: ${session.pin}  •  ${session.totalCount} juegos',
             style: GoogleFonts.nunito(color: Colors.white54, fontSize: 11),
           ),
           const SizedBox(height: 8),
@@ -188,7 +192,7 @@ class _SessionRow extends StatelessWidget {
           Row(
             children: [
               Text(
-                '${session.completedCount}/${session.totalCount} done',
+                '${session.completedCount}/${session.totalCount} completados',
                 style: GoogleFonts.nunito(color: Colors.white38, fontSize: 10),
               ),
               const Spacer(),

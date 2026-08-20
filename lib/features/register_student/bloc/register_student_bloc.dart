@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
@@ -23,6 +25,7 @@ class RegisterStudentBloc with ChangeNotifier {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController guardianEmailController = TextEditingController();
 
   bool loading = false;
   String? errorMessage;
@@ -42,11 +45,14 @@ class RegisterStudentBloc with ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
+    final guardianEmail = guardianEmailController.text.trim();
+
     final user = await authRepository.registerIndependentStudent(
       email: email,
       password: password,
       name: name,
       age: age,
+      guardianEmail: guardianEmail.isEmpty ? null : guardianEmail,
     );
 
     if (user == null) {
@@ -77,6 +83,7 @@ class RegisterStudentBloc with ChangeNotifier {
     nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    guardianEmailController.dispose();
     super.dispose();
   }
 }

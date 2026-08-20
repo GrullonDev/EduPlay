@@ -1,8 +1,11 @@
+// Dart imports:
 import 'dart:math';
 
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
@@ -132,28 +135,38 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
 
   @override
   Future<List<ClassMember>> getEnrollmentsForStudent(String studentId) async {
-    final results = <ClassMember>[];
+    // Called on every student dashboard load — a stalled gRPC channel here
+    // (no timeout, no try/catch) would otherwise hang the caller forever
+    // instead of falling back to "no classroom challenges today".
+    try {
+      final results = <ClassMember>[];
 
-    final byStudentId = await _db
-        .collectionGroup('members')
-        .where('studentId', isEqualTo: studentId)
-        .get();
-    results.addAll(
-      byStudentId.docs.map((doc) => ClassMember.fromMap(doc.data(), doc.id)),
-    );
-
-    if (results.isEmpty) {
-      final byChildProfileId = await _db
+      final byStudentId = await _db
           .collectionGroup('members')
-          .where('childProfileId', isEqualTo: studentId)
-          .get();
+          .where('studentId', isEqualTo: studentId)
+          .get()
+          .timeout(const Duration(seconds: 8));
       results.addAll(
-        byChildProfileId.docs
+        byStudentId.docs
             .map((doc) => ClassMember.fromMap(doc.data(), doc.id)),
       );
-    }
 
-    return results;
+      if (results.isEmpty) {
+        final byChildProfileId = await _db
+            .collectionGroup('members')
+            .where('childProfileId', isEqualTo: studentId)
+            .get()
+            .timeout(const Duration(seconds: 8));
+        results.addAll(
+          byChildProfileId.docs
+              .map((doc) => ClassMember.fromMap(doc.data(), doc.id)),
+        );
+      }
+
+      return results;
+    } catch (e) {
+      return [];
+    }
   }
 
   @override

@@ -1,8 +1,13 @@
+// Dart imports:
 import 'dart:math';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
 
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Project imports:
 import 'package:edu_play/features/friends/models/friend_identity.dart';
 import 'package:edu_play/features/friends/models/friend_request.dart';
 

@@ -3,8 +3,11 @@
 // It previously had zero test coverage despite non-trivial derived logic
 // (completion tracking, progress fraction, session URLs).
 
-import 'package:edu_play/features/practice_session/models/practice_session.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/features/practice_session/models/practice_session.dart';
 
 PracticeSession _buildSession({
   List<String> assignedGameIds = const ['math-1', 'magic-words'],

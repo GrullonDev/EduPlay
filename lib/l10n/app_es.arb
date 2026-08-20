@@ -1,0 +1,100 @@
+{
+  "@@locale": "es",
+
+  "appTitle": "EduPlay",
+  "@appTitle": {"description": "Nombre de la app, mostrado en el título de la ventana/pestaña."},
+
+  "navCurriculum": "Currículo",
+  "navGames": "Juegos",
+  "navForTeachers": "Para Profesores",
+  "navPricing": "Precios",
+  "navLogin": "Iniciar sesión",
+  "navStartFree": "Empieza Gratis",
+
+  "settingsTitle": "Configuración",
+  "settingsSubtitle": "Administra tu cuenta y preferencias",
+
+  "pageNotFound": "Página no encontrada",
+
+  "sortPopular": "Popular",
+  "sortNewest": "Más recientes",
+  "sortLevel": "Nivel",
+
+  "summaryExplorer": "Explorador",
+  "summaryGamesAssigned": "Juegos asignados",
+  "summaryAccess": "Acceso",
+  "summaryPinProtected": "Protegido con PIN",
+
+  "kioskPlay": "Jugar",
+  "kioskGames": "Juegos",
+  "kioskTotalScore": "Puntaje total",
+  "kioskCompleted": "Completados",
+  "kioskSessionSummary": "Resumen de la sesión",
+  "kioskYourGames": "Tus juegos",
+  "kioskCompleteAllGames": "¡Completa todos los juegos para terminar tu sesión!",
+  "kioskNoGamesFound": "No se encontraron juegos para esta sesión.",
+  "kioskPracticeMode": "Modo práctica",
+  "kioskDone": "Listo",
+  "kioskScoreLabel": "Puntaje: {score}",
+  "@kioskScoreLabel": {
+    "placeholders": {"score": {"type": "int"}}
+  },
+  "kioskFinishGame": "Terminar juego",
+  "kioskPracticeModeWithChild": "Modo práctica • {childName}",
+  "@kioskPracticeModeWithChild": {
+    "placeholders": {"childName": {"type": "String"}}
+  },
+  "kioskGreatJob": "¡Buen trabajo, {childName}!",
+  "@kioskGreatJob": {
+    "placeholders": {"childName": {"type": "String"}}
+  },
+  "kioskCompletedAllGames": "¡Completaste los {count} juegos!",
+  "@kioskCompletedAllGames": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "kioskAskParent": "Pídele a tu papá o mamá que vea tu reporte de progreso.",
+  "kioskPointsSuffix": "{score} pts",
+  "@kioskPointsSuffix": {
+    "placeholders": {"score": {"type": "int"}}
+  },
+  "kioskProgressLabel": "{completed} de {total} juegos completados",
+  "@kioskProgressLabel": {
+    "placeholders": {
+      "completed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "kioskExitButton": "¡Listo! 🎉",
+  "kioskGameNotFound": "Juego no encontrado: {gameId}",
+  "@kioskGameNotFound": {
+    "placeholders": {"gameId": {"type": "String"}}
+  },
+
+  "funEnglishAskEmoji": "¿Qué es esto? {emoji}",
+  "@funEnglishAskEmoji": {
+    "placeholders": {"emoji": {"type": "String"}}
+  },
+  "funEnglishAskEnglish": "¿Cómo se dice '{word}' en inglés?",
+  "@funEnglishAskEnglish": {
+    "placeholders": {"word": {"type": "String"}}
+  },
+  "funEnglishAskSpanish": "¿Cómo se dice '{word}' en español?",
+  "@funEnglishAskSpanish": {
+    "placeholders": {"word": {"type": "String"}}
+  },
+
+  "gameIntroObjectiveLabel": "Qué vas a practicar",
+  "gameIntroDifficultyLabel": "Dificultad: {difficulty}",
+  "@gameIntroDifficultyLabel": {
+    "placeholders": {"difficulty": {"type": "String"}}
+  },
+  "gameIntroStart": "¡Comenzar!",
+
+  "answerCorrectTitle": "¡Correcto!",
+  "answerIncorrectTitle": "¡Casi!",
+  "answerCorrectAnswerLabel": "Respuesta correcta: {answer}",
+  "@answerCorrectAnswerLabel": {
+    "placeholders": {"answer": {"type": "String"}}
+  },
+  "answerNextButton": "Siguiente"
+}

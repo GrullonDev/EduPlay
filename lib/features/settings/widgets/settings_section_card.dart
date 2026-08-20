@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -139,7 +142,7 @@ class SettingsFooter extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Empowering the next generation of explorers\nthrough play-based learning.',
+                  'Impulsando a la próxima generación de exploradores\ncon aprendizaje basado en el juego.',
                   style: GoogleFonts.nunito(
                       fontSize: 12, color: Colors.grey[500], height: 1.5),
                 ),
@@ -148,14 +151,17 @@ class SettingsFooter extends StatelessWidget {
           ),
           const Expanded(
             flex: 2,
-            child: _SettingsFooterLinks('RESOURCES',
-                ['Teacher Resources', 'Parent Guide', 'Support Center']),
+            child: _SettingsFooterLinks('RECURSOS', [
+              'Recursos para Profesores',
+              'Guía para Padres',
+              'Centro de Soporte',
+            ]),
           ),
           const Expanded(
             flex: 2,
             child: _SettingsFooterLinks('LEGAL', [
-              'Privacy Policy',
-              'Terms of Service',
+              'Política de Privacidad',
+              'Términos de Servicio',
             ]),
           ),
         ],

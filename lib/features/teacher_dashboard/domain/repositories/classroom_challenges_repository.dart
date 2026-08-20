@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
@@ -8,6 +9,10 @@ abstract class ClassroomChallengesRepository {
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   });
 
   Future<List<ClassroomChallenge>> getChallengesForClasses(

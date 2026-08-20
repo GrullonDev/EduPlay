@@ -1,8 +1,12 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/utils/app_theme.dart';
+// Project imports:
 import 'package:edu_play/features/landing/widgets/landing_section.dart';
+import 'package:edu_play/utils/app_theme.dart';
 
 /// Social-proof section with quotes from teachers and families.
 class LandingTestimonialsSection extends StatelessWidget {

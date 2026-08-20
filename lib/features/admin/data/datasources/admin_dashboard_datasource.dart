@@ -1,6 +1,8 @@
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
 
 abstract class AdminDashboardDatasource {
@@ -58,6 +60,14 @@ class FirestoreAdminDashboardDatasource implements AdminDashboardDatasource {
     );
   }
 
+  /// Dead by design: `firestore.rules` now blocks any client update to
+  /// `role` on `parents/{uid}` (previously any signed-in parent could grant
+  /// themselves admin by writing that field directly, e.g. from a browser
+  /// console). This call will always throw permission-denied. Granting
+  /// admin today means editing the field directly in the Firebase Console
+  /// (which uses the Admin SDK and bypasses rules) — there is intentionally
+  /// no in-app path until a properly-authorized server-side one (e.g. a
+  /// callable Cloud Function restricted to existing admins) replaces it.
   @override
   Future<bool> setAdminRoleByEmail({
     required String email,

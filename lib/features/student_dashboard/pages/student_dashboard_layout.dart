@@ -1,20 +1,27 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/core/audio/sound_manager.dart';
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/friends/pages/friends_view.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/store/widgets/tienda_view.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
-import 'package:edu_play/features/student_dashboard/widgets/student_dashboard_navigation.dart';
-import 'package:edu_play/features/student_dashboard/widgets/student_games_hub_view.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_achievements_view.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_challenges_view.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_dashboard_navigation.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_games_hub_view.dart';
 import 'package:edu_play/features/student_dashboard/widgets/student_home_view.dart';
 import 'package:edu_play/utils/dialogs/confetti_burst.dart';
 import 'package:edu_play/utils/dialogs/custom_dialog.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kBg = Color(0xFFF3F5F9);
@@ -78,6 +85,61 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
     );
   }
 
+  bool _streakPromptChecked = false;
+
+  void _maybeShowStreakRecoveryPrompt(StudentDashboardBloc bloc) {
+    if (_streakPromptChecked) return;
+    _streakPromptChecked = true;
+    bloc.shouldPromptStreakRecovery.then((shouldPrompt) async {
+      if (!shouldPrompt || !mounted) return;
+      await StudentSessionNavigationService.markStreakRecoveryPromptedToday(
+        bloc.childProfile!.id,
+      );
+      if (!mounted) return;
+      _showStreakRecoveryPrompt(bloc);
+    });
+  }
+
+  void _showStreakRecoveryPrompt(StudentDashboardBloc bloc) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          '¿Quieres recuperar tu racha? 🔥',
+          style: GoogleFonts.fredoka(fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Responde 10 preguntas y acierta al menos 9 para mantenerla viva.',
+          style: GoogleFonts.nunito(color: _kNavy.withValues(alpha: 0.75)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('No, gracias',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _kNavy,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              Navigator.of(context).pushNamed(
+                RouterPaths.streakRecoveryQuiz,
+                arguments: bloc.childProfile,
+              );
+            },
+            child: Text('Sí, recuperar',
+                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _selectTab(int i) => setState(() {
         _tab = i;
         _pendingSubject = null;
@@ -95,8 +157,6 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
             bloc: bloc, s: s, initialSubject: _pendingSubject);
       case 2:
         return StudentAchievementsView(s: s);
-      case 5:
-        return StudentChallengesView(s: s);
       case 3:
         if (!ReleaseFlags.friendsEnabled) {
           return StudentHomeView(
@@ -110,6 +170,18 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
           identity: bloc.friendIdentity,
           subtitle: 'Conecta con otros exploradores de EduPlay.',
         );
+      case 4:
+        if (!ReleaseFlags.storeEnabled) {
+          return StudentHomeView(
+            bloc: bloc,
+            s: s,
+            onTabChange: _selectTab,
+            onSubjectSelect: _openGamesForSubject,
+          );
+        }
+        return TiendaView(bloc: bloc, s: s);
+      case 5:
+        return StudentChallengesView(s: s);
       default:
         return StudentHomeView(
           bloc: bloc,
@@ -138,6 +210,7 @@ class _StudentDashboardLayoutState extends State<StudentDashboardLayout> {
         }
 
         _maybeShowLevelUpCelebration(bloc);
+        _maybeShowStreakRecoveryPrompt(bloc);
 
         final tab = _effectiveTab(bloc);
         final content = _buildContent(bloc, s, tab);

@@ -3,9 +3,14 @@
 // only — no Firebase or provider dependency — so it's a safe starting point
 // for widget-testing conventions in this repo.
 
-import 'package:edu_play/shared/widgets/placeholder_section.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/shared/widgets/placeholder_section.dart';
 
 void main() {
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));

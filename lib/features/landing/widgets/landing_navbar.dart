@@ -1,10 +1,14 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/features/landing/widgets/landing_section.dart';
 import 'package:edu_play/utils/app_theme.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/features/landing/widgets/landing_section.dart';
 
 /// Sticky top navigation bar for the public landing page.
 class LandingNavBar extends StatelessWidget {

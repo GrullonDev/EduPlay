@@ -2,8 +2,11 @@
 // helpers convert a student's total points into a level, and are used by
 // every dashboard/leaderboard widget — previously had zero coverage.
 
-import 'package:edu_play/data/repositories/student_repository.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
 
 void main() {
   group('StudentRepository.levelForPoints', () {

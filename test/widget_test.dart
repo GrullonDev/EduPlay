@@ -2,6 +2,7 @@
 // Verifies the app widget tree builds without throwing.
 // Full unit tests live in test/models/ and test/services/.
 
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

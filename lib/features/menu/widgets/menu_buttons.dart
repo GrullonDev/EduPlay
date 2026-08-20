@@ -1,7 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/features/menu/bloc/menu_bloc.dart';
 
 class MenuButtons extends StatelessWidget {

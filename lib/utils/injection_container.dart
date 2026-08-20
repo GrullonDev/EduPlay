@@ -1,20 +1,17 @@
+// Package imports:
 import 'package:get_it/get_it.dart';
-import 'package:edu_play/features/teacher_registration/domain/repositories/teacher_registration_repository.dart';
-import 'package:edu_play/features/teacher_registration/data/repositories/firebase_teacher_registration_repository.dart';
-import 'package:edu_play/features/teacher_registration/data/datasources/teacher_registration_datasource.dart';
-import 'package:edu_play/features/subscription/domain/repositories/checkout_repository.dart';
-import 'package:edu_play/features/subscription/data/repositories/firebase_checkout_repository.dart';
-import 'package:edu_play/features/subscription/data/datasources/checkout_datasource.dart';
-import 'package:edu_play/features/onboarding/domain/repositories/onboarding_repository.dart';
-import 'package:edu_play/features/onboarding/data/repositories/firestore_onboarding_repository.dart';
-import 'package:edu_play/features/onboarding/data/datasources/onboarding_datasource.dart';
-import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
-import 'package:edu_play/features/admin/data/repositories/firestore_admin_dashboard_repository.dart';
-import 'package:edu_play/features/admin/data/datasources/admin_dashboard_datasource.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/auth_datasource.dart';
 import 'package:edu_play/data/datasources/student_datasource.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/admin/data/datasources/admin_dashboard_datasource.dart';
+import 'package:edu_play/features/admin/data/repositories/firestore_admin_dashboard_repository.dart';
+import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/features/onboarding/data/datasources/onboarding_datasource.dart';
+import 'package:edu_play/features/onboarding/data/repositories/firestore_onboarding_repository.dart';
+import 'package:edu_play/features/onboarding/domain/repositories/onboarding_repository.dart';
 import 'package:edu_play/features/parents_dashboard/data/datasources/child_profiles_datasource.dart';
 import 'package:edu_play/features/parents_dashboard/data/datasources/parent_dashboard_datasource.dart';
 import 'package:edu_play/features/parents_dashboard/data/repositories/firestore_child_profiles_repository.dart';
@@ -30,18 +27,28 @@ import 'package:edu_play/features/settings/data/repositories/firebase_account_se
 import 'package:edu_play/features/settings/data/repositories/firestore_settings_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 import 'package:edu_play/features/settings/domain/repositories/settings_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
-import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_classroom_challenges_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/data/datasources/teacher_classes_datasource.dart';
-import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_teacher_classes_repository.dart';
-import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 import 'package:edu_play/features/sticker_album/data/datasources/level_progress_datasource.dart';
 import 'package:edu_play/features/sticker_album/data/repositories/local_level_progress_repository.dart';
 import 'package:edu_play/features/sticker_album/domain/repositories/level_progress_repository.dart';
+import 'package:edu_play/features/store/data/datasources/store_catalog_datasource.dart';
+import 'package:edu_play/features/store/data/repositories/firestore_store_catalog_repository.dart';
+import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
+import 'package:edu_play/features/store/services/store_catalog_cache.dart';
+import 'package:edu_play/features/subscription/data/datasources/checkout_datasource.dart';
 import 'package:edu_play/features/subscription/data/datasources/subscription_datasource.dart';
+import 'package:edu_play/features/subscription/data/repositories/firebase_checkout_repository.dart';
 import 'package:edu_play/features/subscription/data/repositories/firestore_subscription_repository.dart';
+import 'package:edu_play/features/subscription/domain/repositories/checkout_repository.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
+import 'package:edu_play/features/teacher_dashboard/data/datasources/teacher_classes_datasource.dart';
+import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/data/repositories/firestore_teacher_classes_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
+import 'package:edu_play/features/teacher_registration/data/datasources/teacher_registration_datasource.dart';
+import 'package:edu_play/features/teacher_registration/data/repositories/firebase_teacher_registration_repository.dart';
+import 'package:edu_play/features/teacher_registration/domain/repositories/teacher_registration_repository.dart';
 
 class InjectionContainer {}
 
@@ -120,6 +127,11 @@ void init() {
       () => FirestoreTeacherClassesDatasource(),
     );
   }
+  if (!sl.isRegistered<StoreCatalogDatasource>()) {
+    sl.registerLazySingleton<StoreCatalogDatasource>(
+      () => FirestoreStoreCatalogDatasource(),
+    );
+  }
 
   // Repositories
   if (!sl.isRegistered<AdminDashboardRepository>()) {
@@ -133,8 +145,15 @@ void init() {
     );
   }
   if (!sl.isRegistered<StudentRepository>()) {
+    // Lazily resolved: by the time this factory actually runs (first
+    // `sl<StudentRepository>()` call at runtime), every registration below
+    // — including ClassroomChallengesRepository — has already happened, so
+    // registration order here doesn't matter.
     sl.registerLazySingleton<StudentRepository>(
-      () => StudentRepository(datasource: sl()),
+      () => StudentRepository(
+        datasource: sl(),
+        challengesRepository: sl(),
+      ),
     );
   }
   if (!sl.isRegistered<ChildProfilesRepository>()) {
@@ -198,6 +217,16 @@ void init() {
         datasource: sl(),
         teacherClassesRepository: sl(),
       ),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogRepository>()) {
+    sl.registerLazySingleton<StoreCatalogRepository>(
+      () => FirestoreStoreCatalogRepository(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<StoreCatalogCache>()) {
+    sl.registerLazySingleton<StoreCatalogCache>(
+      () => StoreCatalogCache(repository: sl()),
     );
   }
 }

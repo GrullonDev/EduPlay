@@ -1,5 +1,7 @@
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Project imports:
 import 'package:edu_play/features/friends/models/friend_identity.dart';
 
 class FriendRequestModel {

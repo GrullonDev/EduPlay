@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/subscription/models/subscription.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -8,7 +12,7 @@ const _kCoral = Color(0xFFFF6E6C);
 const _kGold = Color(0xFFF39C12);
 const _kBg = Color(0xFFF8F7FF);
 
-enum UpgradeReason { childLimit, sessionLimit }
+enum UpgradeReason { childLimit, sessionLimit, proSticker }
 
 /// Shows a paywall dialog explaining the free-tier limit that was hit and
 /// presenting the Pro upgrade offer.
@@ -33,15 +37,30 @@ class _UpgradePromptDialog extends StatelessWidget {
   const _UpgradePromptDialog({required this.reason});
   final UpgradeReason reason;
 
-  String get _title => reason == UpgradeReason.childLimit
-      ? 'Has alcanzado el límite\nde exploradores'
-      : 'Has alcanzado el límite\nde sesiones este mes';
+  String get _title {
+    switch (reason) {
+      case UpgradeReason.childLimit:
+        return 'Has alcanzado el límite\nde exploradores';
+      case UpgradeReason.sessionLimit:
+        return 'Has alcanzado el límite\nde sesiones este mes';
+      case UpgradeReason.proSticker:
+        return 'Este sticker es\nexclusivo para Pro';
+    }
+  }
 
-  String get _subtitle => reason == UpgradeReason.childLimit
-      ? 'El plan gratuito incluye hasta ${Subscription.freeChildLimit} perfil de niño. '
-          'Pasa a Pro para añadir exploradores ilimitados.'
-      : 'El plan gratuito incluye hasta ${Subscription.freeSessionLimit} sesiones por mes. '
-          'Pasa a Pro para crear sesiones sin límite.';
+  String get _subtitle {
+    switch (reason) {
+      case UpgradeReason.childLimit:
+        return 'El plan gratuito incluye hasta ${Subscription.freeChildLimit} perfil de niño. '
+            'Pasa a Pro para añadir exploradores ilimitados.';
+      case UpgradeReason.sessionLimit:
+        return 'El plan gratuito incluye hasta ${Subscription.freeSessionLimit} sesiones por mes. '
+            'Pasa a Pro para crear sesiones sin límite.';
+      case UpgradeReason.proSticker:
+        return 'Los stickers exclusivos de la Tienda son solo para miembros Pro. '
+            'Pasa a Pro para desbloquearlos todos.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

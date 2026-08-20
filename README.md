@@ -28,7 +28,11 @@ Nuestra colección de juegos se adapta automáticamente a la edad del niño (7-1
 
 ### 🎨 Diseño y Tecnología
 *   **Interfaz Vibrante:** Estética moderna con colores vivos, animaciones fluidas y elementos visuales grandes ("Kid-First Design").
-*   **Multiplataforma:** Optimizado para funcionar en Web, Tablets y Escritorio con diseños responsivos.
+*   **Multiplataforma:** Optimizado para funcionar en Web, con diseños responsivos para tablets y escritorio.
+
+### 🚧 En desarrollo (próximamente)
+*   **🛍️ Tienda:** Los estudiantes podrán canjear los puntos ganados jugando por avatares, íconos y estampas exclusivas para su Álbum.
+*   **🤝 Amigos:** Sistema social multi-rol (estudiante, padre, profesor) para conectar y ver el progreso de compañeros de clase.
 
 ## 🛠 Stack Tecnológico
 

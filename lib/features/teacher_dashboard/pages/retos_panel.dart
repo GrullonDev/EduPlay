@@ -1,12 +1,34 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
 import 'package:edu_play/shared/data/subject_catalog.dart';
 import 'package:edu_play/utils/responsive.dart';
+import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
+
+/// The real, playable games a challenge can be linked to for automatic
+/// completion — kept as a flat (route, label) list here rather than
+/// depending on the games catalog feature, since a challenge only needs a
+/// canonical route, not the catalog's marketing copy.
+const List<({String route, String label})> _kTargetableGames = [
+  (route: RouterPaths.mathAdventure, label: 'Aventura Matemática'),
+  (route: RouterPaths.numberNinja, label: 'Ninja de los Números'),
+  (route: RouterPaths.funEnglish, label: 'Inglés Divertido'),
+  (route: RouterPaths.natureExplorers, label: 'Exploradores de la Naturaleza'),
+  (route: RouterPaths.treasureMap, label: 'Mapa del Tesoro'),
+  (route: RouterPaths.timeTravel, label: 'Viaje en el Tiempo'),
+  (route: RouterPaths.colorConcert, label: 'Concierto de Colores'),
+  (route: RouterPaths.sportsChallenge, label: 'Desafío Deportivo'),
+  (route: RouterPaths.magicWords, label: 'Palabras Mágicas'),
+  (route: RouterPaths.artistsInAction, label: 'Artistas en Acción'),
+];
 
 class RetosPanel extends StatelessWidget {
   const RetosPanel({super.key, required this.bloc});
@@ -79,9 +101,13 @@ class RetosPanel extends StatelessWidget {
     if (bloc.classes.isEmpty) return;
 
     final titleCtrl = TextEditingController();
+    final instructionsCtrl = TextEditingController();
+    final criteriaCtrl = TextEditingController();
+    final targetScoreCtrl = TextEditingController();
     String classId = bloc.classes.first.id;
     String subjectKey = subjectCatalog.first.key;
     String? dueDate;
+    String? targetGameRoute;
 
     await showDialog<void>(
       context: context,
@@ -90,75 +116,127 @@ class RetosPanel extends StatelessWidget {
           builder: (context, setState) {
             return AlertDialog(
               title: Text(
-                'Nuevo reto',
+                'Nueva actividad',
                 style: GoogleFonts.fredoka(
                   fontSize: 20,
                   color: _kNavy,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: titleCtrl,
-                    decoration:
-                        const InputDecoration(labelText: 'Título del reto'),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: classId,
-                    decoration: const InputDecoration(labelText: 'Clase'),
-                    items: bloc.classes
-                        .map(
-                          (tc) => DropdownMenuItem(
-                            value: tc.id,
-                            child: Text('${tc.name} · ${tc.gradeLevel}'),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => classId = value);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: subjectKey,
-                    decoration: const InputDecoration(labelText: 'Materia'),
-                    items: subjectCatalog
-                        .map(
-                          (subject) => DropdownMenuItem(
-                            value: subject.key,
-                            child: Text(subject.label),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value != null) setState(() => subjectKey = value);
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now(),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (picked != null) {
-                        setState(() => dueDate = picked.toIso8601String());
-                      }
-                    },
-                    icon: const Icon(Icons.calendar_today_rounded, size: 16),
-                    label: Text(
-                      dueDate == null
-                          ? 'Agregar fecha límite'
-                          : 'Fecha asignada',
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: titleCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'Título de la actividad'),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: instructionsCtrl,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Instrucciones',
+                        hintText: 'Qué debe hacer el alumno exactamente',
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: criteriaCtrl,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Criterio de evaluación',
+                        hintText: 'Cómo vas a considerar la actividad lograda',
+                        alignLabelWithHint: true,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: classId,
+                      decoration: const InputDecoration(labelText: 'Clase'),
+                      items: bloc.classes
+                          .map(
+                            (tc) => DropdownMenuItem(
+                              value: tc.id,
+                              child: Text('${tc.name} · ${tc.gradeLevel}'),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) setState(() => classId = value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: subjectKey,
+                      decoration: const InputDecoration(labelText: 'Materia'),
+                      items: subjectCatalog
+                          .map(
+                            (subject) => DropdownMenuItem(
+                              value: subject.key,
+                              child: Text(subject.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) setState(() => subjectKey = value);
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: targetGameRoute,
+                      decoration: const InputDecoration(
+                        labelText: 'Juego a completar (opcional)',
+                        hintText: 'Sin juego: se completa manualmente',
+                      ),
+                      items: _kTargetableGames
+                          .map(
+                            (game) => DropdownMenuItem(
+                              value: game.route,
+                              child: Text(game.label),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => targetGameRoute = value),
+                    ),
+                    if (targetGameRoute != null) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: targetScoreCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Puntaje mínimo para completarla',
+                          hintText: 'p. ej. 50',
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setState(() => dueDate = picked.toIso8601String());
+                        }
+                      },
+                      icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                      label: Text(
+                        dueDate == null
+                            ? 'Agregar fecha límite'
+                            : 'Fecha asignada',
+                      ),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -169,11 +247,21 @@ class RetosPanel extends StatelessWidget {
                   onPressed: () async {
                     final title = titleCtrl.text.trim();
                     if (title.isEmpty) return;
+                    final hasGame = targetGameRoute != null;
                     await bloc.addChallenge(
                       classId: classId,
                       title: title,
                       subjectKey: subjectKey,
                       dueDate: dueDate,
+                      instructions: instructionsCtrl.text.trim().isEmpty
+                          ? null
+                          : instructionsCtrl.text.trim(),
+                      evaluationCriteria: criteriaCtrl.text.trim().isEmpty
+                          ? null
+                          : criteriaCtrl.text.trim(),
+                      targetGameRoute: targetGameRoute,
+                      targetScore:
+                          hasGame ? int.tryParse(targetScoreCtrl.text) : null,
                     );
                     if (context.mounted) Navigator.pop(context);
                   },
@@ -301,6 +389,9 @@ class _ChallengeCard extends StatelessWidget {
     final className = data['class_name'] as String? ?? 'Clase';
     final status = (data['status'] as String?) ?? 'active';
     final dueDate = data['due_date'] as String?;
+    final evaluationCriteria = data['evaluation_criteria'] as String?;
+    final targetGameRoute = data['target_game_route'] as String?;
+    final targetScore = (data['target_score'] as num?)?.toInt();
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -387,6 +478,42 @@ class _ChallengeCard extends StatelessWidget {
                   status == 'completed' ? Colors.white70 : Colors.grey.shade700,
             ),
           ),
+          if (evaluationCriteria != null && evaluationCriteria.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Criterio: $evaluationCriteria',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.nunito(
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+                color: status == 'completed'
+                    ? Colors.white70
+                    : Colors.grey.shade600,
+              ),
+            ),
+          ],
+          if (targetGameRoute != null && targetScore != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: status == 'completed'
+                    ? Colors.white.withValues(alpha: 0.14)
+                    : _kCoral.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                'Se completa automáticamente con $targetScore pts',
+                style: GoogleFonts.nunito(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: status == 'completed' ? Colors.white : _kCoral,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

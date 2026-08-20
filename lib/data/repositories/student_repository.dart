@@ -1,6 +1,18 @@
+// Flutter imports:
+import 'package:flutter/foundation.dart';
+
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/student_datasource.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/store/models/purchase_transaction.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
 import 'package:edu_play/shared/data/subject_catalog.dart';
+import 'package:edu_play/utils/points_service.dart';
 
 /// Average performance for a subject over the last 7 days, plus the
 /// previous 7 days for trend comparison.
@@ -25,11 +37,44 @@ class SubjectPerformance {
   double get trendDelta => percentage - previousAverageScore.clamp(0, 100);
 }
 
+/// Accuracy for one concrete skill (e.g. "suma", "vocabulario") over the
+/// last 7 days, plus the previous 7 days for trend comparison. Unlike
+/// [SubjectPerformance] — which proxies a percentage from raw points —
+/// this is a real correct/total accuracy, computed from the `skills` map
+/// games pass to [StudentRepository.recordScore].
+class SkillPerformance {
+  const SkillPerformance({
+    required this.skill,
+    required this.accuracy,
+    required this.previousAccuracy,
+    required this.totalAnswers,
+    required this.hasData,
+  });
+
+  final Skill skill;
+  final double accuracy; // 0–1
+  final double previousAccuracy; // 0–1
+  final int totalAnswers;
+  final bool hasData;
+
+  double get percentage => (accuracy * 100).clamp(0, 100);
+
+  double get trendDelta => percentage - (previousAccuracy * 100).clamp(0, 100);
+}
+
 class StudentRepository {
-  StudentRepository({required StudentDatasource datasource})
-      : _datasource = datasource;
+  StudentRepository({
+    required StudentDatasource datasource,
+    ClassroomChallengesRepository? challengesRepository,
+  })  : _datasource = datasource,
+        _challengesRepository = challengesRepository;
 
   final StudentDatasource _datasource;
+
+  /// Optional so tests/call sites that don't care about classroom
+  /// challenges can construct a [StudentRepository] without one. When
+  /// absent, [recordScore] simply skips the auto-completion check.
+  final ClassroomChallengesRepository? _challengesRepository;
 
   static int levelForPoints(int points) => (points ~/ 100) + 1;
 
@@ -44,6 +89,7 @@ class StudentRepository {
     required String name,
     required int age,
     String? avatar,
+    String? parentUid,
   }) async {
     final id = await _datasource.getOrCreateStudentId();
     await _datasource.ensureProfile(
@@ -51,6 +97,7 @@ class StudentRepository {
       name: name,
       age: age,
       avatar: avatar,
+      parentUid: parentUid,
     );
   }
 
@@ -59,12 +106,14 @@ class StudentRepository {
     required String name,
     required int age,
     String? avatar,
+    String? parentUid,
   }) {
     return _datasource.ensureProfile(
       studentId: studentId,
       name: name,
       age: age,
       avatar: avatar,
+      parentUid: parentUid,
     );
   }
 
@@ -78,11 +127,130 @@ class StudentRepository {
   Future<Map<String, dynamic>?> getStudentProfile(String studentId) =>
       _datasource.getProfile(studentId);
 
+  /// Spends [cost] points on [itemId] for the given student. See
+  /// [PurchaseResult] for how the Tienda UI should react to each outcome.
+  Future<PurchaseResult> purchaseItem({
+    required String studentId,
+    required String itemId,
+    required String itemName,
+    required int cost,
+  }) =>
+      _datasource.purchaseItem(
+        studentId: studentId,
+        itemId: itemId,
+        itemName: itemName,
+        cost: cost,
+      );
+
+  Future<void> equipAvatarColor(String studentId, String colorHex) =>
+      _datasource.equipAvatar(studentId: studentId, colorHex: colorHex);
+
+  Future<void> equipAvatarIcon(String studentId, String iconId) =>
+      _datasource.equipAvatar(studentId: studentId, iconId: iconId);
+
+  /// Clears the equipped avatar color and/or icon, reverting to the default
+  /// avatar (solid navy circle + initial).
+  Future<void> unequipAvatar(
+    String studentId, {
+    bool clearColor = false,
+    bool clearIcon = false,
+  }) =>
+      _datasource.unequipAvatar(
+        studentId: studentId,
+        clearColor: clearColor,
+        clearIcon: clearIcon,
+      );
+
+  /// Submits [itemId] for parent approval instead of spending points right
+  /// away. See [PurchaseResult.pendingApproval].
+  Future<PurchaseResult> requestPurchase({
+    required String studentId,
+    required String itemId,
+    required int cost,
+  }) =>
+      _datasource.requestPurchase(
+          studentId: studentId, itemId: itemId, cost: cost);
+
+  Future<PurchaseResult> approvePendingPurchase({
+    required String studentId,
+    required String itemId,
+    required String itemName,
+  }) =>
+      _datasource.approvePendingPurchase(
+        studentId: studentId,
+        itemId: itemId,
+        itemName: itemName,
+      );
+
+  Future<void> rejectPendingPurchase({
+    required String studentId,
+    required String itemId,
+  }) =>
+      _datasource.rejectPendingPurchase(studentId: studentId, itemId: itemId);
+
+  /// Spending history, newest first — see [PurchaseTransaction].
+  Future<List<PurchaseTransaction>> getTransactions(
+    String studentId, {
+    int limit = 50,
+  }) async {
+    final rows = await _datasource.getTransactions(studentId, limit: limit);
+    return rows.map((row) {
+      final createdAt = row['createdAt'];
+      return PurchaseTransaction(
+        itemId: row['itemId'] as String? ?? '',
+        itemName: row['itemName'] as String? ?? '',
+        cost: (row['cost'] as num?)?.toInt() ?? 0,
+        balanceBefore: (row['balanceBefore'] as num?)?.toInt() ?? 0,
+        balanceAfter: (row['balanceAfter'] as num?)?.toInt() ?? 0,
+        createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
+        type: PurchaseTransactionType.values.firstWhere(
+          (t) => t.name == row['type'],
+          orElse: () => PurchaseTransactionType.purchase,
+        ),
+      );
+    }).toList();
+  }
+
+  /// Sum of transaction costs within the last [days] days — used to enforce
+  /// a parent-configured spend limit without trusting a mutable running
+  /// total that could drift out of sync with the actual ledger.
+  Future<int> getSpentInWindow(String studentId, {required int days}) async {
+    final transactions = await getTransactions(studentId, limit: 200);
+    final cutoff = DateTime.now().subtract(Duration(days: days));
+    return transactions
+        .where((t) => t.createdAt.isAfter(cutoff))
+        .fold<int>(0, (total, t) => total + t.cost);
+  }
+
+  Future<void> syncGuestPoints({
+    required String studentId,
+    required int points,
+  }) =>
+      _datasource.syncGuestPoints(studentId: studentId, points: points);
+
   Future<void> recordScore({
     required String subjectKey,
     required String gameTitle,
     required int score,
+    Map<String, SkillTally>? skills,
+    String? gameRoute,
   }) async {
+    // Guests have no Firebase Auth session (see AuthGate), so a Firestore
+    // write here would always be denied by the rules — and silently
+    // swallowed by the datasource's try/catch, meaning the score was never
+    // saved anywhere. Guest points live in PointsService instead (that's
+    // what the guest-mode dashboard/store read from), so route there.
+    var shouldStoreGuestPoints = false;
+    try {
+      shouldStoreGuestPoints = FirebaseAuth.instance.currentUser == null;
+    } on FirebaseException catch (e) {
+      if (e.code != 'no-app') rethrow;
+    }
+    if (shouldStoreGuestPoints) {
+      await PointsService.addPoints(score);
+      return;
+    }
+
     final id = await _datasource.getOrCreateStudentId();
     final subject = subjectByKey(subjectKey);
     await _datasource.recordScore(
@@ -91,7 +259,66 @@ class StudentRepository {
       subjectLabel: subject.label,
       gameTitle: gameTitle,
       score: score,
+      skills: skills?.map((key, value) => MapEntry(key, value.toMap())),
     );
+
+    if (gameRoute != null) {
+      await _autoCompleteChallenges(
+        studentId: id,
+        gameRoute: gameRoute,
+        score: score,
+      );
+    }
+  }
+
+  /// Marks any active, unlinked-completion classroom challenge that targets
+  /// [gameRoute] as completed once the student reaches its target score —
+  /// this is what makes teacher challenge completion verifiable instead of
+  /// a manual self-reported button.
+  Future<void> _autoCompleteChallenges({
+    required String studentId,
+    required String gameRoute,
+    required int score,
+  }) async {
+    final repo = _challengesRepository;
+    if (repo == null) return;
+
+    try {
+      final challenges = await repo.getChallengesForStudent(studentId);
+      final matches = challenges.where(
+        (c) =>
+            c.status == 'active' &&
+            !c.completed &&
+            c.targetGameRoute == gameRoute &&
+            c.targetScore != null &&
+            score >= c.targetScore! &&
+            c.memberId != null,
+      );
+      for (final challenge in matches) {
+        await repo.completeChallenge(
+          classId: challenge.classId,
+          memberId: challenge.memberId!,
+          challengeId: challenge.id,
+        );
+      }
+    } catch (e) {
+      debugPrint('StudentRepository._autoCompleteChallenges error: $e');
+    }
+  }
+
+  Future<void> markPlayedToday() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.markPlayedToday(id);
+  }
+
+  Future<void> recoverStreak() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.recoverStreak(id);
+  }
+
+  Future<void> resetStreak() async {
+    final id = await _datasource.getOrCreateStudentId();
+    await _datasource.resetStreak(id);
   }
 
   Future<List<Map<String, dynamic>>> getLeaderboard({int limit = 10}) =>
@@ -151,6 +378,23 @@ class StudentRepository {
     return _subjectPerformanceFromScores(scores);
   }
 
+  /// Accuracy per skill (e.g. "Suma 90% · Resta 65%") for the signed-in
+  /// student, aggregated only over score entries that actually carried a
+  /// `skills` map — older entries recorded before this existed are simply
+  /// skipped rather than counted as failures.
+  Future<List<SkillPerformance>> getSkillPerformance() async {
+    final scores = await _datasource.getRecentScores(days: 14);
+    return _skillPerformanceFromScores(scores);
+  }
+
+  Future<List<SkillPerformance>> getSkillPerformanceForStudents(
+    List<String> studentIds,
+  ) async {
+    final scores =
+        await _datasource.getRecentScoresForStudents(studentIds, days: 14);
+    return _skillPerformanceFromScores(scores);
+  }
+
   List<double> _weeklyTotalsFromScores(
     List<Map<String, dynamic>> scores, {
     int weeks = 4,
@@ -205,6 +449,55 @@ class StudentRepository {
         hasData: curr != null && curr.isNotEmpty,
       );
     }).toList();
+  }
+
+  List<SkillPerformance> _skillPerformanceFromScores(
+    List<Map<String, dynamic>> scores,
+  ) {
+    final now = DateTime.now();
+    // skillKey -> [correct, total] pairs, one per score entry that touched it.
+    final current = <String, List<List<int>>>{};
+    final previous = <String, List<List<int>>>{};
+
+    for (final entry in scores) {
+      final date = _toDate(entry['date']);
+      final skills = entry['skills'] as Map<String, dynamic>?;
+      if (date == null || skills == null || skills.isEmpty) continue;
+
+      final diffDays = now.difference(date).inDays;
+      final bucket = diffDays < 7 ? current : previous;
+      if (diffDays >= 14) continue;
+
+      for (final skillEntry in skills.entries) {
+        final tally = skillEntry.value as Map<String, dynamic>?;
+        if (tally == null) continue;
+        final correct = (tally['correct'] as num?)?.toInt() ?? 0;
+        final total = (tally['total'] as num?)?.toInt() ?? 0;
+        if (total == 0) continue;
+        (bucket[skillEntry.key] ??= []).add([correct, total]);
+      }
+    }
+
+    final skillKeys = {...current.keys, ...previous.keys};
+    return skillKeys.map((key) {
+      final curr = current[key];
+      final prev = previous[key];
+      return SkillPerformance(
+        skill: skillByKey(key),
+        accuracy: _accuracy(curr),
+        previousAccuracy: _accuracy(prev),
+        totalAnswers: curr?.fold<int>(0, (acc, pair) => acc + pair[1]) ?? 0,
+        hasData: curr != null && curr.isNotEmpty,
+      );
+    }).toList()
+      ..sort((a, b) => b.totalAnswers.compareTo(a.totalAnswers));
+  }
+
+  double _accuracy(List<List<int>>? pairs) {
+    if (pairs == null || pairs.isEmpty) return 0;
+    final correct = pairs.fold<int>(0, (acc, pair) => acc + pair[0]);
+    final total = pairs.fold<int>(0, (acc, pair) => acc + pair[1]);
+    return total == 0 ? 0 : correct / total;
   }
 
   double _average(List<double>? values) {

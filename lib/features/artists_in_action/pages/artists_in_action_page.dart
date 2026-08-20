@@ -1,4 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
+import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 enum DrawMode { pen, eraser, sticker }
 
@@ -37,6 +46,12 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
   DrawMode _mode = DrawMode.pen;
   IconData _selectedSticker = Icons.star;
 
+  /// Free drawing has no right/wrong answers, so this just tallies
+  /// participation — it lets the skill report show "practicó artes
+  /// visuales" instead of leaving the subject with zero data forever.
+  final SkillTracker skillTracker = SkillTracker();
+  bool _finished = false;
+
   // Sticker palette
   final List<IconData> _stickers = [
     Icons.star,
@@ -46,6 +61,27 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
     Icons.flight,
     Icons.music_note
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Shown once the first frame is up, so the player knows what this
+    // activity is (free drawing) before touching the canvas.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showObjectiveIntro());
+  }
+
+  Future<void> _showObjectiveIntro() async {
+    if (!mounted) return;
+    await showGameObjectiveIntro(
+      context,
+      gameTitle: 'Artistas en Acción',
+      objective:
+          'Vas a dibujar libremente en el lienzo: usa el lápiz para trazar '
+          'líneas de distintos colores y grosores, el borrador para '
+          'corregir, y las calcomanías para decorar tu creación.',
+      difficultyLabel: 'Principiante (actividad libre, sin niveles)',
+    );
+  }
 
   void _onPanStart(DragStartDetails details) {
     if (_mode == DrawMode.pen) {
@@ -95,6 +131,39 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
     });
   }
 
+  /// Records the practice as a skill entry and shows encouraging feedback
+  /// before leaving — mirrors the finish flow in Color Concert / Sports
+  /// Challenge so every game reports concrete skill practice, not just
+  /// this one silently closing with nothing recorded.
+  Future<void> _finishSession() async {
+    if (_finished || _history.isEmpty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    _finished = true;
+
+    skillTracker.record('artes_visuales', correct: true);
+    sl<StudentRepository>().recordScore(
+      subjectKey: 'art',
+      gameTitle: 'Artistas en Acción',
+      score: (_history.length.clamp(0, 50) * 2).toInt(),
+      skills: skillTracker.tallies,
+      gameRoute: '/artists-in-action',
+    );
+
+    await showAnswerExplanation(
+      context,
+      isCorrect: true,
+      correctAnswerText: '',
+      explanation: '¡Practicaste trazo, color y composición en tu dibujo! '
+          'Dibujar libremente ayuda a desarrollar la motricidad fina y la '
+          'creatividad visual.',
+      skillLabel: skillByKey('artes_visuales').label,
+    );
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,7 +179,12 @@ class _ArtistsInActionPageState extends State<ArtistsInActionPage> {
           IconButton(
             icon: const Icon(Icons.delete),
             onPressed: _clearCanvas,
-          )
+          ),
+          TextButton.icon(
+            onPressed: _finishSession,
+            icon: const Icon(Icons.check_rounded, color: Colors.white),
+            label: const Text('Listo', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
       body: Stack(

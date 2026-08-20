@@ -1,23 +1,29 @@
+// Dart imports:
 import 'dart:math' show max;
-import 'package:edu_play/data/repositories/auth_repository.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/alumnos_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
-import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/friends_panel.dart';
-import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/utils/injection_container.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 
