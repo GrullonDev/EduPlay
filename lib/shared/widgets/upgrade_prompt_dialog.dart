@@ -21,7 +21,9 @@ enum UpgradeReason { childLimit, sessionLimit, proSticker }
 /// ```dart
 /// final upgraded = await showUpgradePrompt(context, UpgradeReason.sessionLimit);
 /// ```
-/// Returns true if the user tapped the upgrade CTA (reserved for Stripe flow).
+/// Returns true if the user tapped the upgrade CTA; the caller is
+/// responsible for continuing into the Recurrente checkout flow (see
+/// [SettingsSubscriptionSection](../../features/settings/widgets/settings_subscription_section.dart)).
 Future<bool> showUpgradePrompt(
   BuildContext context,
   UpgradeReason reason,
@@ -228,7 +230,7 @@ class _PlanCard extends StatelessWidget {
 
   factory _PlanCard.pro() => const _PlanCard(
         name: 'Pro',
-        price: '\$9.99/mes',
+        price: '\$4.99/mes',
         features: [
           'Niños ilimitados',
           'Sesiones ilimitadas',
@@ -254,28 +256,67 @@ class _PlanCard extends StatelessWidget {
         color: highlighted ? _kNavy : _kBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: highlighted ? _kNavy : const Color(0xFFE0DEFF),
-          width: highlighted ? 0 : 1.5,
+          color: highlighted ? _kGold : const Color(0xFFE0DEFF),
+          width: highlighted ? 1.5 : 1.5,
         ),
+        boxShadow: highlighted
+            ? [
+                BoxShadow(
+                  color: _kNavy.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: badgeColor.withValues(alpha: highlighted ? 1.0 : 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              name,
-              style: GoogleFonts.fredoka(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: highlighted ? Colors.white : badgeColor,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: highlighted ? 1.0 : 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  name,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: highlighted ? Colors.white : badgeColor,
+                  ),
+                ),
               ),
-            ),
+              if (highlighted)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _kGold,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded,
+                          size: 10, color: _kNavy),
+                      const SizedBox(width: 2),
+                      Text(
+                        'TOP',
+                        style: GoogleFonts.nunito(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: _kNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 10),
 

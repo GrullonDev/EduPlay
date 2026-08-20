@@ -83,7 +83,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     final allowed = await _subscriptionRepository.canCreateSession();
     if (!allowed) {
       if (!mounted) return;
-      await showUpgradePrompt(context, UpgradeReason.sessionLimit);
+      final wantsUpgrade =
+          await showUpgradePrompt(context, UpgradeReason.sessionLimit);
+      if (wantsUpgrade && mounted) {
+        Navigator.of(context).pushNamed(RouterPaths.settings);
+      }
       return;
     }
 

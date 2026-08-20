@@ -114,8 +114,8 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
     if (_gradeLevel == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Selecciona una edad / grado',
-              style: GoogleFonts.nunito()),
+          content:
+              Text('Selecciona una edad / grado', style: GoogleFonts.nunito()),
           backgroundColor: _kRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -129,7 +129,11 @@ class _CreateExplorerPageState extends State<CreateExplorerPage> {
         await sl<SubscriptionRepository>().canAddChild(_existingCount);
     if (!allowed) {
       if (!mounted) return;
-      await showUpgradePrompt(context, UpgradeReason.childLimit);
+      final wantsUpgrade =
+          await showUpgradePrompt(context, UpgradeReason.childLimit);
+      if (wantsUpgrade && mounted) {
+        Navigator.of(context).pushNamed(RouterPaths.settings);
+      }
       return;
     }
 
