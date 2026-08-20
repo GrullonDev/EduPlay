@@ -337,7 +337,11 @@ service cloud.firestore {
     // Notifications
     // Users can read their own notification inbox. Friend-request notifications
     // are created by the sender when the friend request is created, and only
-    // the recipient may mark them as read.
+    // the recipient may mark them as read. Teacher-message notifications are
+    // created by a teacher addressing a specific class member's parent — the
+    // classId/memberId on the doc are cross-checked against the roster so a
+    // teacher can only message parents of students actually in one of their
+    // own classes, not an arbitrary uid.
     match /notifications/{notificationId} {
       allow read: if request.auth != null
         && request.auth.uid == resource.data.recipientUid;
@@ -345,8 +349,19 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.senderUid
         && request.resource.data.recipientUid is string
-        && request.resource.data.type == 'friend_request'
-        && request.resource.data.read == false;
+        && request.resource.data.read == false
+        && (
+          request.resource.data.type == 'friend_request'
+          ||
+          (
+            request.resource.data.type == 'teacher_message'
+            && request.resource.data.senderRole == 'teacher'
+            && request.resource.data.classId is string
+            && request.resource.data.memberId is string
+            && get(/databases/$(database)/documents/classes/$(request.resource.data.classId)).data.teacherUid == request.auth.uid
+            && get(/databases/$(database)/documents/classes/$(request.resource.data.classId)/members/$(request.resource.data.memberId)).data.parentUid == request.resource.data.recipientUid
+          )
+        );
 
       allow update: if request.auth != null
         && request.auth.uid == resource.data.recipientUid
@@ -532,6 +547,23 @@ service cloud.firestore {
           && request.resource.data.cost is int;
         allow update, delete: if false;
       }
+    }
+
+    // ── Newsletter sign-ups ───────────────────────────────────────────────────
+    // Public marketing pages (parent guide, registration landing) capture an
+    // email address into this write-only collection — no Firebase Auth
+    // session exists yet on those pages, so creation must be allowed for
+    // anyone. Nothing in the app ever reads this back; it's reviewed from
+    // the Firebase console. Size-capped to keep it from being abused as a
+    // free-form data dump.
+    match /newsletter_subscribers/{subscriberId} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() < 200
+        && request.resource.data.source is string
+        && request.resource.data.source.size() < 50
+        && request.resource.data.keys().hasOnly(['email', 'source', 'createdAt']);
     }
 
     // ── Default: deny everything not matched above ────────────────────────────
