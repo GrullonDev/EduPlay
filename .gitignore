@@ -12,20 +12,18 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# IDEs and editors
 *.iml
 *.ipr
 *.iws
 .idea/
 
 # The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VS Code which you may wish to be included in version control.
 #.vscode/
 
-# Flutter/Dart/Pub related
+# Flutter/Dart/Pub
 **/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -33,62 +31,50 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+
+# Android build output
 **/android/.gradle
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
-**/node_modules/
 
-# Firebase related
-firebase_options.dart
-.firebase/
-firebase-debug.log
-firebase-debug.*.log
-
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# FVM Version Cache
-.fvm/
-
-# Local assistant/tooling state
-.claude/
-# iOS related
+# iOS build output
 ios/Pods/
 ios/.symlinks/
+ios/Flutter/.last_build_id
+ios/Flutter/App.framework
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
 ios/Flutter/Generated.xcconfig
 ios/Flutter/app.flx
 ios/Flutter/app.zip
 ios/Flutter/engine
-ios/Flutter/flutter_assets
 ios/Flutter/ephemeral/
-/ios/Flutter/App.framework
-/ios/Flutter/Flutter.framework
-/ios/Flutter/Flutter.podspec
-/ios/Flutter/Generated.xcconfig
-/ios/Flutter/app.flx
-/ios/Flutter/app.zip
-/ios/Flutter/engine
-/ios/Flutter/flutter_assets
-/ios/Flutter/ephemeral/
-
-# Desktop platforms
-/windows/
-/linux/
-/macos/
-
-pubspec.lock
+ios/Flutter/flutter_assets
 ios/Flutter/flutter_export_environment.sh
 ios/Runner/GeneratedPluginRegistrant.h
 ios/Runner/GeneratedPluginRegistrant.m
 
+# Desktop platforms not committed for this app
+/linux/
+/macos/
+/windows/
+
+# Node/Firebase
+**/node_modules/
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Generated Firebase config
+firebase_options.dart
+
+# Flutter build artifacts
+app.*.symbols
+app.*.map.json
+
+# FVM version cache
+.fvm/
+
+# Local assistant/tooling state
+.claude/
