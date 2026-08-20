@@ -1,63 +1,64 @@
-name: Deploy to Firebase Hosting
+name: Deploy Web to Firebase Hosting
 
 on:
   push:
     branches:
       - main
-      - master
-  pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch:   # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-hosting-production
+  cancel-in-progress: true
 
 jobs:
-  # ── Quality gate — runs on every push and every PR ──────────────────────────
-  test_and_analyse:
-    name: Analyse & Test
+  validate:
+    name: Analyze and Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyse (static analysis)
+      - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Run unit tests
+      - name: Test
         run: flutter test --no-pub
 
-  # ── Production deploy — runs only on push to main / master ──────────────────
-  build_and_deploy:
-    name: Build & Deploy
-    needs: test_and_analyse          # Deploy only if quality gate passes
-    if: github.event_name == 'push'  # Not on PR events — tests only for PRs
+  deploy_hosting:
+    name: Build and Deploy Hosting
+    needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Web App
-        # --no-tree-shake-icons prevents icon font trimming issues on web.
-        run: flutter build web --no-tree-shake-icons --release
+      - name: Build web
+        run: flutter build web --release --no-tree-shake-icons
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          # Add this secret in GitHub → Settings → Secrets → Actions:
-          # FIREBASE_SERVICE_ACCOUNT_EDUPLAY_8792F
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_EDUPLAY_8792F }}'
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EDUPLAY_PROD }}
           channelId: live
-          projectId: eduplay-8792f
+          projectId: eduplay-prod
