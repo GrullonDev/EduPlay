@@ -37,9 +37,13 @@ migrate_working_dir/
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
+**/node_modules/
 
 # Firebase related
 firebase_options.dart
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
 
 # Symbolication related
 app.*.symbols
@@ -54,6 +58,9 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# Local assistant/tooling state
+.claude/
 # iOS related
 ios/Pods/
 ios/.symlinks/
@@ -84,3 +91,4 @@ pubspec.lock
 ios/Flutter/flutter_export_environment.sh
 ios/Runner/GeneratedPluginRegistrant.h
 ios/Runner/GeneratedPluginRegistrant.m
+
