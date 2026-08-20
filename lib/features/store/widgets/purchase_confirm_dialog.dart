@@ -97,30 +97,8 @@ class _PurchaseConfirmDialog extends StatelessWidget {
                   color: Colors.grey[500],
                 ),
               ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F5FF),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.bolt_rounded, color: _kGold, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${item.cost} pts',
-                      style: GoogleFonts.fredoka(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: _kNavy,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 18),
+              _ReceiptCard(item: item, points: points, remaining: remaining),
               const SizedBox(height: 12),
               if (requiresApproval)
                 const _InfoBanner(
@@ -144,24 +122,54 @@ class _PurchaseConfirmDialog extends StatelessWidget {
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: requiresApproval ? Colors.deepPurple : _kNavy,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                height: 50,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: requiresApproval
+                          ? const [Color(0xFF7C3AED), Color(0xFF9C6BF0)]
+                          : const [_kNavy, Color(0xFF3A36A0)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (requiresApproval ? Colors.deepPurple : _kNavy)
+                            .withValues(alpha: 0.3),
+                        blurRadius: 14,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    requiresApproval
-                        ? 'Enviar solicitud a mis papás'
-                        : 'Comprar por ${item.cost} pts',
-                    style: GoogleFonts.fredoka(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => Navigator.of(context).pop(true),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            requiresApproval
+                                ? Icons.send_rounded
+                                : Icons.bolt_rounded,
+                            color: _kGold,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            requiresApproval
+                                ? 'Enviar solicitud a mis papás'
+                                : 'Comprar por ${item.cost} pts',
+                            style: GoogleFonts.fredoka(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -171,7 +179,8 @@ class _PurchaseConfirmDialog extends StatelessWidget {
                 onPressed: () => Navigator.of(context).pop(false),
                 child: Text(
                   'Cancelar',
-                  style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
+                  style:
+                      GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
                 ),
               ),
             ],
@@ -183,7 +192,8 @@ class _PurchaseConfirmDialog extends StatelessWidget {
 }
 
 class _InfoBanner extends StatelessWidget {
-  const _InfoBanner({required this.icon, required this.color, required this.text});
+  const _InfoBanner(
+      {required this.icon, required this.color, required this.text});
   final IconData icon;
   final Color color;
   final String text;
@@ -214,6 +224,130 @@ class _InfoBanner extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A receipt-style breakdown of the purchase — item, balance, and running
+/// total — so spending points feels like a real checkout rather than a
+/// single "confirm?" tap.
+class _ReceiptCard extends StatelessWidget {
+  const _ReceiptCard({
+    required this.item,
+    required this.points,
+    required this.remaining,
+  });
+
+  final StoreItem item;
+  final int points;
+  final int remaining;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F5FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE0DEFF)),
+      ),
+      child: Column(
+        children: [
+          _ReceiptRow(label: item.name, value: '${item.cost} pts'),
+          const SizedBox(height: 8),
+          _ReceiptRow(
+            label: 'Tu saldo',
+            value: '$points pts',
+            muted: true,
+          ),
+          const SizedBox(height: 10),
+          const _DashedDivider(),
+          const SizedBox(height: 10),
+          _ReceiptRow(
+            label: remaining >= 0 ? 'Te quedarán' : 'Te faltan',
+            value: '${remaining >= 0 ? remaining : remaining.abs()} pts',
+            emphasized: true,
+            valueColor: remaining >= 0 ? _kNavy : const Color(0xFFE74C3C),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReceiptRow extends StatelessWidget {
+  const _ReceiptRow({
+    required this.label,
+    required this.value,
+    this.muted = false,
+    this.emphasized = false,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final bool muted;
+  final bool emphasized;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = GoogleFonts.nunito(
+      fontSize: emphasized ? 13 : 12,
+      fontWeight: emphasized ? FontWeight.w700 : FontWeight.w600,
+      color: muted ? Colors.grey[500] : _kNavy.withValues(alpha: 0.8),
+    );
+    final valueStyle = emphasized
+        ? GoogleFonts.fredoka(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: valueColor ?? _kNavy,
+          )
+        : GoogleFonts.nunito(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: muted ? Colors.grey[500] : _kNavy,
+          );
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child:
+              Text(label, style: labelStyle, overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: 12),
+        Text(value, style: valueStyle),
+      ],
+    );
+  }
+}
+
+class _DashedDivider extends StatelessWidget {
+  const _DashedDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const dashWidth = 5.0;
+        const gap = 4.0;
+        final count = (constraints.maxWidth / (dashWidth + gap)).floor();
+        return Row(
+          children: List.generate(
+            count,
+            (_) => Padding(
+              padding: const EdgeInsets.only(right: gap),
+              child: Container(
+                width: dashWidth,
+                height: 1.4,
+                color: const Color(0xFFCFCBF5),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
