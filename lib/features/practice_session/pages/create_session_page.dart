@@ -1,17 +1,24 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+// Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
-import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
-import 'package:edu_play/features/subscription/services/subscription_service.dart';
+import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
+import 'package:edu_play/l10n/app_localizations.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
 import 'package:edu_play/shared/widgets/upgrade_prompt_dialog.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -35,11 +42,23 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   ChildProfile? _selectedProfile;
   final Set<String> _selectedGameIds = {};
   bool _loading = false;
+  String _parentName = 'Mamá';
+
+  SubscriptionRepository get _subscriptionRepository {
+    init();
+    return sl<SubscriptionRepository>();
+  }
+
+  PracticeSessionsRepository get _practiceSessionsRepository {
+    init();
+    return sl<PracticeSessionsRepository>();
+  }
 
   @override
   void initState() {
     super.initState();
     _loadProfiles();
+    _loadParentName();
   }
 
   Future<void> _loadProfiles() async {
@@ -50,27 +69,37 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     });
   }
 
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
+  }
+
   Future<void> _createSession() async {
     final profile = _selectedProfile;
     if (profile == null || _selectedGameIds.isEmpty) return;
 
     // ── Free-tier session limit check ────────────────────────────────────────
-    final allowed = await SubscriptionService.canCreateSession();
+    final allowed = await _subscriptionRepository.canCreateSession();
     if (!allowed) {
       if (!mounted) return;
-      await showUpgradePrompt(context, UpgradeReason.sessionLimit);
+      final wantsUpgrade =
+          await showUpgradePrompt(context, UpgradeReason.sessionLimit);
+      if (wantsUpgrade && mounted) {
+        Navigator.of(context).pushNamed(RouterPaths.settings);
+      }
       return;
     }
 
     setState(() => _loading = true);
     try {
-      final session = await PracticeSessionsService.createSession(
+      final session = await _practiceSessionsRepository.createSession(
         childProfileId: profile.id,
         childName: profile.name,
         assignedGameIds: _selectedGameIds.toList(),
       );
       // Increment monthly session counter after successful creation.
-      await SubscriptionService.incrementSessionCount();
+      await _subscriptionRepository.incrementSessionCount();
       if (!mounted) return;
       _showSessionCreated(session);
     } finally {
@@ -80,7 +109,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
 
   void _showSessionCreated(PracticeSession session) {
     final url = session.sessionUrl(
-      Uri.base.origin.isEmpty ? 'http://localhost:8080' : Uri.base.origin,
+      Uri.base.origin.isEmpty ? AppUrls.webBase : Uri.base.origin,
     );
     showDialog(
       context: context,
@@ -94,11 +123,11 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
     final wide = ScreenSize.of(context).isDesktop;
     return Scaffold(
       backgroundColor: _kBg,
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(64),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(64),
         child: EduPlayNavBar.parent(
           activeParentTab: ParentTab.inicio,
-          parentName: '',
+          parentName: _parentName,
         ),
       ),
       body: _profiles.isEmpty
@@ -147,18 +176,18 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
             const Icon(Icons.person_add_alt_1_rounded,
                 size: 64, color: Color(0xFFBBB9E0)),
             const SizedBox(height: 16),
-            Text('No child profiles yet',
+            Text('Aún no hay perfiles de niños',
                 style: GoogleFonts.fredoka(
                     fontSize: 22, color: _kNavy, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('Create an explorer first in the dashboard',
+            Text('Crea un explorador primero en el panel',
                 style: GoogleFonts.nunito(color: Colors.grey.shade600)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => Navigator.pushReplacementNamed(
                   context, RouterPaths.parentsDashboard),
               style: ElevatedButton.styleFrom(backgroundColor: _kCoral),
-              child: Text('Go to Dashboard',
+              child: Text('Ir al Panel',
                   style: GoogleFonts.nunito(
                       color: Colors.white, fontWeight: FontWeight.w700)),
             ),
@@ -169,7 +198,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Widget _header() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Start a Practice Session',
+          Text('Iniciar una Sesión de Práctica',
               style: GoogleFonts.fredoka(
                   fontSize: 30,
                   color: _kNavy,
@@ -177,8 +206,8 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                   letterSpacing: 0.5)),
           const SizedBox(height: 6),
           Text(
-            'Pick a child and select the games you want them to practice. '
-            'A shareable link and PIN will be generated.',
+            'Elige un niño y selecciona los juegos que quieres que practique. '
+            'Se generará un enlace compartible y un PIN.',
             style:
                 GoogleFonts.nunito(fontSize: 15, color: Colors.grey.shade700),
           ),
@@ -190,7 +219,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
   Widget _sidePanel() => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionLabel('Select Explorer'),
+          _sectionLabel('Selecciona Explorador'),
           const SizedBox(height: 10),
           ..._profiles.map((p) => _ProfileTile(
                 profile: p,
@@ -198,7 +227,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                 onTap: () => setState(() => _selectedProfile = p),
               )),
           const SizedBox(height: 20),
-          _sectionLabel('Session Summary'),
+          _sectionLabel('Resumen de la Sesión'),
           const SizedBox(height: 10),
           _SummaryCard(
             childName: _selectedProfile?.name ?? '—',
@@ -225,16 +254,17 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
-              _sectionLabel('Choose Games'),
+              _sectionLabel('Elige los Juegos'),
               const Spacer(),
-              Text('${_selectedGameIds.length}/${kGameCatalog.length} selected',
+              Text(
+                  '${_selectedGameIds.length}/${kGameCatalog.length} seleccionados',
                   style: GoogleFonts.nunito(
                       color: _kNavy,
                       fontWeight: FontWeight.w600,
                       fontSize: 13)),
             ]),
             const SizedBox(height: 4),
-            Text('Select at least one game to continue',
+            Text('Selecciona al menos un juego para continuar',
                 style: GoogleFonts.nunito(
                     fontSize: 12, color: Colors.grey.shade500)),
             const SizedBox(height: 16),
@@ -290,7 +320,7 @@ class _CreateSessionPageState extends State<CreateSessionPage> {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: Colors.white))
               : Text(
-                  'Create Session & Get Link  →',
+                  'Crear Sesión y Obtener Enlace  →',
                   style: GoogleFonts.fredoka(
                       fontSize: 18,
                       color: Colors.white,
@@ -364,7 +394,7 @@ class _ProfileTile extends StatelessWidget {
                         fontSize: 15,
                         color: selected ? Colors.white : _kNavy,
                         fontWeight: FontWeight.w600)),
-                Text('Grade ${profile.level}',
+                Text('Nivel ${profile.level}',
                     style: GoogleFonts.nunito(
                         fontSize: 11,
                         color:
@@ -402,11 +432,23 @@ class _SummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          _row(Icons.person_rounded, 'Explorer', childName),
+          _row(
+            Icons.person_rounded,
+            AppLocalizations.of(context)!.summaryExplorer,
+            childName,
+          ),
           const SizedBox(height: 8),
-          _row(Icons.games_rounded, 'Games assigned', '$selectedCount'),
+          _row(
+            Icons.games_rounded,
+            AppLocalizations.of(context)!.summaryGamesAssigned,
+            '$selectedCount',
+          ),
           const SizedBox(height: 8),
-          _row(Icons.lock_rounded, 'Access', 'PIN-protected'),
+          _row(
+            Icons.lock_rounded,
+            AppLocalizations.of(context)!.summaryAccess,
+            AppLocalizations.of(context)!.summaryPinProtected,
+          ),
         ],
       ),
     );
@@ -518,7 +560,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                     const Icon(Icons.check_circle_rounded,
                         color: Color(0xFF27AE60), size: 18),
                     const SizedBox(width: 6),
-                    Text('Session Created!',
+                    Text('¡Sesión Creada!',
                         style: GoogleFonts.fredoka(
                             color: const Color(0xFF27AE60),
                             fontSize: 14,
@@ -528,14 +570,14 @@ class _SessionCreatedDialog extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                '${session.childName}\'s Practice',
+                'Práctica de ${session.childName}',
                 style: GoogleFonts.fredoka(
                     fontSize: 22, color: _kNavy, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 4),
               Text(
-                '${session.totalCount} game${session.totalCount == 1 ? '' : 's'} assigned',
+                '${session.totalCount} juego${session.totalCount == 1 ? '' : 's'} asignado${session.totalCount == 1 ? '' : 's'}',
                 style: GoogleFonts.nunito(
                     color: Colors.grey.shade600, fontSize: 14),
               ),
@@ -543,7 +585,7 @@ class _SessionCreatedDialog extends StatelessWidget {
               const SizedBox(height: 24),
 
               // PIN display
-              Text('SESSION PIN',
+              Text('PIN DE SESIÓN',
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -575,7 +617,7 @@ class _SessionCreatedDialog extends StatelessWidget {
               const SizedBox(height: 24),
 
               // QR Code
-              Text('SCAN TO JOIN',
+              Text('ESCANEA PARA UNIRTE',
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -600,7 +642,7 @@ class _SessionCreatedDialog extends StatelessWidget {
               const SizedBox(height: 20),
 
               // URL copy row
-              Text('OR SHARE LINK',
+              Text('O COMPARTE EL ENLACE',
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -630,13 +672,13 @@ class _SessionCreatedDialog extends StatelessWidget {
                   IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 18),
                     color: _kCoral,
-                    tooltip: 'Copy link',
+                    tooltip: 'Copiar enlace',
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: url));
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content:
-                              Text('Link copied!', style: GoogleFonts.nunito()),
+                          content: Text('¡Enlace copiado!',
+                              style: GoogleFonts.nunito()),
                           backgroundColor: _kNavy,
                           behavior: SnackBarBehavior.floating,
                           duration: const Duration(seconds: 2),
@@ -661,7 +703,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('Dashboard',
+                    child: Text('Panel',
                         style: GoogleFonts.nunito(
                             color: _kNavy, fontWeight: FontWeight.w700)),
                   ),
@@ -676,7 +718,7 @@ class _SessionCreatedDialog extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: Text('New Session',
+                    child: Text('Nueva Sesión',
                         style: GoogleFonts.nunito(
                             color: Colors.white, fontWeight: FontWeight.w700)),
                   ),

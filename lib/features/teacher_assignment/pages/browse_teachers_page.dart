@@ -1,9 +1,15 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
@@ -38,6 +44,9 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
   final Map<String, bool> _enrolled = {};
   // classId → loading?
   final Map<String, bool> _enrolling = {};
+  final TeacherClassesRepository _teacherClassesRepository =
+      sl<TeacherClassesRepository>();
+  final AuthRepository _authRepository = sl<AuthRepository>();
   bool _loading = true;
   String _search = '';
 
@@ -50,12 +59,12 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final classes = await TeacherClassesService.getPublicClassesForAge(
+      final classes = await _teacherClassesRepository.getPublicClassesForAge(
         widget.child.age,
       );
       // Check enrollment status for each class in parallel
       final enrolledResults = await Future.wait(
-        classes.map((tc) => TeacherClassesService.isEnrolled(
+        classes.map((tc) => _teacherClassesRepository.isEnrolled(
               classId: tc.id,
               childProfileId: widget.child.id,
             )),
@@ -79,8 +88,8 @@ class _BrowseTeachersPageState extends State<BrowseTeachersPage> {
   Future<void> _enroll(TeacherClass tc) async {
     setState(() => _enrolling[tc.id] = true);
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      await TeacherClassesService.joinClass(
+      final uid = _authRepository.getCurrentUser()?.uid ?? '';
+      await _teacherClassesRepository.joinClass(
         classId: tc.id,
         displayName: widget.child.name,
         email: '', // child profiles don't have email

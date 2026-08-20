@@ -2,13 +2,15 @@
 // The month-rollover detection and limit checks are driven by simple arithmetic
 // and can be verified without any mocking of Firestore.
 
-import 'package:edu_play/features/subscription/models/subscription.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/features/subscription/models/subscription.dart';
 
 void main() {
   final now = DateTime.now();
-  final currentMonth =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}';
+  final currentMonth = '${now.year}-${now.month.toString().padLeft(2, '0')}';
   final lastMonth = now.month == 1
       ? '${now.year - 1}-12'
       : '${now.year}-${(now.month - 1).toString().padLeft(2, '0')}';

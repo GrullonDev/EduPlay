@@ -1,8 +1,15 @@
-import 'package:edu_play/utils/responsive.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/core/config/release_flags.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
+import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -21,7 +28,7 @@ const _kNavy = Color(0xFF1E1B6A);
 //   ])
 // ─────────────────────────────────────────────────────────────────────────────
 
-enum ParentTab { inicio, progreso, recursos, configuracion }
+enum ParentTab { inicio, progreso, recursos, amigos, configuracion }
 
 enum StudentTab { learn, games, classroom, reports }
 
@@ -63,6 +70,8 @@ class EduPlayNavBar extends StatelessWidget {
       tab: ParentTab.recursos,
       route: RouterPaths.parentGuide
     ),
+    if (ReleaseFlags.friendsEnabled)
+      (label: 'Amigos', tab: ParentTab.amigos, route: RouterPaths.friends),
     (
       label: 'Configuración',
       tab: ParentTab.configuracion,
@@ -71,11 +80,11 @@ class EduPlayNavBar extends StatelessWidget {
   ];
 
   static const _studentTabs = [
-    (label: 'Learn', tab: StudentTab.learn, route: ''),
-    (label: 'Games', tab: StudentTab.games, route: RouterPaths.gamesCatalog),
-    (label: 'Classroom', tab: StudentTab.classroom, route: ''),
+    (label: 'Aprender', tab: StudentTab.learn, route: ''),
+    (label: 'Juegos', tab: StudentTab.games, route: RouterPaths.gamesCatalog),
+    (label: 'Clase', tab: StudentTab.classroom, route: ''),
     (
-      label: 'Reports',
+      label: 'Reportes',
       tab: StudentTab.reports,
       route: RouterPaths.progressReports
     ),
@@ -98,12 +107,13 @@ class EduPlayNavBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Logo — always navigates to home
+              // Logo — always navigates to home. Pops back to AuthGate
+              // (the bottom of the stack) instead of pushing the
+              // auth-blind MainPage, so it always reflects the live
+              // session instead of a stale route.
               GestureDetector(
-                onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-                  RouterPaths.root,
-                  (r) => false,
-                ),
+                onTap: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
                 child: Text(
                   'EduPlay',
                   style: GoogleFonts.fredoka(
@@ -138,14 +148,9 @@ class EduPlayNavBar extends StatelessWidget {
               const Spacer(),
 
               // Right side icons
-              _IconBtn(
-                icon: Icons.notifications_outlined,
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Notificaciones próximamente.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                ),
+              NotificationsButton(
+                iconColor: Colors.grey[400],
+                padding: EdgeInsets.zero,
               ),
               const SizedBox(width: 12),
               _IconBtn(
@@ -195,6 +200,7 @@ class EduPlayNavBar extends StatelessWidget {
     RouterPaths.parentGuide,
     RouterPaths.progressReports,
     RouterPaths.settings,
+    RouterPaths.friends,
   };
 
   void _navigate(BuildContext context, String route) {
@@ -204,8 +210,9 @@ class EduPlayNavBar extends StatelessWidget {
 
     // In student mode, parent-only routes require a real (non-anonymous) login.
     if (_mode == _Mode.student && _parentOnlyRoutes.contains(route)) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null || user.isAnonymous) {
+      final authRepository = sl<AuthRepository>();
+      if (authRepository.getCurrentUserUid() == null ||
+          authRepository.isCurrentUserAnonymous()) {
         Navigator.of(context).pushNamed(RouterPaths.login);
         return;
       }

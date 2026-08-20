@@ -1,4 +1,8 @@
-import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+// Project imports:
+import 'package:edu_play/features/games_catalog/models/catalog_game.dart';
+import 'package:edu_play/features/games_catalog/models/catalog_game_registry_adapter.dart';
+import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 // ── Game catalog metadata ─────────────────────────────────────────────────────
 // Keep in sync with the games listed in games_catalog_page.dart
@@ -39,11 +43,16 @@ class GameRecommendation {
 // ── Service ───────────────────────────────────────────────────────────────────
 
 class ProgressRecommendationsService {
+  static PracticeSessionsRepository get _sessionsRepository {
+    init();
+    return sl<PracticeSessionsRepository>();
+  }
+
   /// Analyses all completed sessions for [childProfileId] and returns games
   /// that need practice (never played OR average score < 70).
   static Future<List<GameRecommendation>> getRecommendations(
       String childProfileId) async {
-    final allSessions = await PracticeSessionsService.getAllSessions();
+    final allSessions = await _sessionsRepository.getAllSessions();
 
     // Filter to this child's completed sessions
     final childSessions = allSessions
@@ -109,5 +118,39 @@ class ProgressRecommendationsService {
     });
 
     return recommendations.take(4).toList(); // top 4 recommendations
+  }
+
+  /// Returns the [GameSubject] with the lowest average score among games the
+  /// child has actually played, or null if no scored sessions exist yet.
+  static Future<GameSubject?> weakestSubject(String childProfileId) async {
+    final allSessions = await _sessionsRepository.getAllSessions();
+    final childSessions = allSessions
+        .where((s) => s.childProfileId == childProfileId && !s.isActive);
+
+    final Map<GameSubject, List<int>> scoresBySubject = {};
+    final gamesById = {for (final g in effectiveCatalogGames) g.id: g};
+
+    for (final session in childSessions) {
+      for (final gameId in session.assignedGameIds) {
+        final score = session.scoreMap[gameId];
+        final subject = gamesById[gameId]?.subject;
+        if (score != null && subject != null) {
+          scoresBySubject.putIfAbsent(subject, () => []).add(score);
+        }
+      }
+    }
+
+    if (scoresBySubject.isEmpty) return null;
+
+    GameSubject? weakest;
+    double lowestAvg = 101;
+    scoresBySubject.forEach((subject, scores) {
+      final avg = scores.reduce((a, b) => a + b) / scores.length;
+      if (avg < lowestAvg) {
+        lowestAvg = avg;
+        weakest = subject;
+      }
+    });
+    return weakest;
   }
 }

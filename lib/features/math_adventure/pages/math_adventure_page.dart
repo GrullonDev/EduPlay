@@ -1,10 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
 import 'package:provider/provider.dart';
 
-import 'package:edu_play/features/register/bloc/register_bloc.dart';
+// Project imports:
 import 'package:edu_play/features/math_adventure/bloc/math_adventure_bloc.dart';
 import 'package:edu_play/features/math_adventure/pages/math_adventure_layout.dart';
+import 'package:edu_play/features/register/bloc/register_bloc.dart';
 
 class MathAdventurePage extends StatelessWidget {
   const MathAdventurePage({

@@ -17,15 +17,57 @@ rules_version = '2';
 //
 //  leaderboard/{uid}                 — any auth reads; owner writes
 //
-//  students/{studentId}              — legacy guest/child scores (shape-validated)
+//  storeCatalog/{itemId}             — public read (guests browse the Tienda
+//                                       with no Firebase Auth session); admin
+//                                       (parents/{uid}.role == 'admin') writes
+//
+//  students/{studentId}              — legacy guest/child scores (shape-validated).
+//    Purchase-affecting fields (ownedItemIds, pendingPurchases, purchasedAt) can
+//    only change via a write that also declares `lastPurchase: {itemId, cost}`,
+//    which is then cross-checked against storeCatalog (price, PRO-only, minLevel,
+//    seasonal availability) and the buyer's subscription tier — see
+//    isValidStudentPurchaseWrite(). This is what stops a modified client from
+//    granting itself a PRO/level-locked/expired item or a discounted price: the
+//    server (not the client) is the one deciding whether the write is
+//    consistent with the trusted catalog/subscription data. Separately,
+//    preservesLinkFields() stops an unrelated authenticated user from
+//    hijacking an existing profile by rewriting parentUid/childProfileId —
+//    see that function's comment for what this does and doesn't cover.
 //    scores/{scoreId}
+//
+//  friend_codes/{code}               — shareable code → owner identity, any
+//                                       auth user may read; only owner writes
+//  friend_requests/{requestId}       — pending/accepted/rejected connections
+//                                       between two identities
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isAdmin() {
+      return request.auth != null &&
+        get(/databases/$(database)/documents/parents/$(request.auth.uid)).data.get('role', '') == 'admin';
+    }
+
     // ── Parents ───────────────────────────────────────────────────────────────
     match /parents/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // `role` is the sole gate admin_dashboard_datasource.dart checks to
+      // grant access to platform-wide stats — it must never be settable by
+      // the document's own owner. This is enforced here, server-side, so it
+      // holds even if someone calls the Firestore SDK directly from a
+      // browser console instead of going through the app's UI: registration
+      // always writes exactly 'parent' (see auth_datasource.dart), and no
+      // update may touch `role` at all. Granting admin today means editing
+      // this field directly in the Firebase Console (bypasses rules via the
+      // Admin SDK) — there is no in-app path, intentionally.
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.role == 'parent';
+
+      allow update: if request.auth != null && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
 
       match /child_profiles/{profileId} {
         allow read, write: if request.auth != null && request.auth.uid == uid;
@@ -37,6 +79,15 @@ service cloud.firestore {
         allow read:  if request.auth != null && request.auth.uid == uid;
         allow write: if false;
       }
+    }
+
+    // ── Independent students (self-registered, 15+) ────────────────────────────
+    // Role marker doc so AuthGate can route them to their own student dashboard
+    // instead of the parent/teacher dashboards. Their actual gameplay profile
+    // lives at parents/{uid}/child_profiles/{id} (uid == this uid), which is
+    // already covered by the "Parents" rule below.
+    match /independent_students/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
     // ── Teachers ──────────────────────────────────────────────────────────────
@@ -165,6 +216,18 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
+    // ── Store catalog ─────────────────────────────────────────────────────────
+    // Public read — the Tienda must render for a true guest, who has no
+    // Firebase Auth session at all (see AuthGate: unauthenticated → guest
+    // dashboard). The catalog is non-sensitive product data (names/costs/
+    // icons), so there's no confidentiality reason to gate it behind auth;
+    // only an admin may create/edit/delete items, so a manipulated client
+    // still can't invent a fake cheap/PRO-free item.
+    match /storeCatalog/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // ── Child PIN index ───────────────────────────────────────────────────────
     // Global PIN → profile lookup, readable by any authenticated user
     // (including anonymous child sessions). Write is restricted to the
@@ -182,7 +245,119 @@ service cloud.firestore {
         && resource.data.parentUid == request.auth.uid;
     }
 
+    // ── Deletion requests ────────────────────────────────────────────────────
+    // An independent student with a guardian email on file creates one of
+    // these instead of deleting their account immediately (see
+    // account_security_datasource.dart requestDeletionWithGuardianConsent).
+    // A Cloud Function (onDeletionRequestCreated) emails the guardian an
+    // approve/deny link; only the resolveDeletion Cloud Function — using the
+    // Admin SDK, which is not subject to these rules — may ever flip
+    // `status` away from 'pending'. No client, including the student who
+    // created it, can approve/deny their own request.
+    match /deletion_requests/{requestId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.uid
+        && request.resource.data.status == 'pending';
+
+      allow update, delete: if false;
+    }
+
+    // ── Orders (Recurrente payments) ─────────────────────────────────────────
+    // Top-level collection: orders/{orderId}. Written only via the Admin SDK
+    // by Cloud Functions — createRecurrenteCheckout creates it PENDING,
+    // recurrenteWebhook marks it PAID — which bypasses these rules, so the
+    // client never creates/updates it directly. It only ever reads its own
+    // order to poll status (e.g. RecurrenteCheckoutScreen's live listener).
+    match /orders/{orderId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow write: if false;
+    }
+
+    // ── Friend codes ──────────────────────────────────────────────────────────
+    // Global code → owner identity lookup, readable by any authenticated user
+    // so a friend's code can be resolved. Write is restricted to the owner,
+    // identified by the ownerUid field on the document.
+    match /friend_codes/{code} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid;
+
+      allow update, delete: if request.auth != null
+        && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ── Friend requests / connections ────────────────────────────────────────
+    // Both sides of a request are stored in participantUids so either party
+    // can read or remove it. Creation must be backed by a real friend_codes
+    // lookup (viaCode) that actually resolves to the named recipient — a
+    // client can't just target an arbitrary uid/childId. Only the recipient
+    // may accept; the sender may only cancel (reject) their own outgoing
+    // request — nobody can self-accept a request they sent.
+    function friendCode(code) {
+      return get(/databases/$(database)/documents/friend_codes/$(code)).data;
+    }
+
+    match /friend_requests/{requestId} {
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.participantUids;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.fromUid
+        && request.auth.uid in request.resource.data.participantUids
+        && request.resource.data.status == 'pending'
+        && !(request.resource.data.fromUid == request.resource.data.toUid
+             && request.resource.data.fromChildId == request.resource.data.toChildId)
+        && request.resource.data.viaCode is string
+        && friendCode(request.resource.data.viaCode).ownerUid
+             == request.resource.data.toUid
+        && friendCode(request.resource.data.viaCode).childId
+             == request.resource.data.toChildId;
+
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data)
+             .affectedKeys()
+             .hasOnly(['status', 'respondedAt'])
+        && (
+          (request.auth.uid == resource.data.toUid
+            && request.resource.data.status in ['accepted', 'rejected'])
+          ||
+          (request.auth.uid == resource.data.fromUid
+            && request.resource.data.status == 'rejected')
+        );
+
+      allow delete: if request.auth != null
+        && request.auth.uid in resource.data.participantUids;
+    }
+
     // ── Legacy student scores (guest/child, shape-validated) ──────────────────
+
+    // Notifications
+    // Users can read their own notification inbox. Friend-request notifications
+    // are created by the sender when the friend request is created, and only
+    // the recipient may mark them as read.
+    match /notifications/{notificationId} {
+      allow read: if request.auth != null
+        && request.auth.uid == resource.data.recipientUid;
+
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.senderUid
+        && request.resource.data.recipientUid is string
+        && request.resource.data.type == 'friend_request'
+        && request.resource.data.read == false;
+
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.recipientUid
+        && request.resource.data.diff(resource.data)
+             .affectedKeys()
+             .hasOnly(['read'])
+        && request.resource.data.read == true;
+
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.recipientUid;
+    }
     function isValidStudent(data) {
       return data.name is string
         && data.age is int
@@ -197,19 +372,164 @@ service cloud.firestore {
         && data.date is timestamp;
     }
 
+    // ── Purchase-write validation ──────────────────────────────────────────────
+    // See the `students/{studentId}` doc comment at the top of this file for
+    // why this exists. Every write that grows `ownedItemIds` (a completed
+    // purchase) or `pendingPurchases` (a purchase request awaiting parent
+    // approval) must also set `lastPurchase: {itemId, cost}` in the SAME write
+    // — a plain scalar map that's cheap to validate here, instead of trying to
+    // diff `ownedItemIds`/`pendingPurchases` themselves.
+    function priorOwnedItemIds() { return resource.data.get('ownedItemIds', []); }
+    function newOwnedItemIds() { return request.resource.data.get('ownedItemIds', []); }
+    function priorPendingPurchases() { return resource.data.get('pendingPurchases', {}); }
+    function newPendingPurchases() { return request.resource.data.get('pendingPurchases', {}); }
+    function declaredPurchase() { return request.resource.data.get('lastPurchase', null); }
+
+    // True for any write that doesn't touch purchase-affecting fields at all
+    // (recordScore, ensureProfile, equipAvatar, unequipAvatar) or only shrinks
+    // pendingPurchases (rejecting/approving a request never needs its own
+    // validation here beyond what isValidOwnedItemsGrowth already covers for
+    // approvals).
+    function isBenignStudentWrite() {
+      return newOwnedItemIds() == priorOwnedItemIds()
+        && newPendingPurchases().size() <= priorPendingPurchases().size();
+    }
+
+    function storeCatalogPath(itemId) {
+      return /databases/$(database)/documents/storeCatalog/$(itemId);
+    }
+
+    // Mirrors the client's own fallback (see
+    // StudentDashboardBloc._loadSubscriptionStatus): a parent-managed child
+    // profile checks its linked parent's subscription; a student playing
+    // under their own signed-in account (no parentUid) checks their own.
+    function subscriptionUid() {
+      return resource.data.get('parentUid', '') != ''
+        ? resource.data.parentUid
+        : request.auth.uid;
+    }
+
+    // Mirrors StudentRepository.levelForPoints (points ~/ 100) + 1, computed
+    // from the buyer's points *before* this write's deduction — a student
+    // can't spend points they'd only reach after cashing in the very
+    // purchase being validated.
+    function isBuyerLevelSufficient(catalogItem) {
+      return catalogItem.get('minLevel', 1) <= 1
+        || (resource.data.get('points', 0) / 100 + 1) >= catalogItem.get('minLevel', 1);
+    }
+
+    // A catalog item with no availableFrom/availableUntil is always
+    // available. Dates are stored as real Firestore Timestamps (see
+    // StoreItem.toJson) — there is no rules-language function to parse a
+    // string into a timestamp, so comparing directly is the only option.
+    function isCatalogItemAvailable(catalogItem) {
+      return (!('availableFrom' in catalogItem) || request.time >= catalogItem.availableFrom)
+        && (!('availableUntil' in catalogItem) || request.time <= catalogItem.availableUntil);
+    }
+
+    function isPurchaseCostAndProValid() {
+      return declaredPurchase() != null
+        && declaredPurchase().itemId is string
+        && declaredPurchase().cost is int
+        && exists(storeCatalogPath(declaredPurchase().itemId))
+        && get(storeCatalogPath(declaredPurchase().itemId)).data.cost == declaredPurchase().cost
+        && isBuyerLevelSufficient(get(storeCatalogPath(declaredPurchase().itemId)).data)
+        && isCatalogItemAvailable(get(storeCatalogPath(declaredPurchase().itemId)).data)
+        && (
+          get(storeCatalogPath(declaredPurchase().itemId)).data.get('isProOnly', false) != true
+          || (
+            exists(/databases/$(database)/documents/subscriptions/$(subscriptionUid()))
+            && get(/databases/$(database)/documents/subscriptions/$(subscriptionUid())).data.get('tier', 'free') == 'pro'
+          )
+        );
+    }
+
+    // A completed purchase (direct buy, or a parent approving a pending one):
+    // ownedItemIds must grow by exactly the declared item, its price must
+    // match the trusted catalog, PRO-only items require a 'pro' subscription
+    // on the buyer's linked parent, and points must decrease by exactly cost.
+    function isValidOwnedItemsGrowth() {
+      return declaredPurchase() != null
+        && newOwnedItemIds().size() == priorOwnedItemIds().size() + 1
+        && newOwnedItemIds().hasAll([declaredPurchase().itemId])
+        && !priorOwnedItemIds().hasAny([declaredPurchase().itemId])
+        && isPurchaseCostAndProValid()
+        && (resource.data.get('points', 0) - request.resource.data.points) == declaredPurchase().cost;
+    }
+
+    // A new "requires approval" purchase request: pendingPurchases grows by
+    // exactly one entry, and it must already satisfy the same price/PRO
+    // checks — otherwise a manipulated client could park a fraudulent price
+    // for a parent to unknowingly approve later.
+    function isValidPendingGrowth() {
+      return declaredPurchase() != null
+        && newPendingPurchases().size() == priorPendingPurchases().size() + 1
+        && newPendingPurchases().get(declaredPurchase().itemId, -1) == declaredPurchase().cost
+        && isPurchaseCostAndProValid();
+    }
+
+    function isValidStudentPurchaseWrite() {
+      return isBenignStudentWrite()
+        || isValidOwnedItemsGrowth()
+        || isValidPendingGrowth();
+    }
+
+    // Once a profile has been linked to a parent (parentUid set) or its
+    // childProfileId recorded, neither can be silently changed by a later
+    // write. This is the concrete, testable slice of "only the linked
+    // student/parent can modify this doc" that's actually enforceable here:
+    // gameplay writes (points/streak/purchases) still come from whichever
+    // authenticated session is currently playing — including a second
+    // device using a parent-shared PIN/link, which is a deliberately
+    // supported flow (see StudentDashboardPage._resolveEntry) and has no
+    // stable per-device identity to lock to without minting a custom auth
+    // claim after PIN verification (a bigger, Cloud-Functions-based change,
+    // out of scope here). What this DOES stop is a completely unrelated
+    // authenticated user hijacking an existing profile by rewriting
+    // parentUid to point at their own account.
+    function preservesLinkFields() {
+      return (!('parentUid' in resource.data) || request.resource.data.get('parentUid', null) == resource.data.parentUid)
+        && (!('childProfileId' in resource.data) || request.resource.data.get('childProfileId', null) == resource.data.childProfileId);
+    }
+
     // Require auth (including anonymous) so unauthenticated crawlers cannot
     // enumerate student records. Anonymous Firebase auth is always present for
     // signed-in child sessions, so this is not a barrier for the app.
     match /students/{studentId} {
       allow read: if request.auth != null;
-      allow create, update: if request.auth != null
+      allow create: if request.auth != null
         && isValidStudent(request.resource.data);
-      allow delete: if false;
+      allow update: if request.auth != null
+        && isValidStudent(request.resource.data)
+        && isValidStudentPurchaseWrite()
+        && preservesLinkFields();
+      // `studentId` is always the same id as the owning
+      // parents/{uid}/child_profiles/{studentId} doc (see addProfile in
+      // child_profiles_datasource.dart) — only that child's own parent may
+      // delete it, e.g. when deleting their account (account_security_
+      // datasource.dart), which otherwise left this gameplay record
+      // (points/streak/score history) orphaned behind a deleted profile.
+      allow delete: if request.auth != null
+        && exists(/databases/$(database)/documents/parents/$(request.auth.uid)/child_profiles/$(studentId));
 
       match /scores/{scoreId} {
         allow read: if request.auth != null;
         allow create: if request.auth != null
           && isValidScore(request.resource.data);
+        allow update: if false;
+        allow delete: if request.auth != null
+          && exists(/databases/$(database)/documents/parents/$(request.auth.uid)/child_profiles/$(studentId));
+      }
+
+      // Spending-history ledger, written alongside a completed purchase (see
+      // purchaseItem/approvePendingPurchase). Append-only — the cost/price
+      // integrity check already happened on the parent `students/{studentId}`
+      // write in the same transaction, so this just needs a sane shape.
+      match /transactions/{transactionId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null
+          && request.resource.data.itemId is string
+          && request.resource.data.cost is int;
         allow update, delete: if false;
       }
     }

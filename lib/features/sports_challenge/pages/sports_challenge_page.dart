@@ -1,11 +1,21 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:math';
 
-import 'package:edu_play/data/repositories/student_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
-import 'package:edu_play/utils/routes/router_paths.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
+
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
+import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
+import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 class SportsChallengePage extends StatefulWidget {
   const SportsChallengePage({super.key});
@@ -46,6 +56,16 @@ class _SportsChallengePageState extends State<SportsChallengePage>
   bool _isItemVisible = false;
   bool _isGameActive = false;
   bool _isRedCard = false; // "Bomb" type item
+
+  // Mistake counters kept for the end-of-game educational summary — a
+  // reflex game like this one is too fast to interrupt with a modal on
+  // every single miss without breaking the pace.
+  int _penaltyCount = 0;
+  int _missedBalls = 0;
+
+  /// Per-skill correct/total tally for this session, sent alongside the
+  /// score when the round ends.
+  final SkillTracker skillTracker = SkillTracker();
 
   // Animation
   late AnimationController _scaleController;
@@ -145,7 +165,7 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton(
-                      onPressed: _startGame,
+                      onPressed: _onStartPressed,
                       style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 50, vertical: 20),
@@ -226,13 +246,28 @@ class _SportsChallengePageState extends State<SportsChallengePage>
         CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut);
   }
 
-  void _endGame() {
+  Future<void> _onStartPressed() async {
+    await showGameObjectiveIntro(
+      context,
+      gameTitle: 'Desafío Deportivo',
+      objective:
+          'Vas a poner a prueba tus reflejos y tu coordinación mano-ojo: toca los balones apenas aparezcan y evita las tarjetas rojas. Entre más rápido reacciones, más veloz se vuelve el juego.',
+      difficultyLabel: 'Principiante',
+    );
+    if (!mounted) return;
+    _startGame();
+  }
+
+  Future<void> _endGame() async {
     _gameTimer?.cancel();
     _spawnTimer?.cancel();
     _scaleController.stop();
 
     // Capture before setState so the dialog builder always sees the real value
     final finalScore = _score;
+    final finalSkills = skillTracker.tallies;
+    final penalties = _penaltyCount;
+    final missed = _missedBalls;
 
     setState(() {
       _isGameActive = false;
@@ -243,7 +278,25 @@ class _SportsChallengePageState extends State<SportsChallengePage>
       subjectKey: 'sports',
       gameTitle: 'Desafío Deportivo',
       score: finalScore,
+      skills: finalSkills,
+      gameRoute: '/sports-challenge',
     );
+
+    // A whack-a-mole round is too fast to explain every miss live, so the
+    // educational feedback is a single summary shown once the round ends.
+    final hasMistakes = penalties > 0 || missed > 0;
+    await showAnswerExplanation(
+      context,
+      isCorrect: !hasMistakes,
+      correctAnswerText: hasMistakes
+          ? 'Fíjate bien antes de tocar: solo el balón cuenta como gol; la tarjeta roja te resta tiempo.'
+          : '¡Reaccionaste a tiempo y evitaste todas las tarjetas rojas!',
+      explanation: hasMistakes
+          ? 'Tocaste $penalties tarjeta(s) roja(s) y dejaste pasar $missed balón(es) sin tocar. Para mejorar, mantén la vista fija en el centro de la cancha y reacciona apenas veas el balón, sin tocar lo rojo.'
+          : 'Mantuviste la concentración durante todo el reto: tocaste los balones a tiempo y no caíste en ninguna tarjeta roja. Así se entrena la coordinación mano-ojo.',
+      skillLabel: skillByKey('reflejos').label,
+    );
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -304,12 +357,9 @@ class _SportsChallengePageState extends State<SportsChallengePage>
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              Navigator.pop(ctx);
-                              Navigator.pushNamedAndRemoveUntil(
-                                context,
-                                RouterPaths.childPortal,
-                                (route) => false,
-                              );
+                              Navigator.pop(ctx); // dismiss game-over dialog
+                              StudentSessionNavigationService
+                                  .returnAfterGameOver(context);
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF1E1B6A),
@@ -371,7 +421,9 @@ class _SportsChallengePageState extends State<SportsChallengePage>
     if (!_isItemVisible) return;
 
     if (_isRedCard) {
-      // Penalty!
+      // Penalty! Touching a red card is the "wrong item" mistake.
+      skillTracker.record('reflejos', correct: false);
+      _penaltyCount++;
       setState(() {
         _timeLeft = max(0, _timeLeft - 5);
         _isItemVisible = false;
@@ -382,7 +434,8 @@ class _SportsChallengePageState extends State<SportsChallengePage>
           backgroundColor: Colors.red,
           duration: Duration(milliseconds: 500)));
     } else {
-      // Goal!
+      // Goal! Tapped the ball in time.
+      skillTracker.record('reflejos', correct: true);
       setState(() {
         _score++;
         _isItemVisible = false;
@@ -417,7 +470,13 @@ class _SportsChallengePageState extends State<SportsChallengePage>
     _spawnTimer?.cancel();
     _spawnTimer = Timer(Duration(milliseconds: duration), () {
       if (_isItemVisible && _isGameActive) {
-        // Missed it
+        // Timed out without a tap: letting a ball go is a missed reflex,
+        // but letting a red card go untouched is the *correct* call.
+        final wasRedCard = _isRedCard;
+        skillTracker.record('reflejos', correct: wasRedCard);
+        if (!wasRedCard) {
+          _missedBalls++;
+        }
         _hideItem();
       }
     });
@@ -429,6 +488,9 @@ class _SportsChallengePageState extends State<SportsChallengePage>
       _timeLeft = 30;
       _isGameActive = true;
       _isItemVisible = false;
+      _penaltyCount = 0;
+      _missedBalls = 0;
+      skillTracker.reset();
     });
 
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {

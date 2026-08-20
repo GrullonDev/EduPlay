@@ -1,9 +1,16 @@
+// Dart imports:
 import 'dart:math' show sin, pi;
-import 'package:firebase_auth/firebase_auth.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -70,17 +77,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
       _error = false;
     });
 
-    // Children have no Firebase account. Sign in anonymously so Firestore
-    // Security Rules allow reading active sessions and writing game scores.
-    // If the parent happens to be on the same device we keep their session.
-    final auth = FirebaseAuth.instance;
-    if (auth.currentUser == null) {
-      try {
-        await auth.signInAnonymously();
-      } catch (_) {
-        // Proceed anyway — the query may still work if rules allow public reads.
-      }
-    }
+    await sl<AuthRepository>().ensureAnonymousAuth();
 
     final session = await PracticeSessionsService.findByPin(pin);
     if (!mounted) return;
@@ -160,7 +157,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Practice Session',
+                'Sesión de Práctica',
                 style: GoogleFonts.nunito(
                   color: Colors.white70,
                   fontSize: 12,
@@ -192,7 +189,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
               ),
               const SizedBox(height: 20),
               Text(
-                'Enter Session PIN',
+                'Ingresa el PIN de la Sesión',
                 style: GoogleFonts.fredoka(
                   fontSize: 28,
                   color: Colors.white,
@@ -201,7 +198,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
               ),
               const SizedBox(height: 8),
               Text(
-                'Your parent shared a 6-digit PIN\nto start your practice session',
+                'Tu papá o mamá compartió un PIN de 6 dígitos\npara comenzar tu sesión de práctica',
                 style: GoogleFonts.nunito(
                   color: Colors.white60,
                   fontSize: 14,
@@ -263,7 +260,7 @@ class _SessionEntryPageState extends State<SessionEntryPage>
                 opacity: _error ? 1 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: Text(
-                  'Invalid PIN — please try again',
+                  'PIN inválido — inténtalo de nuevo',
                   style: GoogleFonts.nunito(
                     color: const Color(0xFFFF6E6C),
                     fontWeight: FontWeight.w700,

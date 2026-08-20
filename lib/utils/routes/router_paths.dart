@@ -11,7 +11,9 @@ class RouterPaths {
   static const funEnglish = '/fun-english';
   static const notFound = '/not-found';
   static const String guestEntry = 'guestEntry';
-  static const String studentDashboard = 'studentDashboard';
+  static const String studentDashboard = '/student-dashboard';
+  static const String legacyStudentDashboard = 'studentDashboard';
+  static const String legacySlashStudentDashboard = '/studentDashboard';
   static const String parentsDashboard = 'parentsDashboard';
   static const String teacherDashboard = 'teacherDashboard';
   static const natureExplorers = '/nature-explorers';
@@ -20,9 +22,11 @@ class RouterPaths {
   static const artistsInAction = '/artists-in-action';
   static const colorConcert = '/color-concert';
   static const sportsChallenge = '/sports-challenge';
-  static const stickerAlbum = '/sticker-album';
   static const gamesCatalog = '/games-catalog';
+  static const numberNinja = '/number-ninja';
   static const childPin = '/child-pin';
+  static const ageGate = '/age-gate';
+  static const registerStudent = '/register-student';
   static const parentGuide = '/parent-guide';
   static const settings = '/settings';
   static const progressReports = '/progress-reports';
@@ -36,4 +40,7 @@ class RouterPaths {
   static const privacyPolicy = '/privacy-policy';
   static const termsOfService = '/terms-of-service';
   static const browseTeachers = '/browse-teachers';
+  static const friends = '/friends';
+  static const streakRecoveryQuiz = '/streak-recovery';
+  static const independentStudentAccount = '/my-account';
 }

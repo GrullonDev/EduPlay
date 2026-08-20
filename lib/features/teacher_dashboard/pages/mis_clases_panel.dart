@@ -1,21 +1,27 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/teacher_dashboard/services/teacher_classes_service.dart';
-
-// ── Palette ───────────────────────────────────────────────────────────────────
+// Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kCoral = Color(0xFFFF6E6C);
 const _kLavender = Color(0xFFEEEDF8);
 
-// ── Entry point ───────────────────────────────────────────────────────────────
-
 class MisClasesPanel extends StatelessWidget {
-  const MisClasesPanel({super.key});
+  const MisClasesPanel({super.key, this.onViewRoster});
+
+  final VoidCallback? onViewRoster;
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +63,16 @@ class MisClasesPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          Text(
+            'Gestiona tus grupos y comparte el código de invitación.',
+            style: GoogleFonts.nunito(fontSize: 13, color: Colors.grey[500]),
+          ),
+          const SizedBox(height: 20),
 
           // ── Class list ────────────────────────────────────────────────────
           Expanded(
             child: StreamBuilder<List<TeacherClass>>(
-              stream: TeacherClassesService.watchMyClasses(),
+              stream: sl<TeacherClassesRepository>().watchMyClasses(),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -76,9 +86,20 @@ class MisClasesPanel extends StatelessWidget {
                     onTap: () => _showCreateDialog(context),
                   );
                 }
-                return wide
-                    ? _ClassGrid(classes: classes)
-                    : _ClassList(classes: classes);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ClassStatsRow(classes: classes, wide: wide),
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: wide
+                          ? _ClassGrid(
+                              classes: classes, onViewRoster: onViewRoster)
+                          : _ClassList(
+                              classes: classes, onViewRoster: onViewRoster),
+                    ),
+                  ],
+                );
               },
             ),
           ),
@@ -95,11 +116,138 @@ class MisClasesPanel extends StatelessWidget {
   }
 }
 
-// ── Grid (desktop) ────────────────────────────────────────────────────────────
+class _ClassStatsRow extends StatelessWidget {
+  const _ClassStatsRow({required this.classes, required this.wide});
+
+  final List<TeacherClass> classes;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final totalStudents =
+        classes.fold<int>(0, (sum, c) => sum + c.studentCount);
+    final publicCount = classes.where((c) => c.isPublic).length;
+
+    final cards = [
+      _MiniStatCardData(
+        label: 'Total Alumnos',
+        value: '$totalStudents',
+        icon: Icons.groups_rounded,
+        color: const Color(0xFF3B82F6),
+        bg: const Color(0xFFDBEAFE),
+      ),
+      _MiniStatCardData(
+        label: 'Total Clases',
+        value: '${classes.length}',
+        icon: Icons.school_rounded,
+        color: const Color(0xFF16A34A),
+        bg: const Color(0xFFD5F5E3),
+      ),
+      _MiniStatCardData(
+        label: 'Clases Públicas',
+        value: '$publicCount',
+        icon: Icons.public_rounded,
+        color: const Color(0xFFD97706),
+        bg: const Color(0xFFFEF3C7),
+      ),
+    ];
+
+    if (!wide) {
+      return Column(
+        children: cards
+            .map((d) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _MiniStatCard(data: d),
+                ))
+            .toList(),
+      );
+    }
+    return Row(
+      children: cards
+          .map((d) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 16),
+                  child: _MiniStatCard(data: d),
+                ),
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _MiniStatCardData {
+  const _MiniStatCardData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.bg,
+  });
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final Color bg;
+}
+
+class _MiniStatCard extends StatelessWidget {
+  const _MiniStatCard({required this.data});
+  final _MiniStatCardData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _kNavy.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: data.bg,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(data.icon, color: data.color, size: 21),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(data.value,
+                    style: GoogleFonts.fredoka(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: _kNavy)),
+                Text(data.label,
+                    style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _ClassGrid extends StatelessWidget {
-  const _ClassGrid({required this.classes});
+  const _ClassGrid({required this.classes, this.onViewRoster});
   final List<TeacherClass> classes;
+  final VoidCallback? onViewRoster;
 
   @override
   Widget build(BuildContext context) {
@@ -108,29 +256,30 @@ class _ClassGrid extends StatelessWidget {
         maxCrossAxisExtent: 340,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.1,
+        childAspectRatio: 0.72,
       ),
       itemCount: classes.length,
-      itemBuilder: (_, i) => _ClassCard(tc: classes[i]),
+      itemBuilder: (_, i) =>
+          _ClassCard(tc: classes[i], onViewRoster: onViewRoster),
     );
   }
 }
 
 class _ClassList extends StatelessWidget {
-  const _ClassList({required this.classes});
+  const _ClassList({required this.classes, this.onViewRoster});
   final List<TeacherClass> classes;
+  final VoidCallback? onViewRoster;
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: classes.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _ClassCard(tc: classes[i]),
+      itemBuilder: (_, i) =>
+          _ClassCard(tc: classes[i], onViewRoster: onViewRoster),
     );
   }
 }
-
-// ── Class card ────────────────────────────────────────────────────────────────
 
 const _kLevelColors = [
   Color(0xFFE11D48),
@@ -141,8 +290,9 @@ const _kLevelColors = [
 ];
 
 class _ClassCard extends StatefulWidget {
-  const _ClassCard({required this.tc});
+  const _ClassCard({required this.tc, this.onViewRoster});
   final TeacherClass tc;
+  final VoidCallback? onViewRoster;
 
   @override
   State<_ClassCard> createState() => _ClassCardState();
@@ -157,10 +307,8 @@ class _ClassCardState extends State<_ClassCard> {
   }
 
   String get _inviteUrl {
-    if (!kIsWeb) {
-      return 'http://localhost:3000/#/join-class?code=${widget.tc.joinCode}';
-    }
-    return '${Uri.base.origin}/#/join-class?code=${widget.tc.joinCode}';
+    final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
+    return '$origin/#/join-class?code=${widget.tc.joinCode}';
   }
 
   Future<void> _copyLink() async {
@@ -186,262 +334,280 @@ class _ClassCardState extends State<_ClassCard> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Level badge + actions
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _accentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  tc.gradeLevel,
-                  style: GoogleFonts.nunito(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: _accentColor,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert_rounded,
-                    size: 18, color: Colors.grey),
-                onSelected: (v) async {
-                  if (v == 'delete') {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text('Eliminar clase',
-                            style: GoogleFonts.fredoka(
-                                color: _kCoral, fontSize: 18)),
-                        content: Text(
-                          '¿Eliminar "${tc.name}"? Esta acción no se puede deshacer.',
-                          style: GoogleFonts.nunito(fontSize: 14),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancelar'),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: _kCoral),
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text('Eliminar',
-                                style: GoogleFonts.nunito(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed == true) {
-                      await TeacherClassesService.deleteClass(tc.id);
-                    }
-                  }
-                },
-                itemBuilder: (_) => [
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete_outline_rounded,
-                            size: 16, color: _kCoral),
-                        const SizedBox(width: 8),
-                        Text('Eliminar',
-                            style: GoogleFonts.nunito(color: _kCoral)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Name
-          Text(
-            tc.name,
-            style: GoogleFonts.fredoka(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: _kNavy,
-            ),
-          ),
-          Text(
-            tc.subject,
-            style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
-          ),
-
-          const Spacer(),
-
-          // Stats row
-          Row(
-            children: [
-              const Icon(Icons.people_outline_rounded,
-                  size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                '${tc.studentCount} alumnos',
-                style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(width: 10),
-              const Icon(Icons.cake_outlined, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                tc.ageRangeLabel,
-                style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
-              if (tc.isPublic)
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
+                    color: _accentColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.public_rounded,
-                          size: 10, color: Color(0xFF2E7D32)),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Pública',
-                        style: GoogleFonts.nunito(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2E7D32)),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Join code + copy link
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: _kLavender,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Código: ',
-                  style:
-                      GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
-                ),
-                Text(
-                  tc.joinCode,
-                  style: GoogleFonts.fredoka(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: _kNavy,
-                    letterSpacing: 2,
+                  child: Text(
+                    tc.gradeLevel,
+                    style: GoogleFonts.nunito(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: _accentColor,
+                    ),
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
-                  onTap: _copyLink,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 200),
-                    child: _codeCopied
-                        ? const Icon(Icons.check_rounded,
-                            key: ValueKey('check'),
-                            size: 18,
-                            color: Color(0xFF27AE60))
-                        : const Icon(Icons.copy_rounded,
-                            key: ValueKey('copy'), size: 18, color: _kNavy),
-                  ),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert_rounded,
+                      size: 18, color: Colors.grey),
+                  onSelected: (v) async {
+                    if (v == 'delete') {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: Text('Eliminar clase',
+                              style: GoogleFonts.fredoka(
+                                  color: _kCoral, fontSize: 18)),
+                          content: Text(
+                            '¿Eliminar "${tc.name}"? Esta acción no se puede deshacer.',
+                            style: GoogleFonts.nunito(fontSize: 14),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancelar'),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: _kCoral),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text('Eliminar',
+                                  style:
+                                      GoogleFonts.nunito(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await sl<TeacherClassesRepository>().deleteClass(tc.id);
+                      }
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_outline_rounded,
+                              size: 16, color: _kCoral),
+                          const SizedBox(width: 8),
+                          Text('Eliminar',
+                              style: GoogleFonts.nunito(color: _kCoral)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder<List<ClassMember>>(
-            future: TeacherClassesService.getMembers(tc.id),
-            builder: (context, snapshot) {
-              final members = snapshot.data ?? const <ClassMember>[];
-              if (members.isEmpty) {
-                return Text(
-                  'Aún no hay alumnos en esta clase.',
-                  style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                );
-              }
+            const SizedBox(height: 12),
 
-              final visible = members.take(3).toList();
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Alumnos a cargo',
-                    style: GoogleFonts.nunito(
+            // Name
+            Text(
+              tc.name,
+              style: GoogleFonts.fredoka(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _kNavy,
+              ),
+            ),
+            Text(
+              tc.subject,
+              style: GoogleFonts.nunito(fontSize: 12, color: Colors.grey[500]),
+            ),
+
+            const SizedBox(height: 14),
+
+            Row(
+              children: [
+                const Icon(Icons.people_outline_rounded,
+                    size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  '${tc.studentCount} alumnos',
+                  style: GoogleFonts.nunito(
                       fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: _kNavy,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 10),
+                const Icon(Icons.cake_outlined, size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  tc.ageRangeLabel,
+                  style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600),
+                ),
+                const Spacer(),
+                if (tc.isPublic)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.public_rounded,
+                            size: 10, color: Color(0xFF2E7D32)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Pública',
+                          style: GoogleFonts.nunito(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF2E7D32)),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final member in visible)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _accentColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _kLavender,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'Código: ',
+                    style: GoogleFonts.nunito(
+                        fontSize: 12, color: Colors.grey[500]),
+                  ),
+                  Text(
+                    tc.joinCode,
+                    style: GoogleFonts.fredoka(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _kNavy,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: _copyLink,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: _codeCopied
+                          ? const Icon(Icons.check_rounded,
+                              key: ValueKey('check'),
+                              size: 18,
+                              color: Color(0xFF27AE60))
+                          : const Icon(Icons.copy_rounded,
+                              key: ValueKey('copy'), size: 18, color: _kNavy),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            FutureBuilder<List<ClassMember>>(
+              future: sl<TeacherClassesRepository>().getMembers(tc.id),
+              builder: (context, snapshot) {
+                final members = snapshot.data ?? const <ClassMember>[];
+                if (members.isEmpty) {
+                  return Text(
+                    'Aún no hay alumnos en esta clase.',
+                    style: GoogleFonts.nunito(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
+                  );
+                }
+
+                final visible = members.take(3).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Alumnos a cargo',
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: _kNavy,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final member in visible)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _accentColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              member.displayName,
+                              style: GoogleFonts.nunito(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _accentColor,
+                              ),
+                            ),
                           ),
-                          child: Text(
-                            member.displayName,
+                        if (members.length > visible.length)
+                          Text(
+                            '+${members.length - visible.length} más',
                             style: GoogleFonts.nunito(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: _accentColor,
+                              color: Colors.grey[500],
                             ),
                           ),
-                        ),
-                      if (members.length > visible.length)
-                        Text(
-                          '+${members.length - visible.length} más',
-                          style: GoogleFonts.nunito(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.grey[500],
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
+            if (widget.onViewRoster != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: widget.onViewRoster,
+                  icon: const Icon(Icons.school_rounded, size: 15),
+                  label: Text('Ver alumnos',
+                      style: GoogleFonts.nunito(
+                          fontSize: 12, fontWeight: FontWeight.w700)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _kNavy,
+                    side: BorderSide(color: Colors.grey.shade200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
-                ],
-              );
-            },
-          ),
-        ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
-
-// ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyClasses extends StatelessWidget {
   const _EmptyClasses({required this.onTap});
@@ -489,8 +655,6 @@ class _EmptyClasses extends StatelessWidget {
     );
   }
 }
-
-// ── Create class dialog ───────────────────────────────────────────────────────
 
 const _kGradeLevels = [
   'Preescolar',
@@ -546,7 +710,7 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
     });
 
     try {
-      final tc = await TeacherClassesService.createClass(
+      final tc = await sl<TeacherClassesRepository>().createClass(
         name: _nameCtrl.text.trim(),
         subject: _subjectCtrl.text.trim().isEmpty
             ? 'General'
@@ -600,7 +764,6 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                   ctrl: _subjectCtrl,
                   hint: 'Ej: Matemáticas, Lengua…'),
               const SizedBox(height: 14),
-              // ── Age range ─────────────────────────────────────────────────
               Text(
                 'Rango de edad de los alumnos',
                 style: GoogleFonts.nunito(
@@ -643,7 +806,6 @@ class _CreateClassDialogState extends State<_CreateClassDialog> {
                 ),
               ),
               const SizedBox(height: 8),
-              // ── Visibility toggle ─────────────────────────────────────────
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -774,10 +936,8 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
   bool _copied = false;
 
   String get _inviteUrl {
-    if (!kIsWeb) {
-      return 'http://localhost:3000/#/join-class?code=${widget.tc.joinCode}';
-    }
-    return '${Uri.base.origin}/#/join-class?code=${widget.tc.joinCode}';
+    final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
+    return '$origin/#/join-class?code=${widget.tc.joinCode}';
   }
 
   Future<void> _copy() async {

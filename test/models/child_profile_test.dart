@@ -1,5 +1,8 @@
-import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
+// Package imports:
 import 'package:flutter_test/flutter_test.dart';
+
+// Project imports:
+import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
 void main() {
   group('ChildProfile.generatePin', () {

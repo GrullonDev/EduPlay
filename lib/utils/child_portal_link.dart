@@ -1,29 +1,23 @@
+// Dart imports:
 import 'dart:convert';
+
+// Flutter imports:
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+// Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
 import 'package:edu_play/features/parents_dashboard/models/child_profile.dart';
 
-/// Generates the shareable child-portal URL for [profile].
-///
-/// The profile data is base64url-encoded and embedded as the `d=` query
-/// parameter so the child portal can render immediately — without any
-/// Firestore query or Firebase authentication — on any device.
-///
-/// Format: `{origin}/#/child-portal?pin={pin}&d={base64Profile}`
 String childPortalUrl(ChildProfile profile) {
-  final origin = kIsWeb ? Uri.base.origin : 'http://localhost:3000';
+  final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
   final encoded = base64Url.encode(utf8.encode(jsonEncode(profile.toJson())));
-  return '$origin/#/child-portal?pin=${profile.pin}&d=$encoded';
+  return '$origin/#/student-dashboard?pin=${profile.pin}&d=$encoded';
 }
 
-/// Parses a [ChildProfile] from the `d=` query parameter embedded in the
-/// current page URL (Flutter web hash routing).
-///
-/// Returns `null` if the parameter is absent or the data cannot be decoded.
 ChildProfile? childProfileFromUrl() {
   if (!kIsWeb) return null;
   try {
-    final fragment = Uri.base.fragment; // e.g. "/child-portal?pin=1234&d=..."
+    final fragment = Uri.base.fragment;
     final qIdx = fragment.indexOf('?');
     if (qIdx == -1) return null;
     final params = Uri.splitQueryString(fragment.substring(qIdx + 1));
@@ -37,7 +31,6 @@ ChildProfile? childProfileFromUrl() {
   }
 }
 
-/// Parses just the PIN from the current URL fragment.
 String? pinFromUrl() {
   if (!kIsWeb) return null;
   try {

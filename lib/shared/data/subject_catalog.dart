@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// A school subject, used to classify games and challenges across both
@@ -66,6 +69,12 @@ const List<Subject> subjectCatalog = [
     icon: Icons.sports_soccer_rounded,
     color: Color(0xFF795548),
   ),
+  Subject(
+    key: 'art',
+    label: 'Arte',
+    icon: Icons.palette_rounded,
+    color: Color(0xFFE91E63),
+  ),
 ];
 
 Subject subjectByKey(String key) => subjectCatalog.firstWhere(
@@ -84,4 +93,5 @@ const Map<String, String> subjectGameRoutes = {
   'logic': RouterPaths.treasureMap,
   'music': RouterPaths.colorConcert,
   'sports': RouterPaths.sportsChallenge,
+  'art': RouterPaths.artistsInAction,
 };

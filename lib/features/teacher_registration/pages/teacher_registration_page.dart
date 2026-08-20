@@ -1,9 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/features/teacher_registration/domain/repositories/teacher_registration_repository.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -60,31 +65,13 @@ class _TeacherRegistrationPageState extends State<TeacherRegistrationPage> {
     });
 
     try {
-      // 1 — Create Firebase Auth account
-      final credential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await sl<TeacherRegistrationRepository>().registerTeacher(
+        firstName: _firstNameCtrl.text.trim(),
+        lastName: _lastNameCtrl.text.trim(),
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
+        schoolName: _schoolCtrl.text.trim(),
       );
-
-      final user = credential.user;
-      if (user == null) throw Exception('No user returned');
-
-      // 2 — Write teacher document so AuthGate can resolve role
-      await FirebaseFirestore.instance
-          .collection('teachers')
-          .doc(user.uid)
-          .set({
-        'firstName': _firstNameCtrl.text.trim(),
-        'lastName': _lastNameCtrl.text.trim(),
-        'email': _emailCtrl.text.trim(),
-        'schoolName': _schoolCtrl.text.trim(),
-        'role': 'teacher',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      // Send verification email immediately after account creation.
-      await user.sendEmailVerification();
 
       if (!mounted) return;
 

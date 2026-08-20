@@ -1,8 +1,13 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -211,6 +216,7 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
   final _newsletterEmailCtrl = TextEditingController();
   bool _subscribed = false;
   final Set<String> _bookmarked = {};
+  String _parentName = 'Mamá';
 
   static const _filters = [
     'Todo',
@@ -223,6 +229,13 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
   void initState() {
     super.initState();
     _searchCtrl.addListener(() => setState(() {}));
+    _loadParentName();
+  }
+
+  Future<void> _loadParentName() async {
+    final name = await ChildProfilesService.getParentName();
+    if (!mounted) return;
+    setState(() => _parentName = name);
   }
 
   @override
@@ -328,7 +341,8 @@ class _ParentGuidePageState extends State<ParentGuidePage> {
       backgroundColor: _kBg,
       body: Column(
         children: [
-          const EduPlayNavBar.parent(activeParentTab: ParentTab.recursos),
+          EduPlayNavBar.parent(
+              activeParentTab: ParentTab.recursos, parentName: _parentName),
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollCtrl,

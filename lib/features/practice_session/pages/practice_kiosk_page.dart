@@ -1,21 +1,28 @@
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
-import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
-import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
-import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
-import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
-import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/artists_in_action/pages/artists_in_action_page.dart';
 import 'package:edu_play/features/color_concert/pages/color_concert_page.dart';
-import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
-import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
-
+import 'package:edu_play/features/fun_english/pages/fun_english_page.dart';
+import 'package:edu_play/features/magic_words/pages/magic_words_page.dart';
+import 'package:edu_play/features/math_adventure/pages/math_adventure_page.dart';
+import 'package:edu_play/features/nature_explorers/pages/nature_explorers_page.dart';
 import 'package:edu_play/features/practice_session/models/game_info.dart';
 import 'package:edu_play/features/practice_session/models/practice_session.dart';
 import 'package:edu_play/features/practice_session/services/practice_sessions_service.dart';
+import 'package:edu_play/features/sports_challenge/pages/sports_challenge_page.dart';
+import 'package:edu_play/features/sticker_album/models/sticker.dart';
+import 'package:edu_play/features/sticker_album/pages/sticker_album_page.dart';
+import 'package:edu_play/features/time_travel/pages/time_travel_page.dart';
+import 'package:edu_play/features/treasure_map/pages/treasure_map_page.dart';
+import 'package:edu_play/l10n/app_localizations.dart';
+import 'package:edu_play/utils/injection_container.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -111,7 +118,7 @@ class _PracticeKioskPageState extends State<PracticeKioskPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Your Games',
+                                AppLocalizations.of(context)!.kioskYourGames,
                                 style: GoogleFonts.fredoka(
                                   fontSize: 22,
                                   color: _kNavy,
@@ -120,7 +127,8 @@ class _PracticeKioskPageState extends State<PracticeKioskPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Complete all games to finish your session!',
+                                AppLocalizations.of(context)!
+                                    .kioskCompleteAllGames,
                                 style: GoogleFonts.nunito(
                                   color: Colors.grey.shade600,
                                   fontSize: 14,
@@ -159,7 +167,7 @@ class _PracticeKioskPageState extends State<PracticeKioskPage> {
 
   Widget _noGamesFound() => Center(
         child: Text(
-          'No games found for this session.',
+          AppLocalizations.of(context)!.kioskNoGamesFound,
           style: GoogleFonts.nunito(color: Colors.grey),
         ),
       );
@@ -191,7 +199,7 @@ class _TopBar extends StatelessWidget {
               color: _kCoral.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Text('Practice Mode',
+            child: Text(AppLocalizations.of(context)!.kioskPracticeMode,
                 style: GoogleFonts.nunito(
                     color: Colors.white,
                     fontSize: 11,
@@ -245,7 +253,8 @@ class _ProgressBanner extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '${session.completedCount} of ${session.totalCount} games completed',
+                      AppLocalizations.of(context)!.kioskProgressLabel(
+                          session.completedCount, session.totalCount),
                       style: GoogleFonts.nunito(
                           color: Colors.white70, fontSize: 12),
                     ),
@@ -351,7 +360,7 @@ class _KioskGameCard extends StatelessWidget {
                           const Icon(Icons.check_rounded,
                               size: 11, color: Color(0xFF27AE60)),
                           const SizedBox(width: 3),
-                          Text('Done',
+                          Text(AppLocalizations.of(context)!.kioskDone,
                               style: GoogleFonts.nunito(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
@@ -375,7 +384,7 @@ class _KioskGameCard extends StatelessWidget {
               const Spacer(),
               if (completed && score != null)
                 Text(
-                  'Score: $score',
+                  AppLocalizations.of(context)!.kioskScoreLabel(score!),
                   style: GoogleFonts.nunito(
                       fontSize: 11,
                       color: const Color(0xFF27AE60),
@@ -394,7 +403,7 @@ class _KioskGameCard extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      'Play',
+                      AppLocalizations.of(context)!.kioskPlay,
                       style: GoogleFonts.fredoka(
                           color: Colors.white,
                           fontSize: 14,
@@ -481,11 +490,12 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
       case 'sports-challenge':
         return const SportsChallengePage();
       case 'sticker-album':
-        return const StickerAlbumPage();
+        return _StickerAlbumKioskEntry(
+            childProfileId: widget.session.childProfileId);
       default:
         return Center(
           child: Text(
-            'Game not found: ${widget.game.id}',
+            AppLocalizations.of(context)!.kioskGameNotFound(widget.game.id),
             style: GoogleFonts.nunito(color: Colors.red),
           ),
         );
@@ -514,6 +524,34 @@ class _PracticeGameWrapperState extends State<_PracticeGameWrapper> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Sticker album entry (resolves the child's level before rendering) ─────────
+
+/// `StickerAlbumPage` needs the child's unlocked stickers, but this kiosk
+/// only knows a [childProfileId] — not a live `StudentDashboardBloc`. Fetches
+/// that child's profile once, derives their level, then renders the album.
+class _StickerAlbumKioskEntry extends StatelessWidget {
+  const _StickerAlbumKioskEntry({required this.childProfileId});
+
+  final String childProfileId;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: sl<StudentRepository>().getStudentProfile(childProfileId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final points = (snapshot.data?['points'] as num?)?.toInt() ?? 0;
+        final level = StudentRepository.levelForPoints(points);
+        final unlockedIds =
+            stickersUnlockedAtLevel(level).map((s) => s.id).toList();
+        return StickerAlbumPage(unlockedIds: unlockedIds);
+      },
     );
   }
 }
@@ -555,7 +593,9 @@ class _KioskBar extends StatelessWidget {
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w600)),
-                  Text('Practice mode • $childName',
+                  Text(
+                      AppLocalizations.of(context)!
+                          .kioskPracticeModeWithChild(childName),
                       style: GoogleFonts.nunito(
                           color: Colors.white60, fontSize: 11)),
                 ],
@@ -570,7 +610,7 @@ class _KioskBar extends StatelessWidget {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white))
                     : const Icon(Icons.check_rounded, size: 16),
-                label: Text('Finish Game',
+                label: Text(AppLocalizations.of(context)!.kioskFinishGame,
                     style: GoogleFonts.nunito(
                         fontWeight: FontWeight.w700, fontSize: 13)),
                 style: ElevatedButton.styleFrom(
@@ -622,7 +662,8 @@ class _CompletionScreen extends StatelessWidget {
                   const Text('🎉', style: TextStyle(fontSize: 72)),
                   const SizedBox(height: 16),
                   Text(
-                    'Great job, ${session.childName}!',
+                    AppLocalizations.of(context)!
+                        .kioskGreatJob(session.childName),
                     style: GoogleFonts.fredoka(
                       fontSize: 32,
                       color: Colors.white,
@@ -632,7 +673,8 @@ class _CompletionScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'You completed all ${session.totalCount} games!',
+                    AppLocalizations.of(context)!
+                        .kioskCompletedAllGames(session.totalCount),
                     style: GoogleFonts.nunito(
                       color: Colors.white70,
                       fontSize: 16,
@@ -652,7 +694,7 @@ class _CompletionScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          'Session Summary',
+                          AppLocalizations.of(context)!.kioskSessionSummary,
                           style: GoogleFonts.fredoka(
                               color: Colors.white70,
                               fontSize: 14,
@@ -664,17 +706,19 @@ class _CompletionScreen extends StatelessWidget {
                           children: [
                             _StatPill(
                               emoji: '⭐',
-                              label: 'Total Score',
+                              label: AppLocalizations.of(context)!
+                                  .kioskTotalScore,
                               value: '$totalScore',
                             ),
                             _StatPill(
                               emoji: '🎮',
-                              label: 'Games',
+                              label: AppLocalizations.of(context)!.kioskGames,
                               value: '${session.totalCount}',
                             ),
                             _StatPill(
                               emoji: '✅',
-                              label: 'Completed',
+                              label: AppLocalizations.of(context)!
+                                  .kioskCompleted,
                               value: '${session.completedCount}',
                             ),
                           ],
@@ -698,7 +742,9 @@ class _CompletionScreen extends StatelessWidget {
                                       fontWeight: FontWeight.w600),
                                 ),
                               ),
-                              Text('$score pts',
+                              Text(
+                                  AppLocalizations.of(context)!
+                                      .kioskPointsSuffix(score),
                                   style: GoogleFonts.nunito(
                                       color: Colors.white60, fontSize: 13)),
                             ]),
@@ -710,7 +756,7 @@ class _CompletionScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
                   Text(
-                    'Ask your parent to see your progress report!',
+                    AppLocalizations.of(context)!.kioskAskParent,
                     style:
                         GoogleFonts.nunito(color: Colors.white60, fontSize: 14),
                     textAlign: TextAlign.center,
@@ -729,7 +775,7 @@ class _CompletionScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(14)),
                     ),
                     child: Text(
-                      'All Done! 🎉',
+                      AppLocalizations.of(context)!.kioskExitButton,
                       style: GoogleFonts.fredoka(
                           color: Colors.white,
                           fontSize: 18,

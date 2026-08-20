@@ -1,8 +1,17 @@
+// Dart imports:
 import 'dart:async';
 import 'dart:math';
-import 'package:edu_play/data/repositories/student_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
+import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 class ColorConcertPage extends StatefulWidget {
   const ColorConcertPage({super.key});
@@ -18,13 +27,49 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
     Colors.greenAccent,
     Colors.yellowAccent
   ];
+
+  // Each pad is framed as a musical note so the memory challenge has a
+  // musical hook, even though the game itself doesn't play real audio yet.
+  static const List<String> _padNoteNames = ['Do', 'Re', 'Mi', 'Fa'];
+  static const List<String> _padColorNames = [
+    'rojo',
+    'azul',
+    'verde',
+    'amarillo'
+  ];
+
+  String _padLabel(int index) => '${_padNoteNames[index]} (${_padColorNames[index]})';
+
   List<int> _sequence = [];
   List<int> _userSequence = [];
   int _score = 0;
   bool _isPlayingSequence = false;
   bool _isGameActive = false;
+  bool _playedTodayMarked = false;
   int? _activeLightIndex; // Currently lit up button
   String _message = '¡Bienvenido al Concierto!';
+
+  /// Per-skill correct/total tally for the current session, sent alongside
+  /// the score when the game ends.
+  final SkillTracker skillTracker = SkillTracker();
+
+  /// Shows the learning objective before each new game starts, so the
+  /// player knows what they're about to practice.
+  Future<void> _showIntroAndStart() async {
+    await showGameObjectiveIntro(
+      context,
+      gameTitle: 'Concierto de Colores',
+      objective:
+          'Memoriza la secuencia de colores que se ilumina — cada color '
+          'representa una nota musical distinta — y repítela tocando los '
+          'pads en el mismo orden. Cada ronda que superas agrega un color '
+          'más a la secuencia y la reproduce más rápido.',
+      difficultyLabel:
+          'Principiante (la secuencia crece y se acelera en cada ronda)',
+    );
+    if (!mounted) return;
+    _startGame();
+  }
 
   void _startGame() {
     setState(() {
@@ -33,6 +78,8 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
       _score = 0;
       _message = '¡Atento!';
       _isGameActive = true;
+      _playedTodayMarked = false;
+      skillTracker.reset();
     });
     Future.delayed(const Duration(seconds: 1), _nextRound);
   }
@@ -80,7 +127,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
     }
   }
 
-  void _onColorTap(int index) {
+  Future<void> _onColorTap(int index) async {
     if (_isPlayingSequence || !_isGameActive) return;
 
     // Flash immediately
@@ -95,11 +142,26 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
       }
     });
 
+    final int position = _userSequence.length;
     _userSequence.add(index);
 
     // Check correctness immediately
-    if (_userSequence[_userSequence.length - 1] !=
-        _sequence[_userSequence.length - 1]) {
+    final bool tapIsCorrect = index == _sequence[position];
+    skillTracker.record('teoria_musical', correct: tapIsCorrect);
+
+    if (!tapIsCorrect) {
+      final correctIndex = _sequence[position];
+      await showAnswerExplanation(
+        context,
+        isCorrect: false,
+        correctAnswerText: _padLabel(correctIndex),
+        explanation: 'La secuencia era: '
+            '${_sequence.map(_padLabel).join(' → ')}. '
+            'En el Concierto de Colores cada color representa una nota '
+            'distinta: repetir el orden exacto entrena tu memoria musical.',
+        skillLabel: skillByKey('teoria_musical').label,
+      );
+      if (!mounted) return;
       _gameOver();
       return;
     }
@@ -110,6 +172,12 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
         _score++;
         _message = '¡Correcto!';
       });
+      // First completed round of the session keeps the streak alive right
+      // away, instead of waiting for the player to eventually fail.
+      if (!_playedTodayMarked) {
+        _playedTodayMarked = true;
+        sl<StudentRepository>().markPlayedToday();
+      }
       Future.delayed(const Duration(seconds: 1), _nextRound);
     }
   }
@@ -124,6 +192,8 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
       subjectKey: 'music',
       gameTitle: 'Concierto de Colores',
       score: _score * 10,
+      skills: skillTracker.tallies,
+      gameRoute: '/color-concert',
     );
 
     showDialog(
@@ -139,7 +209,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _startGame();
+              _showIntroAndStart();
             },
             child: const Text('Reintentar',
                 style: TextStyle(color: Colors.tealAccent)),
@@ -225,7 +295,7 @@ class _ColorConcertPageState extends State<ColorConcertPage> {
                     // Center Start Button
                     Center(
                       child: GestureDetector(
-                        onTap: _isGameActive ? null : _startGame,
+                        onTap: _isGameActive ? null : _showIntroAndStart,
                         child: Container(
                           width: 100,
                           height: 100,

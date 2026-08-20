@@ -1,10 +1,16 @@
-import 'package:edu_play/features/sticker_album/data/sticker_repository.dart';
-import 'package:edu_play/features/sticker_album/models/sticker.dart';
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
+import 'package:edu_play/core/audio/sound_manager.dart';
+import 'package:edu_play/features/sticker_album/models/sticker.dart';
+import 'package:edu_play/utils/dialogs/custom_dialog.dart';
+import 'package:edu_play/utils/responsive.dart';
+
 class StickerAlbumPage extends StatelessWidget {
-  const StickerAlbumPage({super.key});
+  const StickerAlbumPage({super.key, required this.unlockedIds});
+
+  final List<String> unlockedIds;
 
   @override
   Widget build(BuildContext context) {
@@ -14,73 +20,50 @@ class StickerAlbumPage extends StatelessWidget {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
-      body: const StickerAlbumGrid(),
+      body: StickerAlbumGrid(unlockedIds: unlockedIds),
     );
   }
 }
 
 /// Grid of [allStickers], unlocked ones tappable to show their detail.
 /// Extracted so it can be embedded directly inside the student dashboard's
-/// "Logros" section as well as shown as its own page.
-class StickerAlbumGrid extends StatefulWidget {
-  const StickerAlbumGrid({super.key, this.padding});
+/// "Logros" section as well as shown as its own page. Purely presentational
+/// — the caller owns fetching/deriving [unlockedIds].
+class StickerAlbumGrid extends StatelessWidget {
+  const StickerAlbumGrid({
+    super.key,
+    required this.unlockedIds,
+    this.padding,
+    this.shrinkWrap = false,
+    this.physics,
+  });
 
+  final List<String> unlockedIds;
   final EdgeInsetsGeometry? padding;
+  final bool shrinkWrap;
+  final ScrollPhysics? physics;
 
-  @override
-  State<StickerAlbumGrid> createState() => _StickerAlbumGridState();
-}
-
-class _StickerAlbumGridState extends State<StickerAlbumGrid> {
-  final StickerRepository _repository = StickerRepository();
-  List<String> _unlockedIds = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadStickers();
-  }
-
-  Future<void> _loadStickers() async {
-    final ids = await _repository.getUnlockedStickers();
-    if (!mounted) return;
-    setState(() {
-      _unlockedIds = ids;
-      _isLoading = false;
-    });
-  }
-
-  void _showDetail(Sticker sticker) {
+  void _showDetail(BuildContext context, Sticker sticker) {
+    SoundManager().playPop();
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(sticker.icon, size: 80, color: sticker.color),
-            const SizedBox(height: 20),
-            Text(sticker.name,
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text(sticker.description, textAlign: TextAlign.center),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar'))
-        ],
+      builder: (_) => CustomDialog(
+        type: DialogType.reward,
+        title: sticker.name,
+        content: sticker.description,
+        buttonText: 'Cerrar',
+        onButtonPressed: () => Navigator.pop(context),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final unlockedSet = unlockedIds.toSet();
+    // The first locked sticker in order is the next one the child can earn —
+    // give it a gentle pulse to draw the eye without making the whole grid busy.
+    final nextToUnlockIndex =
+        allStickers.indexWhere((s) => !unlockedSet.contains(s.id));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -90,7 +73,9 @@ class _StickerAlbumGridState extends State<StickerAlbumGrid> {
         final labelFontSize = s.isMobile ? 10.0 : 12.0;
 
         return GridView.builder(
-          padding: widget.padding ?? EdgeInsets.all(s.isMobile ? 12 : 16),
+          shrinkWrap: shrinkWrap,
+          physics: physics,
+          padding: padding ?? EdgeInsets.all(s.isMobile ? 12 : 16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: cols,
             crossAxisSpacing: s.isMobile ? 8 : 10,
@@ -99,55 +84,151 @@ class _StickerAlbumGridState extends State<StickerAlbumGrid> {
           itemCount: allStickers.length,
           itemBuilder: (context, index) {
             final sticker = allStickers[index];
-            final isUnlocked = _unlockedIds.contains(sticker.id);
+            final isUnlocked = unlockedSet.contains(sticker.id);
 
-            return GestureDetector(
-              onTap: isUnlocked ? () => _showDetail(sticker) : null,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isUnlocked ? Colors.white : Colors.grey[300],
-                  borderRadius: BorderRadius.circular(15),
-                  border: Border.all(
-                    color: isUnlocked ? Colors.deepPurple : Colors.grey,
-                    width: isUnlocked ? 2 : 1,
-                  ),
-                  boxShadow: isUnlocked
-                      ? [
-                          const BoxShadow(
-                              color: Colors.black12,
-                              blurRadius: 4,
-                              offset: Offset(2, 2))
-                        ]
-                      : null,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isUnlocked ? sticker.icon : Icons.question_mark,
-                      size: iconSize,
-                      color: isUnlocked ? sticker.color : Colors.grey[500],
-                    ),
-                    if (isUnlocked)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6.0),
-                        child: Text(
-                          sticker.name,
-                          style: TextStyle(
-                              fontSize: labelFontSize,
-                              fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                  ],
-                ),
+            return _StaggeredEntrance(
+              index: index,
+              child: _StickerAlbumCell(
+                sticker: sticker,
+                isUnlocked: isUnlocked,
+                pulse: !isUnlocked && index == nextToUnlockIndex,
+                iconSize: iconSize,
+                labelFontSize: labelFontSize,
+                onTap: isUnlocked ? () => _showDetail(context, sticker) : null,
               ),
             );
           },
         );
       },
+    );
+  }
+}
+
+/// Fades + scales a cell in, with an index-based delay so the grid "pops in"
+/// one card after another instead of appearing all at once.
+class _StaggeredEntrance extends StatelessWidget {
+  const _StaggeredEntrance({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final delay = (index * 60).clamp(0, 600);
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(index),
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 380 + delay),
+      curve: Curves.easeOutBack,
+      builder: (context, value, child) {
+        final clamped = value.clamp(0.0, 1.0);
+        return Opacity(
+          opacity: clamped,
+          child: Transform.scale(scale: value, child: child),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
+class _StickerAlbumCell extends StatelessWidget {
+  const _StickerAlbumCell({
+    required this.sticker,
+    required this.isUnlocked,
+    required this.pulse,
+    required this.iconSize,
+    required this.labelFontSize,
+    required this.onTap,
+  });
+
+  final Sticker sticker;
+  final bool isUnlocked;
+  final bool pulse;
+  final double iconSize;
+  final double labelFontSize;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      decoration: BoxDecoration(
+        color: isUnlocked ? Colors.white : Colors.grey[300],
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: isUnlocked ? sticker.color : Colors.grey,
+          width: isUnlocked ? 2 : 1,
+        ),
+        boxShadow: isUnlocked
+            ? [
+                BoxShadow(
+                  color: sticker.color.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isUnlocked ? sticker.icon : Icons.question_mark,
+            size: iconSize,
+            color: isUnlocked ? sticker.color : Colors.grey[500],
+          ),
+          if (isUnlocked)
+            Padding(
+              padding: const EdgeInsets.only(top: 6.0),
+              child: Text(
+                sticker.name,
+                style: TextStyle(
+                    fontSize: labelFontSize, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return GestureDetector(
+      onTap: onTap,
+      child: pulse ? _Pulse(child: card) : card,
+    );
+  }
+}
+
+/// Gentle looping opacity pulse for the next sticker the child can unlock.
+class _Pulse extends StatefulWidget {
+  const _Pulse({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_Pulse> createState() => _PulseState();
+}
+
+class _PulseState extends State<_Pulse> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween(begin: 0.55, end: 1.0).animate(
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      ),
+      child: widget.child,
     );
   }
 }
