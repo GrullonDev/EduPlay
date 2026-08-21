@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/subscription/models/subscription.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
@@ -8,7 +12,7 @@ const _kCoral = Color(0xFFFF6E6C);
 const _kGold = Color(0xFFF39C12);
 const _kBg = Color(0xFFF8F7FF);
 
-enum UpgradeReason { childLimit, sessionLimit }
+enum UpgradeReason { childLimit, sessionLimit, proSticker }
 
 /// Shows a paywall dialog explaining the free-tier limit that was hit and
 /// presenting the Pro upgrade offer.
@@ -17,7 +21,9 @@ enum UpgradeReason { childLimit, sessionLimit }
 /// ```dart
 /// final upgraded = await showUpgradePrompt(context, UpgradeReason.sessionLimit);
 /// ```
-/// Returns true if the user tapped the upgrade CTA (reserved for Stripe flow).
+/// Returns true if the user tapped the upgrade CTA; the caller is
+/// responsible for continuing into the Recurrente checkout flow (see
+/// [SettingsSubscriptionSection](../../features/settings/widgets/settings_subscription_section.dart)).
 Future<bool> showUpgradePrompt(
   BuildContext context,
   UpgradeReason reason,
@@ -33,15 +39,30 @@ class _UpgradePromptDialog extends StatelessWidget {
   const _UpgradePromptDialog({required this.reason});
   final UpgradeReason reason;
 
-  String get _title => reason == UpgradeReason.childLimit
-      ? 'Has alcanzado el límite\nde exploradores'
-      : 'Has alcanzado el límite\nde sesiones este mes';
+  String get _title {
+    switch (reason) {
+      case UpgradeReason.childLimit:
+        return 'Has alcanzado el límite\nde exploradores';
+      case UpgradeReason.sessionLimit:
+        return 'Has alcanzado el límite\nde sesiones este mes';
+      case UpgradeReason.proSticker:
+        return 'Este sticker es\nexclusivo para Pro';
+    }
+  }
 
-  String get _subtitle => reason == UpgradeReason.childLimit
-      ? 'El plan gratuito incluye hasta ${Subscription.freeChildLimit} perfil de niño. '
-          'Pasa a Pro para añadir exploradores ilimitados.'
-      : 'El plan gratuito incluye hasta ${Subscription.freeSessionLimit} sesiones por mes. '
-          'Pasa a Pro para crear sesiones sin límite.';
+  String get _subtitle {
+    switch (reason) {
+      case UpgradeReason.childLimit:
+        return 'El plan gratuito incluye hasta ${Subscription.freeChildLimit} perfil de niño. '
+            'Pasa a Pro para añadir exploradores ilimitados.';
+      case UpgradeReason.sessionLimit:
+        return 'El plan gratuito incluye hasta ${Subscription.freeSessionLimit} sesiones por mes. '
+            'Pasa a Pro para crear sesiones sin límite.';
+      case UpgradeReason.proSticker:
+        return 'Los stickers exclusivos de la Tienda son solo para miembros Pro. '
+            'Pasa a Pro para desbloquearlos todos.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +230,7 @@ class _PlanCard extends StatelessWidget {
 
   factory _PlanCard.pro() => const _PlanCard(
         name: 'Pro',
-        price: '\$9.99/mes',
+        price: '\$4.99/mes',
         features: [
           'Niños ilimitados',
           'Sesiones ilimitadas',
@@ -235,28 +256,67 @@ class _PlanCard extends StatelessWidget {
         color: highlighted ? _kNavy : _kBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: highlighted ? _kNavy : const Color(0xFFE0DEFF),
-          width: highlighted ? 0 : 1.5,
+          color: highlighted ? _kGold : const Color(0xFFE0DEFF),
+          width: highlighted ? 1.5 : 1.5,
         ),
+        boxShadow: highlighted
+            ? [
+                BoxShadow(
+                  color: _kNavy.withValues(alpha: 0.25),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: badgeColor.withValues(alpha: highlighted ? 1.0 : 0.12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              name,
-              style: GoogleFonts.fredoka(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: highlighted ? Colors.white : badgeColor,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: badgeColor.withValues(alpha: highlighted ? 1.0 : 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  name,
+                  style: GoogleFonts.fredoka(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: highlighted ? Colors.white : badgeColor,
+                  ),
+                ),
               ),
-            ),
+              if (highlighted)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: _kGold,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department_rounded,
+                          size: 10, color: _kNavy),
+                      const SizedBox(width: 2),
+                      Text(
+                        'TOP',
+                        style: GoogleFonts.nunito(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: _kNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 10),
 

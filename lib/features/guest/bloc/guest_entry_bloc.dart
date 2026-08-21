@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:provider/provider.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/local/database_helper.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';

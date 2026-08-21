@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:edu_play/utils/responsive.dart';
 
 /// Breakpoint above which the landing page switches to its desktop layout.

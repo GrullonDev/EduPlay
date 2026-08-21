@@ -1,7 +1,8 @@
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/classroom_challenge.dart';
-import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/repositories/classroom_challenges_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
 
 class FirestoreClassroomChallengesRepository
@@ -21,6 +22,10 @@ class FirestoreClassroomChallengesRepository
     required String subjectKey,
     String? dueDate,
     String status = 'active',
+    String? instructions,
+    String? evaluationCriteria,
+    String? targetGameRoute,
+    int? targetScore,
   }) {
     return datasource.createChallenge(
       classId: classId,
@@ -28,6 +33,10 @@ class FirestoreClassroomChallengesRepository
       subjectKey: subjectKey,
       dueDate: dueDate,
       status: status,
+      instructions: instructions,
+      evaluationCriteria: evaluationCriteria,
+      targetGameRoute: targetGameRoute,
+      targetScore: targetScore,
     );
   }
 
@@ -81,6 +90,10 @@ class FirestoreClassroomChallengesRepository
         dueDate: challenge.dueDate,
         completed: completed,
         memberId: enrollment?.id,
+        instructions: challenge.instructions,
+        evaluationCriteria: challenge.evaluationCriteria,
+        targetGameRoute: challenge.targetGameRoute,
+        targetScore: challenge.targetScore,
       );
     }).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));

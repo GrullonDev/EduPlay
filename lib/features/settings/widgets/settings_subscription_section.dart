@@ -1,16 +1,35 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
+import 'package:edu_play/features/payments/domain/usecases/create_recurrente_checkout_usecase.dart';
+import 'package:edu_play/features/payments/presentation/screens/recurrente_checkout_screen.dart';
+import 'package:edu_play/features/settings/widgets/settings_section_card.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/features/subscription/models/subscription.dart';
-import 'package:edu_play/features/subscription/services/stripe_service.dart';
-import 'package:edu_play/features/settings/widgets/settings_section_card.dart';
 import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
+const _kGold = Color(0xFFF39C12);
+const _kCoral = Color(0xFFFF6E6C);
 
-class SettingsSubscriptionSection extends StatelessWidget {
+const _kProPriceUsd = 4.99;
+const _kProPriceGtq = 38.04;
+
+const _kProBenefits = [
+  'Exploradores ilimitados',
+  'Sesiones de práctica ilimitadas',
+  'Informes avanzados de progreso',
+  'Soporte prioritario',
+];
+
+class SettingsSubscriptionSection extends StatefulWidget {
   const SettingsSubscriptionSection(
       {super.key, SubscriptionRepository? repository})
       : _repository = repository;
@@ -18,9 +37,75 @@ class SettingsSubscriptionSection extends StatelessWidget {
   final SubscriptionRepository? _repository;
 
   @override
+  State<SettingsSubscriptionSection> createState() =>
+      _SettingsSubscriptionSectionState();
+}
+
+class _SettingsSubscriptionSectionState
+    extends State<SettingsSubscriptionSection> {
+  bool _startingCheckout = false;
+
+  Future<void> _startCheckout(BuildContext context) async {
+    if (_startingCheckout) return;
+    setState(() => _startingCheckout = true);
+    try {
+      final authRepository = sl<AuthRepository>();
+      final uid = authRepository.getCurrentUserUid();
+      final email = authRepository.getCurrentUserEmail();
+      if (uid == null || email == null) {
+        throw Exception('Debes iniciar sesión para suscribirte.');
+      }
+
+      final orderId = FirebaseFirestore.instance.collection('orders').doc().id;
+      final checkout = await sl<CreateRecurrenteCheckoutUseCase>()(
+        amount: _kProPriceGtq,
+        orderId: orderId,
+        userEmail: email,
+        itemName: 'EduPlay Pro - Suscripción mensual',
+        currency: 'GTQ',
+        metadata: const {'kind': 'subscription'},
+      );
+
+      if (!context.mounted) return;
+      final paid = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => RecurrenteCheckoutScreen(
+            checkoutUrl: checkout.checkoutUrl,
+            orderId: checkout.orderId,
+          ),
+        ),
+      );
+
+      if (paid == true && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '¡Listo! Ya eres Pro.',
+              style: GoogleFonts.nunito(),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'No se pudo abrir el pago. Inténtalo de nuevo.',
+              style: GoogleFonts.nunito(),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _startingCheckout = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     init();
-    final repository = _repository ?? sl<SubscriptionRepository>();
+    final repository = widget._repository ?? sl<SubscriptionRepository>();
 
     return StreamBuilder<Subscription>(
       stream: repository.watchSubscription(),
@@ -43,6 +128,7 @@ class SettingsSubscriptionSection extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(20),
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isPro
@@ -52,53 +138,100 @@ class SettingsSubscriptionSection extends StatelessWidget {
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(14),
+                      border: isPro
+                          ? Border.all(
+                              color: _kGold.withValues(alpha: 0.5), width: 1)
+                          : null,
                     ),
-                    child: Row(
+                    child: Stack(
                       children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Colors.white
-                                .withValues(alpha: isPro ? 0.12 : 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isPro
-                                ? Icons.star_rounded
-                                : Icons.lock_outline_rounded,
-                            color: isPro ? Colors.white : Colors.grey.shade500,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isPro ? 'Plan Pro' : 'Plan Gratuito',
-                                style: GoogleFonts.fredoka(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: isPro
-                                      ? Colors.white
-                                      : Colors.grey.shade800,
-                                ),
+                        if (isPro)
+                          Positioned(
+                            top: -30,
+                            right: -30,
+                            child: Container(
+                              width: 110,
+                              height: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _kGold.withValues(alpha: 0.08),
                               ),
-                              Text(
+                            ),
+                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white
+                                    .withValues(alpha: isPro ? 0.12 : 0.6),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
                                 isPro
-                                    ? 'Acceso ilimitado a todas las funciones'
-                                    : 'Limitado a 1 niño y 5 sesiones/mes',
-                                style: GoogleFonts.nunito(
-                                  fontSize: 12,
-                                  color: isPro
-                                      ? Colors.white.withValues(alpha: 0.75)
-                                      : Colors.grey.shade500,
-                                ),
+                                    ? Icons.workspace_premium_rounded
+                                    : Icons.lock_outline_rounded,
+                                color: isPro ? _kGold : Colors.grey.shade500,
+                                size: 22,
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        isPro ? 'Plan Pro' : 'Plan Gratuito',
+                                        style: GoogleFonts.fredoka(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w700,
+                                          color: isPro
+                                              ? Colors.white
+                                              : Colors.grey.shade800,
+                                        ),
+                                      ),
+                                      if (isPro) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 7, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _kGold,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            'ACTIVO',
+                                            style: GoogleFonts.nunito(
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.5,
+                                              color: _kNavy,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  Text(
+                                    isPro
+                                        ? 'Acceso ilimitado a todas las funciones'
+                                        : 'Limitado a 1 niño y 5 sesiones/mes',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 12,
+                                      color: isPro
+                                          ? Colors.white.withValues(alpha: 0.75)
+                                          : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -127,51 +260,176 @@ class SettingsSubscriptionSection extends StatelessWidget {
                     const SizedBox(height: 12),
                     const _UsageMeter(
                       label: 'Perfiles de niño',
-                      used: null, // loaded by a separate FutureBuilder below
+                      used: null,
                       limit: Subscription.freeChildLimit,
                       isChildMeter: true,
                     ),
 
                     const SizedBox(height: 24),
 
+                    // Pro pricing card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F7FF),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE0DEFF)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.workspace_premium_rounded,
+                                  color: _kGold, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Con Plan Pro obtienes',
+                                style: GoogleFonts.fredoka(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: _kNavy,
+                                ),
+                              ),
+                              const Spacer(),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '\$$_kProPriceUsd',
+                                        style: GoogleFonts.fredoka(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: _kNavy,
+                                        ),
+                                      ),
+                                      Text(
+                                        '/mes',
+                                        style: GoogleFonts.nunito(
+                                          fontSize: 11,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    '≈ Q$_kProPriceGtq',
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          for (final benefit in _kProBenefits) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle_rounded,
+                                      size: 15, color: Color(0xFF27AE60)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    benefit,
+                                    style: GoogleFonts.nunito(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
                     // Upgrade CTA
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          try {
-                            await StripeService.startCheckout();
-                          } catch (e) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'No se pudo abrir el pago. Inténtalo de nuevo.',
-                                    style: GoogleFonts.nunito(),
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.rocket_launch_rounded,
-                            size: 18, color: Colors.white),
-                        label: Text(
-                          'Mejorar a Pro — \$9.99/mes',
-                          style: GoogleFonts.fredoka(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                      height: 52,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_kCoral, Color(0xFFFF8B69)],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _kCoral.withValues(alpha: 0.35),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: _startingCheckout
+                                ? null
+                                : () => _startCheckout(context),
+                            child: Center(
+                              child: _startingCheckout
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.4,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.rocket_launch_rounded,
+                                            size: 18, color: Colors.white),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Mejorar a Pro',
+                                          style: GoogleFonts.fredoka(
+                                            fontSize: 16,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                            ),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF6E6C),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.lock_rounded,
+                            size: 12, color: Colors.grey[400]),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Pago seguro con Recurrente · Cancela cuando quieras',
+                          style: GoogleFonts.nunito(
+                            fontSize: 11,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
 

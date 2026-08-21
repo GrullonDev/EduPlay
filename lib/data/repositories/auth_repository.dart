@@ -1,4 +1,7 @@
+// Package imports:
 import 'package:firebase_auth/firebase_auth.dart';
+
+// Project imports:
 import 'package:edu_play/data/datasources/auth_datasource.dart';
 
 abstract class AuthRepository {
@@ -14,6 +17,14 @@ abstract class AuthRepository {
   Future<User?> loginParent({
     required String email,
     required String password,
+  });
+
+  Future<User?> registerIndependentStudent({
+    required String email,
+    required String password,
+    required String name,
+    required int age,
+    String? guardianEmail,
   });
 
   Future<bool> isChildRegistered(String name);
@@ -56,6 +67,23 @@ class ImplAuthRepository implements AuthRepository {
       lastName: lastName,
       age: age,
       children: children,
+    );
+  }
+
+  @override
+  Future<User?> registerIndependentStudent({
+    required String email,
+    required String password,
+    required String name,
+    required int age,
+    String? guardianEmail,
+  }) {
+    return _authDatasource.registerIndependentStudent(
+      email: email,
+      password: password,
+      name: name,
+      age: age,
+      guardianEmail: guardianEmail,
     );
   }
 

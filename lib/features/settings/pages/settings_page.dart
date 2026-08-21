@@ -1,16 +1,21 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
 import 'package:edu_play/features/parents_dashboard/services/child_profiles_service.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
-import 'package:edu_play/features/settings/widgets/settings_security_section.dart';
 import 'package:edu_play/features/settings/widgets/settings_notifications_section.dart';
-import 'package:edu_play/features/settings/widgets/settings_subscription_section.dart';
 import 'package:edu_play/features/settings/widgets/settings_profile_section.dart';
+import 'package:edu_play/features/settings/widgets/settings_security_section.dart';
+import 'package:edu_play/features/settings/widgets/settings_subscription_section.dart';
+import 'package:edu_play/l10n/app_localizations.dart';
 import 'package:edu_play/shared/widgets/edu_play_nav_bar.dart';
+import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
-import 'package:edu_play/utils/injection_container.dart';
 
 const _kNavy = Color(0xFF1E1B6A);
 const _kRed = Color(0xFFC0392B);
@@ -43,10 +48,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   static const _sections = [
-    (icon: Icons.person_outline_rounded, label: 'Profile'),
-    (icon: Icons.credit_card_outlined, label: 'Subscription'),
-    (icon: Icons.notifications_none_rounded, label: 'Notifications'),
-    (icon: Icons.shield_outlined, label: 'Security'),
+    (icon: Icons.person_outline_rounded, label: 'Perfil'),
+    (icon: Icons.credit_card_outlined, label: 'Suscripción'),
+    (icon: Icons.notifications_none_rounded, label: 'Notificaciones'),
+    (icon: Icons.shield_outlined, label: 'Seguridad'),
   ];
 
   @override
@@ -147,7 +152,7 @@ class _SidebarPanel extends StatelessWidget {
         children: [
           const SizedBox(height: 8),
           Text(
-            'Settings',
+            AppLocalizations.of(context)!.settingsTitle,
             style: GoogleFonts.fredoka(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -155,7 +160,7 @@ class _SidebarPanel extends StatelessWidget {
             ),
           ),
           Text(
-            'Manage your account and preferences',
+            AppLocalizations.of(context)!.settingsSubtitle,
             style: GoogleFonts.nunito(
                 fontSize: 12, color: Colors.grey[500], height: 1.4),
           ),

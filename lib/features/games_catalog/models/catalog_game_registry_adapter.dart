@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/features/games/core/game_metadata.dart';
 import 'package:edu_play/features/games/core/game_registry.dart';
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart';

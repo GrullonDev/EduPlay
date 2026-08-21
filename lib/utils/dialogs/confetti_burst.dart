@@ -1,5 +1,7 @@
+// Dart imports:
 import 'dart:math';
 
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 /// A short, decorative burst of falling confetti. Purely visual — ignores

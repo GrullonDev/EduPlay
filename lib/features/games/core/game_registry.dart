@@ -1,5 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
+// Project imports:
 import 'package:edu_play/features/games/core/game_metadata.dart';
 import 'package:edu_play/features/games/core/game_module.dart';
 import 'package:edu_play/features/games/number_ninja/number_ninja_module.dart';

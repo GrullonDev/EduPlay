@@ -1,7 +1,16 @@
+// Dart imports:
 import 'dart:math';
-import 'package:edu_play/data/repositories/student_repository.dart';
-import 'package:edu_play/utils/injection_container.dart';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
+import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/games/core/models/skill_result.dart';
+import 'package:edu_play/features/games/core/widgets/answer_explanation_sheet.dart';
+import 'package:edu_play/features/games/core/widgets/game_objective_intro.dart';
+import 'package:edu_play/shared/data/skill_catalog.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 class TreasureMapPage extends StatefulWidget {
   const TreasureMapPage({super.key});
@@ -11,8 +20,8 @@ class TreasureMapPage extends StatefulWidget {
 }
 
 class _TreasureMapPageState extends State<TreasureMapPage> {
-  final int _rows = 6;
-  final int _cols = 6;
+  int _rows = 6;
+  int _cols = 6;
   int _playerPos = 0;
   int _treasurePos = 35;
   final List<int> _obstacles = [];
@@ -20,16 +29,53 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
   final Random _random = Random();
   final GlobalKey _playerKey = GlobalKey();
 
+  /// Lives left before an obstacle collision triggers a full explanation
+  /// (instead of just the quick snack-bar bump), so the player isn't
+  /// interrupted with a modal on every single bump.
+  int _livesThisLevel = 3;
+
+  /// Per-skill correct/total tally for this session, sent alongside the
+  /// score every time a level is completed.
+  final SkillTracker skillTracker = SkillTracker();
+
   @override
   void initState() {
     super.initState();
+    // Show the objective dialog after the first frame (it needs an Overlay
+    // to be mounted), then generate the first board once it's dismissed.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showIntroAndStart());
+  }
+
+  Future<void> _showIntroAndStart() async {
+    await showGameObjectiveIntro(
+      context,
+      gameTitle: 'Mapa del Tesoro',
+      objective:
+          'Vas a practicar razonamiento lógico-espacial: observa el tablero completo, planifica tu ruta con anticipación y esquiva los obstáculos para llegar al tesoro.',
+      difficultyLabel: _difficultyLabel(),
+    );
+    if (!mounted) return;
     _startLevel();
   }
 
+  String _difficultyLabel() {
+    if (_level <= 2) return 'Principiante';
+    if (_level <= 4) return 'Intermedio';
+    return 'Avanzado';
+  }
+
+  /// Grows the maze itself every few levels (not just the obstacle count),
+  /// so higher levels genuinely require more spatial planning instead of
+  /// just dodging more clutter on the same small board.
+  int _gridSizeForLevel() => min(6 + ((_level - 1) ~/ 3), 9);
+
   void _startLevel() {
     setState(() {
+      _rows = _gridSizeForLevel();
+      _cols = _rows;
       _playerPos = 0;
       _treasurePos = (_rows * _cols) - 1;
+      _livesThisLevel = 3;
       _generateObstacles();
     });
     _scrollToPlayer();
@@ -68,7 +114,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
     }
   }
 
-  void _move(String direction) {
+  Future<void> _move(String direction) async {
     int newPos = _playerPos;
     if (direction == 'UP') {
       if (_playerPos >= _cols) newPos -= _cols;
@@ -81,12 +127,36 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
     }
 
     if (_obstacles.contains(newPos)) {
-      // Shake or feedback effect could go here
+      skillTracker.record('logica_espacial', correct: false);
+      setState(() {
+        _livesThisLevel--;
+      });
+
+      // Quick, non-blocking bump feedback so the maze keeps its pace on
+      // every single collision.
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('¡Cuidado! Un monstruo marino bloquea el camino.'),
         duration: Duration(milliseconds: 500),
         backgroundColor: Colors.redAccent,
       ));
+
+      // Only after "losing a life" (3 collisions) do we interrupt with the
+      // full explanation, so occasional bumps don't break the flow.
+      if (_livesThisLevel <= 0) {
+        await showAnswerExplanation(
+          context,
+          isCorrect: false,
+          correctAnswerText:
+              'Observa el tablero completo antes de moverte y rodea el obstáculo por el lado que sí tenga camino libre.',
+          explanation:
+              'Chocar varias veces con el mismo obstáculo suele significar que avanzas sin mirar. Antes de mover, ubica el tesoro, identifica los obstáculos entre tú y él, y planea 2 o 3 pasos por adelantado.',
+          skillLabel: skillByKey('logica_espacial').label,
+        );
+        if (!mounted) return;
+        setState(() {
+          _livesThisLevel = 3;
+        });
+      }
     } else {
       setState(() {
         _playerPos = newPos;
@@ -98,6 +168,7 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
 
   void _checkWin() {
     if (_playerPos == _treasurePos) {
+      skillTracker.record('logica_espacial', correct: true);
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -113,6 +184,8 @@ class _TreasureMapPageState extends State<TreasureMapPage> {
                   subjectKey: 'logic',
                   gameTitle: 'Mapa del Tesoro',
                   score: _level * 10,
+                  skills: skillTracker.tallies,
+                  gameRoute: '/treasure-map',
                 );
                 setState(() {
                   _level++;

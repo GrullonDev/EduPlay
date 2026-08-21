@@ -1,8 +1,13 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
+// Project imports:
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
+import 'package:edu_play/l10n/app_localizations.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -157,10 +162,10 @@ class _Navbar extends StatelessWidget {
               if (isDesktop) ...[
                 const SizedBox(width: 40),
                 ...[
-                  'Curriculum',
-                  'Games',
-                  'For Teachers',
-                  'Pricing',
+                  AppLocalizations.of(context)!.navCurriculum,
+                  AppLocalizations.of(context)!.navGames,
+                  AppLocalizations.of(context)!.navForTeachers,
+                  AppLocalizations.of(context)!.navPricing,
                 ].map(
                   (label) => Padding(
                     padding: const EdgeInsets.only(right: 28),
@@ -180,7 +185,7 @@ class _Navbar extends StatelessWidget {
                 onPressed: () =>
                     Navigator.pushNamed(context, RouterPaths.login),
                 child: Text(
-                  'Login',
+                  AppLocalizations.of(context)!.navLogin,
                   style: GoogleFonts.nunito(
                     fontWeight: FontWeight.w700,
                     color: Colors.grey[700],
@@ -204,7 +209,7 @@ class _Navbar extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Start Free',
+                  AppLocalizations.of(context)!.navStartFree,
                   style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
                 ),
               ),
@@ -735,9 +740,9 @@ class _Footer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _FooterBrand()),
-                const Expanded(child: _FooterLinks('Product', _productLinks)),
+                const Expanded(child: _FooterLinks('Producto', _productLinks)),
                 const Expanded(
-                    child: _FooterLinks('Resources', _resourceLinks)),
+                    child: _FooterLinks('Recursos', _resourceLinks)),
                 Expanded(child: _FooterNewsletter()),
               ],
             )
@@ -746,9 +751,9 @@ class _Footer extends StatelessWidget {
               children: [
                 _FooterBrand(),
                 const SizedBox(height: 24),
-                const _FooterLinks('Product', _productLinks),
+                const _FooterLinks('Producto', _productLinks),
                 const SizedBox(height: 24),
-                const _FooterLinks('Resources', _resourceLinks),
+                const _FooterLinks('Recursos', _resourceLinks),
                 const SizedBox(height: 24),
                 _FooterNewsletter(),
               ],
@@ -757,13 +762,13 @@ class _Footer extends StatelessWidget {
   }
 
   static const _productLinks = [
-    'Teacher Toolkit',
-    'Parent Guide',
-    'Research Labs',
+    'Herramientas para Profesores',
+    'Guía para Padres',
+    'Laboratorios de Investigación',
   ];
   static const _resourceLinks = [
-    'Privacy Policy',
-    'Terms of Service',
+    'Política de Privacidad',
+    'Términos de Servicio',
   ];
 }
 
@@ -837,7 +842,7 @@ class _FooterNewsletter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Newsletter',
+          'Boletín',
           style: GoogleFonts.nunito(
             fontWeight: FontWeight.w800,
             fontSize: 13,

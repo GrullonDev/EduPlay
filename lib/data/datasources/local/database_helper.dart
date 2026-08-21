@@ -1,6 +1,11 @@
+// Dart imports:
 import 'dart:io' show Platform;
-import 'package:flutter/material.dart';
+
+// Flutter imports:
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 

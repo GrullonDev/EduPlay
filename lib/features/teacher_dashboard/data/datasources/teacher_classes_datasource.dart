@@ -1,8 +1,11 @@
+// Dart imports:
 import 'dart:math';
 
+// Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
@@ -36,6 +39,9 @@ abstract class TeacherClassesDatasource {
   });
 
   Future<void> deleteClass(String classId);
+
+  Future<void> removeMember(
+      {required String classId, required String memberId});
 
   Future<void> joinClass({
     required String classId,
@@ -77,7 +83,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
         .snapshots()
         .map(
           (snap) => snap.docs
-              .map((doc) => _teacherClassFromMap(doc.data(), doc.id))
+              .map((doc) => TeacherClass.fromMap(doc.data(), doc.id))
               .toList(),
         );
   }
@@ -89,7 +95,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
         .limit(1)
         .get();
     if (snap.docs.isEmpty) return null;
-    return _teacherClassFromMap(snap.docs.first.data(), snap.docs.first.id);
+    return TeacherClass.fromMap(snap.docs.first.data(), snap.docs.first.id);
   }
 
   @override
@@ -101,7 +107,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
         .orderBy('joinedAt')
         .get();
     return snap.docs
-        .map((doc) => _classMemberFromMap(doc.data(), doc.id))
+        .map((doc) => ClassMember.fromMap(doc.data(), doc.id))
         .toList();
   }
 
@@ -114,7 +120,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
         .orderBy('createdAt', descending: true)
         .get();
     return snap.docs
-        .map((doc) => _teacherClassFromMap(doc.data(), doc.id))
+        .map((doc) => TeacherClass.fromMap(doc.data(), doc.id))
         .toList();
   }
 
@@ -129,28 +135,38 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
 
   @override
   Future<List<ClassMember>> getEnrollmentsForStudent(String studentId) async {
-    final results = <ClassMember>[];
+    // Called on every student dashboard load — a stalled gRPC channel here
+    // (no timeout, no try/catch) would otherwise hang the caller forever
+    // instead of falling back to "no classroom challenges today".
+    try {
+      final results = <ClassMember>[];
 
-    final byStudentId = await _db
-        .collectionGroup('members')
-        .where('studentId', isEqualTo: studentId)
-        .get();
-    results.addAll(
-      byStudentId.docs.map((doc) => _classMemberFromMap(doc.data(), doc.id)),
-    );
-
-    if (results.isEmpty) {
-      final byChildProfileId = await _db
+      final byStudentId = await _db
           .collectionGroup('members')
-          .where('childProfileId', isEqualTo: studentId)
-          .get();
+          .where('studentId', isEqualTo: studentId)
+          .get()
+          .timeout(const Duration(seconds: 8));
       results.addAll(
-        byChildProfileId.docs
-            .map((doc) => _classMemberFromMap(doc.data(), doc.id)),
+        byStudentId.docs
+            .map((doc) => ClassMember.fromMap(doc.data(), doc.id)),
       );
-    }
 
-    return results;
+      if (results.isEmpty) {
+        final byChildProfileId = await _db
+            .collectionGroup('members')
+            .where('childProfileId', isEqualTo: studentId)
+            .get()
+            .timeout(const Duration(seconds: 8));
+        results.addAll(
+          byChildProfileId.docs
+              .map((doc) => ClassMember.fromMap(doc.data(), doc.id)),
+        );
+      }
+
+      return results;
+    } catch (e) {
+      return [];
+    }
   }
 
   @override
@@ -184,7 +200,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
       createdAt: DateTime.now(),
     );
 
-    await docRef.set(_teacherClassToMap(teacherClass));
+    await docRef.set(teacherClass.toMap());
     return teacherClass;
   }
 
@@ -198,7 +214,7 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
         .get();
 
     return snap.docs
-        .map((doc) => _teacherClassFromMap(doc.data(), doc.id))
+        .map((doc) => TeacherClass.fromMap(doc.data(), doc.id))
         .where((teacherClass) => teacherClass.maxAge >= childAge)
         .toList();
   }
@@ -220,6 +236,23 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
   @override
   Future<void> deleteClass(String classId) {
     return _classes.doc(classId).delete();
+  }
+
+  @override
+  Future<void> removeMember({
+    required String classId,
+    required String memberId,
+  }) async {
+    final classRef = _classes.doc(classId);
+    final memberRef = classRef.collection('members').doc(memberId);
+
+    await _db.runTransaction((tx) async {
+      final memberSnap = await tx.get(memberRef);
+      if (!memberSnap.exists) return;
+
+      tx.delete(memberRef);
+      tx.update(classRef, {'studentCount': FieldValue.increment(-1)});
+    });
   }
 
   @override
@@ -320,64 +353,4 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
       return '';
     }
   }
-}
-
-TeacherClass _teacherClassFromMap(Map<String, dynamic> map, String id) {
-  return TeacherClass(
-    id: id,
-    teacherUid: (map['teacherUid'] as String?) ?? '',
-    teacherName: (map['teacherName'] as String?) ?? '',
-    name: (map['name'] as String?) ?? '',
-    subject: (map['subject'] as String?) ?? '',
-    gradeLevel: (map['gradeLevel'] as String?) ?? '',
-    joinCode: (map['joinCode'] as String?) ?? '',
-    studentCount: (map['studentCount'] as int?) ?? 0,
-    minAge: (map['minAge'] as num?)?.toInt() ?? 3,
-    maxAge: (map['maxAge'] as num?)?.toInt() ?? 12,
-    isPublic: (map['isPublic'] as bool?) ?? false,
-    createdAt: map['createdAt'] is Timestamp
-        ? (map['createdAt'] as Timestamp).toDate()
-        : DateTime.now(),
-  );
-}
-
-Map<String, dynamic> _teacherClassToMap(TeacherClass teacherClass) {
-  return {
-    'teacherUid': teacherClass.teacherUid,
-    'teacherName': teacherClass.teacherName,
-    'name': teacherClass.name,
-    'subject': teacherClass.subject,
-    'gradeLevel': teacherClass.gradeLevel,
-    'joinCode': teacherClass.joinCode,
-    'studentCount': teacherClass.studentCount,
-    'minAge': teacherClass.minAge,
-    'maxAge': teacherClass.maxAge,
-    'isPublic': teacherClass.isPublic,
-    'createdAt': FieldValue.serverTimestamp(),
-  };
-}
-
-ClassMember _classMemberFromMap(Map<String, dynamic> map, String id) {
-  return ClassMember(
-    id: id,
-    classId: (map['classId'] as String?) ?? '',
-    teacherUid: (map['teacherUid'] as String?) ?? '',
-    className: (map['className'] as String?) ?? '',
-    classSubject: (map['classSubject'] as String?) ?? '',
-    classGradeLevel: (map['classGradeLevel'] as String?) ?? '',
-    displayName: (map['displayName'] as String?) ?? '',
-    email: (map['email'] as String?) ?? '',
-    role: (map['role'] as String?) ?? 'student',
-    studentId: (map['studentId'] as String?) ?? id,
-    childProfileId: (map['childProfileId'] as String?) ?? '',
-    parentUid: (map['parentUid'] as String?) ?? '',
-    age: (map['age'] as num?)?.toInt(),
-    focusSubject: (map['focusSubject'] as String?) ?? '',
-    completedChallengeIds: List<String>.from(
-      (map['completedChallengeIds'] as List?) ?? const [],
-    ),
-    joinedAt: map['joinedAt'] is Timestamp
-        ? (map['joinedAt'] as Timestamp).toDate()
-        : DateTime.now(),
-  );
 }

@@ -1,3 +1,4 @@
+// Project imports:
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
@@ -31,6 +32,9 @@ abstract class TeacherClassesRepository {
   });
 
   Future<void> deleteClass(String classId);
+
+  Future<void> removeMember(
+      {required String classId, required String memberId});
 
   Future<void> joinClass({
     required String classId,

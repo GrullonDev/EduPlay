@@ -1,51 +1,72 @@
 {
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "emulators": {
     "firestore": {
-        "rules": "firestore.rules",
-        "indexes": "firestore.indexes.json"
+      "port": 8085
     },
-    "hosting": {
-        "public": "build/web",
-        "ignore": [
-            "firebase.json",
-            "**/.*",
-            "**/node_modules/**"
-        ],
-        "rewrites": [
-            {
-                "source": "**",
-                "destination": "/index.html"
-            }
-        ]
-    },
-    "flutter": {
-        "platforms": {
-            "android": {
-                "default": {
-                    "projectId": "eduplay-8792f",
-                    "appId": "1:729553550400:android:9cf0c6db595ad89901f3a5",
-                    "fileOutput": "android/app/google-services.json"
-                }
-            },
-            "ios": {
-                "default": {
-                    "projectId": "eduplay-2b5bd",
-                    "appId": "1:489239455681:ios:11403730d4d38ef06af140",
-                    "uploadDebugSymbols": false,
-                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
-                }
-            },
-            "dart": {
-                "lib/firebase_options.dart": {
-                    "projectId": "eduplay-8792f",
-                    "configurations": {
-                        "android": "1:729553550400:android:9cf0c6db595ad89901f3a5",
-                        "ios": "1:729553550400:ios:4480b23f2ab981e101f3a5",
-                        "macos": "1:729553550400:ios:4480b23f2ab981e101f3a5",
-                        "web": "1:729553550400:web:dfff11b6e7dc86f301f3a5",
-                        "windows": "1:729553550400:web:e5a66561d6c5a17201f3a5"
-                    }
-                }
-            }
-        }
+    "ui": {
+      "enabled": true
     }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ],
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "eduplay-8792f",
+          "appId": "1:729553550400:android:9cf0c6db595ad89901f3a5",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "eduplay-2b5bd",
+          "appId": "1:489239455681:ios:11403730d4d38ef06af140",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "eduplay-prod",
+          "configurations": {
+            "android": "1:729553550400:android:9cf0c6db595ad89901f3a5",
+            "ios": "1:729553550400:ios:4480b23f2ab981e101f3a5",
+            "macos": "1:729553550400:ios:4480b23f2ab981e101f3a5",
+            "web": "1:319528834915:web:f6dc2fd50059c3c5586556",
+            "windows": "1:729553550400:web:e5a66561d6c5a17201f3a5"
+          }
+        }
+      }
+    }
+  }
 }

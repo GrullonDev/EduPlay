@@ -1,11 +1,15 @@
-import 'package:edu_play/features/fun_english/bloc/fun_english_bloc.dart';
-
-import 'package:edu_play/utils/app_theme.dart';
-import 'package:edu_play/utils/responsive.dart';
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+// Project imports:
+import 'package:edu_play/features/fun_english/bloc/fun_english_bloc.dart';
 import 'package:edu_play/features/register/bloc/register_bloc.dart';
+import 'package:edu_play/utils/app_theme.dart';
+import 'package:edu_play/utils/responsive.dart';
 
 class FunEnglishPage extends StatelessWidget {
   const FunEnglishPage({super.key});

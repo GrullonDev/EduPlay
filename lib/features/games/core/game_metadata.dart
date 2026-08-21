@@ -1,3 +1,4 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
 
 import 'package:edu_play/features/games_catalog/models/catalog_game.dart'

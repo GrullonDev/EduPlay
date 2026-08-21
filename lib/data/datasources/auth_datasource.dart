@@ -1,5 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Flutter imports:
 import 'package:flutter/foundation.dart';
+
+// Package imports:
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 abstract class AuthDatasource {
@@ -15,6 +18,21 @@ abstract class AuthDatasource {
   Future<User?> loginParent({
     required String email,
     required String password,
+  });
+
+  /// Self-registration for a teen (15+) who does not have a parent account.
+  /// Creates a Firebase user and an `independent_students/{uid}` role doc —
+  /// distinct from `parents/{uid}` so [AuthGate] routes them to their own
+  /// student dashboard instead of a parent dashboard. The gameplay child
+  /// profile (PIN, avatar, etc.) is created separately by the caller via
+  /// `ChildProfilesService.addProfile`, reusing the same mechanism parents
+  /// use to add a child.
+  Future<User?> registerIndependentStudent({
+    required String email,
+    required String password,
+    required String name,
+    required int age,
+    String? guardianEmail,
   });
 
   Future<bool> isChildRegistered(String name);
@@ -80,6 +98,57 @@ class ImplAuthDatasource implements AuthDatasource {
         // Deliverability note: Firebase sends from noreply@<project>.firebaseapp.com.
         // For better inbox placement, configure a custom sender domain in
         // Firebase Console → Authentication → Templates → Customize action URL.
+        await user.sendEmailVerification();
+      }
+
+      return user;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Error: $e');
+      return null;
+    } catch (e) {
+      debugPrint('Error: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<User?> registerIndependentStudent({
+    required String email,
+    required String password,
+    required String name,
+    required int age,
+    String? guardianEmail,
+  }) async {
+    try {
+      UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = userCredential.user;
+
+      if (user != null) {
+        await _firestore.collection('independent_students').doc(user.uid).set({
+          'name': name,
+          'email': email,
+          'age': age,
+          'role': 'independent_student', // used by AuthGate to route back after reload
+          // Optional, self-reported — the only way an independent student
+          // (no parent account on file) can be offered a parental-consent
+          // step before deleting their own account. Absent means account
+          // deletion is immediate/self-serve, same as before.
+          if (guardianEmail != null && guardianEmail.isNotEmpty)
+            'guardianEmail': guardianEmail,
+          'onboardingComplete': false,
+          'notificationPrefs': {
+            'emailSessionComplete': true,
+            'emailWeeklyDigest': true,
+            'emailTips': false,
+            'emailNewFeatures': true,
+          },
+        });
+        await _initSubscription(user.uid);
         await user.sendEmailVerification();
       }
 
@@ -190,12 +259,21 @@ class ImplAuthDatasource implements AuthDatasource {
   Future<bool> ensureAnonymousAuth(
       {Duration timeout = const Duration(seconds: 8)}) async {
     if (_firebaseAuth.currentUser != null) return true;
-    try {
-      await _firebaseAuth.signInAnonymously().timeout(timeout);
-      return true;
-    } catch (_) {
-      return false;
+    // A single transient failure (brief connectivity blip, cold start) would
+    // otherwise be treated as a hard sign-in failure and drop the child into
+    // guest mode. Retry once before giving up.
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await _firebaseAuth.signInAnonymously().timeout(timeout);
+        return true;
+      } catch (e) {
+        debugPrint('ensureAnonymousAuth attempt $attempt failed: $e');
+        if (attempt == 0) {
+          await Future.delayed(const Duration(seconds: 1));
+        }
+      }
     }
+    return false;
   }
 
   @override

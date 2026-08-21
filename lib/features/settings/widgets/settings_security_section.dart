@@ -1,6 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:google_fonts/google_fonts.dart';
 
+// Project imports:
+import 'package:edu_play/features/legal/pages/privacy_policy_page.dart';
 import 'package:edu_play/features/settings/domain/entities/account_security_info.dart';
 import 'package:edu_play/features/settings/domain/repositories/account_security_repository.dart';
 import 'package:edu_play/features/settings/widgets/settings_section_card.dart';
@@ -42,68 +47,135 @@ class SettingsSecuritySectionState extends State<SettingsSecuritySection> {
     final passwordCtrl = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Eliminar cuenta',
-          style: GoogleFonts.fredoka(color: _kRed, fontSize: 20),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Esta acción eliminará permanentemente tu cuenta y todos los datos asociados (perfiles de niños, sesiones de práctica, etc.). Esta acción no se puede deshacer.',
-              style: GoogleFonts.nunito(fontSize: 13, height: 1.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Introduce tu contraseña para confirmar:',
-              style:
-                  GoogleFonts.nunito(fontSize: 13, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: passwordCtrl,
-              obscureText: true,
-              style: GoogleFonts.nunito(fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Tu contraseña actual',
-                hintStyle:
-                    GoogleFonts.nunito(fontSize: 14, color: Colors.grey[400]),
-                filled: true,
-                fillColor: const Color(0xFFF9FAFB),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancelar',
-                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _kRed,
+      builder: (dialogContext) {
+        var understood = false;
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'Eliminar cuenta',
-              style: GoogleFonts.nunito(
-                  color: Colors.white, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
+                  borderRadius: BorderRadius.circular(16)),
+              title: Text(
+                'Eliminar cuenta',
+                style: GoogleFonts.fredoka(color: _kRed, fontSize: 20),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Esta acción es permanente e irreversible. Al continuar, se elimina de inmediato:',
+                      style: GoogleFonts.nunito(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.5),
+                    ),
+                    const SizedBox(height: 8),
+                    const _DeletionBullet(
+                        'Tu cuenta de padre/madre y tus datos de perfil.'),
+                    const _DeletionBullet(
+                        'TODOS los perfiles de tus hijos registrados en esta cuenta.'),
+                    const _DeletionBullet(
+                        'El progreso de cada hijo: puntos, racha, nivel e historial de partidas.'),
+                    const _DeletionBullet(
+                        'Sesiones de práctica, retos asignados y tu suscripción.'),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => Navigator.of(dialogContext).push(
+                        MaterialPageRoute(
+                            builder: (_) => const PrivacyPolicyPage()),
+                      ),
+                      child: Text(
+                        'Leer política de privacidad →',
+                        style: GoogleFonts.nunito(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _kNavy,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    InkWell(
+                      onTap: () =>
+                          setDialogState(() => understood = !understood),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: understood,
+                            activeColor: _kRed,
+                            onChanged: (v) =>
+                                setDialogState(() => understood = v ?? false),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                'Entiendo que esto elimina permanentemente mi cuenta y la de mis hijos, y que no se puede deshacer.',
+                                style: GoogleFonts.nunito(
+                                    fontSize: 12.5, height: 1.4),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Introduce tu contraseña para confirmar:',
+                      style: GoogleFonts.nunito(
+                          fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: passwordCtrl,
+                      obscureText: true,
+                      style: GoogleFonts.nunito(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Tu contraseña actual',
+                        hintStyle: GoogleFonts.nunito(
+                            fontSize: 14, color: Colors.grey[400]),
+                        filled: true,
+                        fillColor: const Color(0xFFF9FAFB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: Text('Cancelar',
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kRed,
+                    disabledBackgroundColor: _kRed.withValues(alpha: 0.35),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: understood
+                      ? () => Navigator.pop(dialogContext, true)
+                      : null,
+                  child: Text(
+                    'Eliminar cuenta',
+                    style: GoogleFonts.nunito(
+                        color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
 
     if (confirmed != true || !context.mounted) return;
@@ -374,6 +446,32 @@ class SettingsSecuritySectionState extends State<SettingsSecuritySection> {
         const SizedBox(height: 40),
         const SettingsFooter(),
       ],
+    );
+  }
+}
+
+class _DeletionBullet extends StatelessWidget {
+  const _DeletionBullet(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('•  ',
+              style: GoogleFonts.nunito(fontSize: 13, color: _kRed)),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.nunito(fontSize: 13, height: 1.4),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Project imports:
 import 'package:edu_play/utils/routes/router_paths.dart';
 
 /// Keeps the child-facing navigation flow independent from individual games.
@@ -47,6 +51,30 @@ class StudentSessionNavigationService {
       hasPin ? RouterPaths.studentDashboard : RouterPaths.gamesCatalog,
       (route) => false,
     );
+  }
+
+  static String _streakRecoveryPromptKey(String childId) =>
+      'streak_recovery_prompted_$childId';
+
+  /// Whether the streak-recovery dialog was already shown to [childId]
+  /// today — so it nags at most once per day even if the child dismisses
+  /// it without playing.
+  static Future<bool> wasStreakRecoveryPromptedToday(String childId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(_streakRecoveryPromptKey(childId));
+    return stored == _todayKey();
+  }
+
+  static Future<void> markStreakRecoveryPromptedToday(String childId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_streakRecoveryPromptKey(childId), _todayKey());
+  }
+
+  static String _todayKey() {
+    final now = DateTime.now();
+    return '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
   }
 
   static void goToAdultRegistration(BuildContext context) {
