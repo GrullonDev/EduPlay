@@ -1,8 +1,8 @@
-# Ignore dependencies
+# Dependencies
 node_modules/
 
-# Ignore logs
-logs
+# Logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -10,7 +10,7 @@ yarn-error.log*
 firebase-debug.log
 firebase-debug.*.log
 
-# Ignore local configuration files
+# Local environment
 .env
 .env.local
 .env.development.local

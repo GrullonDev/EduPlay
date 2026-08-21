@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // Project imports:
+import 'package:edu_play/core/config/app_urls.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/class_member.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 import 'package:edu_play/features/teacher_dashboard/domain/repositories/teacher_classes_repository.dart';
@@ -306,10 +307,8 @@ class _ClassCardState extends State<_ClassCard> {
   }
 
   String get _inviteUrl {
-    if (!kIsWeb) {
-      return 'http://localhost:3000/#/join-class?code=${widget.tc.joinCode}';
-    }
-    return '${Uri.base.origin}/#/join-class?code=${widget.tc.joinCode}';
+    final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
+    return '$origin/#/join-class?code=${widget.tc.joinCode}';
   }
 
   Future<void> _copyLink() async {
@@ -937,10 +936,8 @@ class _JoinCodeDialogState extends State<_JoinCodeDialog> {
   bool _copied = false;
 
   String get _inviteUrl {
-    if (!kIsWeb) {
-      return 'http://localhost:3000/#/join-class?code=${widget.tc.joinCode}';
-    }
-    return '${Uri.base.origin}/#/join-class?code=${widget.tc.joinCode}';
+    final origin = kIsWeb ? Uri.base.origin : AppUrls.webBase;
+    return '$origin/#/join-class?code=${widget.tc.joinCode}';
   }
 
   Future<void> _copy() async {

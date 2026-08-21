@@ -18,6 +18,10 @@ import 'package:edu_play/features/parents_dashboard/data/repositories/firestore_
 import 'package:edu_play/features/parents_dashboard/data/repositories/firestore_parent_dashboard_repository.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/child_profiles_repository.dart';
 import 'package:edu_play/features/parents_dashboard/domain/repositories/parent_dashboard_repository.dart';
+import 'package:edu_play/features/payments/data/datasources/recurrente_datasource.dart';
+import 'package:edu_play/features/payments/data/repositories/recurrente_repository_impl.dart';
+import 'package:edu_play/features/payments/domain/repositories/recurrente_repository.dart';
+import 'package:edu_play/features/payments/domain/usecases/create_recurrente_checkout_usecase.dart';
 import 'package:edu_play/features/practice_session/data/datasources/practice_sessions_datasource.dart';
 import 'package:edu_play/features/practice_session/data/repositories/firestore_practice_sessions_repository.dart';
 import 'package:edu_play/features/practice_session/domain/repositories/practice_sessions_repository.dart';
@@ -132,6 +136,11 @@ void init() {
       () => FirestoreStoreCatalogDatasource(),
     );
   }
+  if (!sl.isRegistered<RecurrenteDatasource>()) {
+    sl.registerLazySingleton<RecurrenteDatasource>(
+      () => FirebaseRecurrenteDatasource(),
+    );
+  }
 
   // Repositories
   if (!sl.isRegistered<AdminDashboardRepository>()) {
@@ -227,6 +236,16 @@ void init() {
   if (!sl.isRegistered<StoreCatalogCache>()) {
     sl.registerLazySingleton<StoreCatalogCache>(
       () => StoreCatalogCache(repository: sl()),
+    );
+  }
+  if (!sl.isRegistered<RecurrenteRepository>()) {
+    sl.registerLazySingleton<RecurrenteRepository>(
+      () => RecurrenteRepositoryImpl(datasource: sl()),
+    );
+  }
+  if (!sl.isRegistered<CreateRecurrenteCheckoutUseCase>()) {
+    sl.registerLazySingleton<CreateRecurrenteCheckoutUseCase>(
+      () => CreateRecurrenteCheckoutUseCase(sl()),
     );
   }
 }

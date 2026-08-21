@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 // Project imports:
 import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
 import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/features/admin/pages/admin_classes_page.dart';
 import 'package:edu_play/features/admin/pages/admin_store_catalog_page.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
@@ -188,13 +189,6 @@ class _StatsView extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _ActionTile(
-            icon: Icons.manage_accounts_rounded,
-            label: 'Gestionar roles de usuario',
-            subtitle: 'Asignar o revocar rol admin',
-            onTap: () => _showManageRolesDialog(context),
-          ),
-          const SizedBox(height: 8),
-          _ActionTile(
             icon: Icons.storefront_rounded,
             label: 'Catálogo de la Tienda',
             subtitle: 'Precios, PRO, nivel y temporadas',
@@ -207,115 +201,11 @@ class _StatsView extends StatelessWidget {
             icon: Icons.school_rounded,
             label: 'Ver todas las clases',
             subtitle: '${stats.totalClasses} clases activas',
-            onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Vista de todas las clases próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AdminClassesPage()),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _showManageRolesDialog(BuildContext context) {
-    final emailCtrl = TextEditingController();
-    bool granting = true;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSt) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          title: Text('Gestionar rol admin',
-              style: GoogleFonts.fredoka(color: _kNavy, fontSize: 20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Email del usuario:',
-                style: GoogleFonts.nunito(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF374151)),
-              ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: emailCtrl,
-                decoration: const InputDecoration(
-                  hintText: 'usuario@email.com',
-                  border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                ),
-                style: GoogleFonts.nunito(fontSize: 14),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text('Acción:',
-                      style: GoogleFonts.nunito(
-                          fontSize: 13, fontWeight: FontWeight.w700)),
-                  const SizedBox(width: 12),
-                  ChoiceChip(
-                    label: const Text('Conceder admin'),
-                    selected: granting,
-                    onSelected: (_) => setSt(() => granting = true),
-                  ),
-                  const SizedBox(width: 8),
-                  ChoiceChip(
-                    label: const Text('Revocar admin'),
-                    selected: !granting,
-                    onSelected: (_) => setSt(() => granting = false),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: _kNavy,
-                  foregroundColor: Colors.white,
-                  elevation: 0),
-              onPressed: () async {
-                final email = emailCtrl.text.trim();
-                if (email.isEmpty) return;
-
-                final updated = await sl<AdminDashboardRepository>()
-                    .setAdminRoleByEmail(email: email, granting: granting);
-
-                if (!updated) {
-                  if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      const SnackBar(content: Text('Usuario no encontrado.')),
-                    );
-                  }
-                  return;
-                }
-
-                if (ctx.mounted) {
-                  Navigator.of(ctx).pop();
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(
-                      content: Text(granting
-                          ? 'Rol admin concedido a .'
-                          : 'Rol admin revocado para .'),
-                    ),
-                  );
-                }
-              },
-              child: Text('Aplicar',
-                  style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
       ),
     );
   }

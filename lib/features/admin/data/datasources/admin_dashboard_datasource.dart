@@ -4,13 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // Project imports:
 import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
 abstract class AdminDashboardDatasource {
   Future<PlatformStats?> loadStats();
-  Future<bool> setAdminRoleByEmail({
-    required String email,
-    required bool granting,
-  });
+  Future<List<TeacherClass>> listAllClasses();
 }
 
 class FirestoreAdminDashboardDatasource implements AdminDashboardDatasource {
@@ -60,28 +58,14 @@ class FirestoreAdminDashboardDatasource implements AdminDashboardDatasource {
     );
   }
 
-  /// Dead by design: `firestore.rules` now blocks any client update to
-  /// `role` on `parents/{uid}` (previously any signed-in parent could grant
-  /// themselves admin by writing that field directly, e.g. from a browser
-  /// console). This call will always throw permission-denied. Granting
-  /// admin today means editing the field directly in the Firebase Console
-  /// (which uses the Admin SDK and bypasses rules) — there is intentionally
-  /// no in-app path until a properly-authorized server-side one (e.g. a
-  /// callable Cloud Function restricted to existing admins) replaces it.
   @override
-  Future<bool> setAdminRoleByEmail({
-    required String email,
-    required bool granting,
-  }) async {
+  Future<List<TeacherClass>> listAllClasses() async {
     final snap = await _firestore
-        .collection('parents')
-        .where('email', isEqualTo: email)
-        .limit(1)
+        .collection('classes')
+        .orderBy('createdAt', descending: true)
         .get();
-    if (snap.docs.isEmpty) return false;
-    await snap.docs.first.reference.update({
-      'role': granting ? 'admin' : 'parent',
-    });
-    return true;
+    return snap.docs
+        .map((doc) => TeacherClass.fromMap(doc.data(), doc.id))
+        .toList();
   }
 }

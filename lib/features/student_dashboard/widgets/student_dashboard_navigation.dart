@@ -9,6 +9,7 @@ import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/store/models/store_item.dart';
 import 'package:edu_play/features/student_dashboard/bloc/student_dashboard_bloc.dart';
+import 'package:edu_play/features/student_dashboard/widgets/student_help_sheet.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -285,12 +286,7 @@ class StudentSidebar extends StatelessWidget {
             _SideFooterTile(
               icon: Icons.help_outline_rounded,
               label: 'Ayuda',
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Centro de ayuda próximamente.'),
-                  duration: Duration(seconds: 2),
-                ),
-              ),
+              onTap: () => showStudentHelpSheet(context),
             ),
             _SideFooterTile(
               icon: Icons.logout_rounded,

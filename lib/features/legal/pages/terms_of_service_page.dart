@@ -72,7 +72,7 @@ const _sections = <LegalSection>[
         'EduPlay ofrece un plan gratuito con funciones básicas y un plan premium '
         'con acceso completo.\n\n'
         '• Los pagos se procesan de forma segura a través de proveedores '
-        'certificados (Stripe u equivalente).\n'
+        'certificados (Recurrente u equivalente).\n'
         '• Las suscripciones se renuevan automáticamente salvo que las canceles '
         'antes de la fecha de renovación.\n'
         '• Puedes cancelar en cualquier momento desde Configuración → '

@@ -166,9 +166,11 @@ class _NotificationTile extends StatelessWidget {
             ? Colors.grey.shade100
             : _kCoral.withValues(alpha: 0.12),
         child: Icon(
-          notification.type == 'friend_request'
-              ? Icons.person_add_alt_1_rounded
-              : Icons.notifications_rounded,
+          switch (notification.type) {
+            'friend_request' => Icons.person_add_alt_1_rounded,
+            'teacher_message' => Icons.school_rounded,
+            _ => Icons.notifications_rounded,
+          },
           color: notification.read ? Colors.grey.shade500 : _kCoral,
         ),
       ),

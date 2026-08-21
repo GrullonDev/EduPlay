@@ -75,9 +75,10 @@ class _TiendaBody extends StatelessWidget {
         filtered.where((i) => i.category == StoreCategory.avatarIcon).toList();
     final stickers =
         filtered.where((i) => i.category == StoreCategory.sticker).toList();
-    final isEmpty = avatarColors.isEmpty && avatarIcons.isEmpty && stickers.isEmpty;
-    final showFeatured =
-        storeBloc.filter == StoreFilter.all && storeBloc.featuredItems.isNotEmpty;
+    final isEmpty =
+        avatarColors.isEmpty && avatarIcons.isEmpty && stickers.isEmpty;
+    final showFeatured = storeBloc.filter == StoreFilter.all &&
+        storeBloc.featuredItems.isNotEmpty;
 
     return CustomScrollView(
       slivers: [
@@ -152,7 +153,8 @@ class _TiendaBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
               ],
-              if (storeBloc.requiresApproval && !storeBloc.dashboardBloc.isGuest) ...[
+              if (storeBloc.requiresApproval &&
+                  !storeBloc.dashboardBloc.isGuest) ...[
                 const _ApprovalRequiredBanner(),
                 const SizedBox(height: 16),
               ],
@@ -170,7 +172,8 @@ class _TiendaBody extends StatelessWidget {
                 const _EmptyFilterState()
               else ...[
                 if (avatarColors.isNotEmpty) ...[
-                  _StoreSection(title: 'Colores de avatar', items: avatarColors),
+                  _StoreSection(
+                      title: 'Colores de avatar', items: avatarColors),
                   const SizedBox(height: 24),
                 ],
                 if (avatarIcons.isNotEmpty) ...[
@@ -178,7 +181,8 @@ class _TiendaBody extends StatelessWidget {
                   const SizedBox(height: 24),
                 ],
                 if (stickers.isNotEmpty)
-                  _StoreSection(title: 'Stickers exclusivos ⭐', items: stickers),
+                  _StoreSection(
+                      title: 'Stickers exclusivos ⭐', items: stickers),
               ],
             ]),
           ),
@@ -197,7 +201,8 @@ class _MyPurchasesButton extends StatelessWidget {
     return IconButton(
       tooltip: 'Mis compras',
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => MyPurchasesPage(storeBloc: storeBloc)),
+        MaterialPageRoute(
+            builder: (_) => MyPurchasesPage(storeBloc: storeBloc)),
       ),
       icon: const Icon(Icons.receipt_long_rounded, color: Colors.white),
       style: IconButton.styleFrom(
@@ -304,7 +309,8 @@ class _ApprovalRequiredBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFF3E8FF),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.4)),
+        border:
+            Border.all(color: const Color(0xFF7C3AED).withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -679,8 +685,7 @@ class _StoreItemCard extends StatelessWidget {
               ],
             ),
           ),
-          if (proOnly)
-            Positioned(top: -6, right: -6, child: _ProBadge()),
+          if (proOnly) Positioned(top: -6, right: -6, child: _ProBadge()),
           if (locked && levelLocked)
             Positioned(
               top: 4,
@@ -825,25 +830,28 @@ Future<void> _showGuestNeedsAccountDialog(BuildContext context) async {
             Navigator.pop(ctx);
             Navigator.pushNamed(context, RouterPaths.registerParents);
           },
-          child: const Text('Registrarse', style: TextStyle(color: Colors.white)),
+          child:
+              const Text('Registrarse', style: TextStyle(color: Colors.white)),
         ),
       ],
     ),
   );
 }
 
-Future<void> _handleProLockedTap(BuildContext context, StoreBloc storeBloc) async {
+Future<void> _handleProLockedTap(
+    BuildContext context, StoreBloc storeBloc) async {
   if (storeBloc.dashboardBloc.isGuest) {
     await _showGuestNeedsAccountDialog(context);
     return;
   }
-  final wantsUpgrade = await showUpgradePrompt(context, UpgradeReason.proSticker);
+  final wantsUpgrade =
+      await showUpgradePrompt(context, UpgradeReason.proSticker);
   if (wantsUpgrade && context.mounted) {
     Navigator.pushNamed(context, RouterPaths.settings);
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionButton extends StatefulWidget {
   const _ActionButton({
     required this.item,
     required this.owned,
@@ -854,6 +862,18 @@ class _ActionButton extends StatelessWidget {
   final bool owned;
   final bool equipped;
   final bool pending;
+
+  @override
+  State<_ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<_ActionButton> {
+  bool _processing = false;
+
+  StoreItem get item => widget.item;
+  bool get owned => widget.owned;
+  bool get equipped => widget.equipped;
+  bool get pending => widget.pending;
 
   Future<void> _handleBuy(BuildContext context, StoreBloc storeBloc) async {
     final requiresApproval =
@@ -866,7 +886,9 @@ class _ActionButton extends StatelessWidget {
     );
     if (!confirmed) return;
 
+    setState(() => _processing = true);
     final outcome = await storeBloc.purchase(item);
+    if (mounted) setState(() => _processing = false);
     if (!context.mounted) return;
 
     switch (outcome) {
@@ -875,7 +897,8 @@ class _ActionButton extends StatelessWidget {
       case PurchaseOutcome.pendingApproval:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(storeBloc.lastInfo ?? 'Solicitud enviada a tus papás.'),
+            content:
+                Text(storeBloc.lastInfo ?? 'Solicitud enviada a tus papás.'),
             backgroundColor: const Color(0xFF7C3AED),
             duration: const Duration(seconds: 3),
           ),
@@ -906,7 +929,8 @@ class _ActionButton extends StatelessWidget {
     final storeBloc = context.watch<StoreBloc>();
 
     if (pending) {
-      return const _StaticLabel(text: '⏳ Esperando aprobación', color: Color(0xFF7C3AED));
+      return const _StaticLabel(
+          text: '⏳ Esperando aprobación', color: Color(0xFF7C3AED));
     }
     if (owned && item.category == StoreCategory.sticker) {
       return const _StaticLabel(text: '✓ En tu álbum', color: Colors.green);
@@ -939,7 +963,8 @@ class _ActionButton extends StatelessWidget {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton(
-          onPressed: storeBloc.isBusy ? null : () => _handleEquip(context, storeBloc),
+          onPressed:
+              storeBloc.isBusy ? null : () => _handleEquip(context, storeBloc),
           style: OutlinedButton.styleFrom(
             foregroundColor: _kNavy,
             side: const BorderSide(color: _kNavy),
@@ -962,7 +987,8 @@ class _ActionButton extends StatelessWidget {
     if (!storeBloc.canAccess(item)) {
       return GestureDetector(
         onTap: () => _handleProLockedTap(context, storeBloc),
-        child: const _StaticLabel(text: 'Solo PRO · Toca para saber más', color: Color(0xFF7C3AED)),
+        child: const _StaticLabel(
+            text: 'Solo PRO · Toca para saber más', color: Color(0xFF7C3AED)),
       );
     }
 
@@ -999,24 +1025,40 @@ class _ActionButton extends StatelessWidget {
                 ? null
                 : () => _handleBuy(context, storeBloc),
             style: ElevatedButton.styleFrom(
-              backgroundColor: canAfford && !overSpendLimit ? _kNavy : Colors.grey[300],
-              foregroundColor: canAfford && !overSpendLimit ? Colors.white : Colors.grey[600],
+              backgroundColor:
+                  canAfford && !overSpendLimit ? _kNavy : Colors.grey[300],
+              foregroundColor: canAfford && !overSpendLimit
+                  ? Colors.white
+                  : Colors.grey[600],
+              disabledBackgroundColor: _processing ? _kNavy : null,
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 8),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10)),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bolt_rounded,
-                    size: 14,
-                    color: canAfford && !overSpendLimit ? _kGold : Colors.grey[500]),
-                const SizedBox(width: 4),
-                Text('${item.cost}', style: const TextStyle(fontSize: 12)),
-              ],
-            ),
+            child: _processing
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.bolt_rounded,
+                          size: 14,
+                          color: canAfford && !overSpendLimit
+                              ? _kGold
+                              : Colors.grey[500]),
+                      const SizedBox(width: 4),
+                      Text('${item.cost}',
+                          style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
           ),
         ),
         if (!canAfford) ...[
