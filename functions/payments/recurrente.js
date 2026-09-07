@@ -28,19 +28,28 @@
  * Environment config (Firebase Secret Manager or .env):
  *   RECURRENTE_SECRET_KEY_TEST     – sk_test_...
  *   RECURRENTE_SECRET_KEY          – sk_live_...
- *   RECURRENTE_WEBHOOK_SECRET_TEST – signing secret for the test-mode webhook
- *   RECURRENTE_WEBHOOK_SECRET      – signing secret for the live-mode webhook
+ *   RECURRENTE_WEBHOOK_SECRET_TEST – Svix signing secret for the test-mode
+ *                                    endpoint (whsec_..., from the "GrullonDev
+ *                                    (Test)" environment in Recurrente's Svix
+ *                                    webhook dashboard)
+ *   RECURRENTE_WEBHOOK_SECRET      – Svix signing secret for the live-mode
+ *                                    endpoint (whsec_..., from the
+ *                                    "GrullonDev" production environment,
+ *                                    once that endpoint is created there)
  *
- * Webhook signature verification: Recurrente's event naming
- * (`payment_intent.succeeded`, flat body) mirrors Stripe's API design, so
- * `isValidSignature` below verifies against the same composite scheme Stripe
- * uses: a `<signature-header>` value shaped as `t=<unix ts>,v1=<hmac>`, where
- * the hmac is HMAC-SHA256(`${t}.${rawBody}`, webhookSecret) — this needs to
- * be confirmed against the "Webhooks" section of the Recurrente dashboard
- * (where the signing secret is issued) before relying on it in production.
- * If the header name or scheme differs, SIGNATURE_HEADER and
- * isValidSignature are the only things that need to change — the rest of
- * the webhook (order lookup, mode selection, accreditation) doesn't.
+ * Webhook signature verification: confirmed (via the Recurrente/Svix
+ * dashboard) that Recurrente delivers webhooks through Svix, not a
+ * Stripe-style scheme — so `isValidSignature` below implements Svix's own
+ * verification algorithm: https://docs.svix.com/receiving/verifying-payloads/how-manual
+ *   1. Headers `svix-id`, `svix-timestamp`, `svix-signature` arrive on every
+ *      delivery (`svix-signature` is a space-delimited list of
+ *      "<version>,<base64-hmac>" pairs; only "v1" is checked here).
+ *   2. signedContent = `${svix-id}.${svix-timestamp}.${rawBody}`.
+ *   3. The whsec_... secret's base64 portion (after the prefix) is the raw
+ *      HMAC-SHA256 key; the digest is base64-encoded and compared
+ *      (timing-safe) against each v1 value in svix-signature.
+ *   4. svix-timestamp outside MAX_SIGNATURE_AGE_SECONDS of "now" is rejected
+ *      (replay protection) — same tolerance Svix's own libraries use.
  */
 
 'use strict';
@@ -57,48 +66,55 @@ const RECURRENTE_WEBHOOK_SECRET = defineSecret('RECURRENTE_WEBHOOK_SECRET');
 
 const RECURRENTE_API_BASE = 'https://app.recurrente.com/api/v1';
 
-// Confirm this against the Recurrente dashboard's webhook config — see the
-// module docstring above. Lowercase because Node normalizes incoming header
-// names to lowercase on `req.headers`.
-const SIGNATURE_HEADER = 'recurrente-signature';
+const SVIX_ID_HEADER = 'svix-id';
+const SVIX_TIMESTAMP_HEADER = 'svix-timestamp';
+const SVIX_SIGNATURE_HEADER = 'svix-signature';
 
-// Reject events whose timestamp is further than this from "now", to stop a
-// captured request from being replayed later.
+// Reject events whose svix-timestamp is further than this from "now", to
+// stop a captured request from being replayed later.
 const MAX_SIGNATURE_AGE_SECONDS = 5 * 60;
 
 /**
- * Verifies a Stripe-style composite signature header (`t=<ts>,v1=<hmac>`)
- * against the raw request body. Fails closed: any missing piece (header,
- * secret, malformed value, stale timestamp, mismatch) returns false.
+ * Verifies a Svix webhook delivery against the raw request body. Fails
+ * closed: any missing piece (headers, secret, malformed value, stale
+ * timestamp, no matching v1 signature) returns false.
  */
-function isValidSignature(rawBody, signatureHeader, secret) {
-  if (!rawBody || !signatureHeader || !secret) return false;
+function isValidSignature(rawBody, headers, secret) {
+  if (!rawBody || !secret) return false;
 
-  const parts = {};
-  for (const segment of String(signatureHeader).split(',')) {
-    const [key, value] = segment.trim().split('=');
-    if (key && value) parts[key] = value;
-  }
+  const svixId = headers?.[SVIX_ID_HEADER];
+  const svixTimestamp = headers?.[SVIX_TIMESTAMP_HEADER];
+  const svixSignature = headers?.[SVIX_SIGNATURE_HEADER];
+  if (!svixId || !svixTimestamp || !svixSignature) return false;
 
-  const timestamp = parts.t;
-  const signature = parts.v1;
-  if (!timestamp || !signature) return false;
-
-  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(svixTimestamp));
   if (!Number.isFinite(ageSeconds) || ageSeconds > MAX_SIGNATURE_AGE_SECONDS) {
     return false;
   }
 
-  const signedPayload = Buffer.concat([
-    Buffer.from(`${timestamp}.`, 'utf8'),
-    Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8'),
+  const bodyBuf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+  const signedContent = Buffer.concat([
+    Buffer.from(`${svixId}.${svixTimestamp}.`, 'utf8'),
+    bodyBuf,
   ]);
-  const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
 
-  const expectedBuf = Buffer.from(expected, 'utf8');
-  const providedBuf = Buffer.from(signature, 'utf8');
-  if (expectedBuf.length !== providedBuf.length) return false;
-  return crypto.timingSafeEqual(expectedBuf, providedBuf);
+  // whsec_... secrets are base64-encoded after the prefix; that decoded
+  // value is the actual HMAC key (per Svix's verification spec).
+  const secretKey = secret.startsWith('whsec_')
+    ? Buffer.from(secret.slice('whsec_'.length), 'base64')
+    : Buffer.from(secret, 'base64');
+
+  const expectedBuf = crypto.createHmac('sha256', secretKey).update(signedContent).digest();
+
+  for (const part of String(svixSignature).split(' ')) {
+    const [version, sig] = part.trim().split(',');
+    if (version !== 'v1' || !sig) continue;
+
+    const providedBuf = Buffer.from(sig, 'base64');
+    if (providedBuf.length !== expectedBuf.length) continue;
+    if (crypto.timingSafeEqual(expectedBuf, providedBuf)) return true;
+  }
+  return false;
 }
 
 /**
@@ -348,9 +364,7 @@ const recurrenteWebhook = onRequest(
       order.mode === 'test'
         ? RECURRENTE_WEBHOOK_SECRET_TEST.value()
         : RECURRENTE_WEBHOOK_SECRET.value();
-    const signatureHeader = req.headers[SIGNATURE_HEADER];
-
-    if (!isValidSignature(req.rawBody, signatureHeader, webhookSecret)) {
+    if (!isValidSignature(req.rawBody, req.headers, webhookSecret)) {
       console.error(
         `Recurrente webhook: invalid or missing signature for order ${orderId} ` +
         `(mode=${order.mode ?? 'unknown'}).`
