@@ -2,37 +2,31 @@
  * EduPlay – Firebase Cloud Functions
  *
  * Functions:
- *  1. createStripeCheckoutSession  – ON HOLD, commented out below in the
- *     "Stripe (on hold)" section. Stripe billing isn't being turned on yet
- *     — re-enable by deleting the block-comment markers around that section.
- *
- *  2. stripeWebhook                – ON HOLD, see above.
- *
- *  3. onSessionComplete            – ON HOLD, commented out below in the
+ *  1. onSessionComplete            – ON HOLD, commented out below in the
  *     "onSessionComplete (on hold)" section. Firestore trigger; would fire
  *     when a practice_sessions document transitions isActive: true → false
  *     and send an email to the parent via SendGrid.
  *
- *  4. onDeletionRequestCreated     – Firestore trigger; fires when an
+ *  2. onDeletionRequestCreated     – Firestore trigger; fires when an
  *     independent student (who has a guardian email on file) requests
  *     account deletion. Emails the guardian an approve/deny link — the
  *     student's own account is never deleted unless they click approve.
  *
- *  5. resolveDeletion              – HTTP; the approve/deny link target.
+ *  3. resolveDeletion              – HTTP; the approve/deny link target.
  *     Runs with the Admin SDK (bypasses Firestore rules on purpose — this
  *     is the ONE place a deletion_requests doc may ever be resolved) and,
  *     on approve, performs the actual account/data deletion.
  *
- *  6. createRecurrenteCheckout     – Callable; see payments/recurrente.js.
+ *  4. createRecurrenteCheckout     – Callable; see payments/recurrente.js.
  *     Creates a Recurrente checkout link and a matching orders/{orderId}
  *     doc in Firestore (status PENDING).
  *
- *  7. recurrenteWebhook            – HTTP; see payments/recurrente.js.
+ *  5. recurrenteWebhook            – HTTP; see payments/recurrente.js.
  *     Recurrente's payment-confirmation callback. Marks the order PAID and
  *     credits the purchase (subscription upgrade today; store items are a
  *     documented no-op pending a target write, see accreditOrder()).
  *
- *  8. cancelRecurrenteSubscription – Callable; see payments/recurrente.js.
+ *  6. cancelRecurrenteSubscription – Callable; see payments/recurrente.js.
  *     Downgrades the caller's own subscriptions/{uid} from 'pro' back to
  *     'free'. Purely a local Firestore flip — Recurrente checkouts here are
  *     one-off payments, not a Recurrente-managed recurring subscription, so
@@ -40,9 +34,6 @@
  *     docstring for the full reasoning).
  *
  * Environment config (set via Firebase Secret Manager or .env):
- *   STRIPE_SECRET_KEY           – sk_live_… or sk_test_…
- *   STRIPE_WEBHOOK_SECRET       – whsec_… from Stripe dashboard
- *   STRIPE_PRO_PRICE_ID         – price_… for the EduPlay Pro plan
  *   SENDGRID_API_KEY            – SG.…
  *   SENDGRID_FROM_EMAIL         – noreply@yourdomain.com
  *   APP_URL                     – https://your-app.web.app
@@ -69,158 +60,19 @@ const {
 } = require('./payments/recurrente');
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
-// Stripe is still on hold below. SendGrid is active but only for
-// onDeletionRequestCreated (guardian-consent emails) — onSessionComplete
-// stays disabled in its own "on hold" section further down.
+// SendGrid is active but only for onDeletionRequestCreated (guardian-consent
+// emails) — onSessionComplete stays disabled in its own "on hold" section
+// further down.
 const SENDGRID_API_KEY    = defineSecret('SENDGRID_API_KEY');
 const SENDGRID_FROM_EMAIL = defineSecret('SENDGRID_FROM_EMAIL');
 const APP_URL             = defineSecret('APP_URL');
-
-/* ── Stripe (on hold) ──────────────────────────────────────────────────────────
- * Not being turned on yet. Kept here, disabled, rather than deleted, so the
- * subscriptions/{uid}.tier logic it depends on doesn't need to be
- * re-designed from scratch later. To re-enable: delete this opening
- * "/*" and the matching closing "*\/" below, and move the three STRIPE_*
- * defineSecret(...) calls back out of this comment alongside SENDGRID_API_KEY
- * above.
-
-const STRIPE_SECRET_KEY     = defineSecret('STRIPE_SECRET_KEY');
-const STRIPE_WEBHOOK_SECRET = defineSecret('STRIPE_WEBHOOK_SECRET');
-const STRIPE_PRO_PRICE_ID   = defineSecret('STRIPE_PRO_PRICE_ID');
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. createStripeCheckoutSession
-// ─────────────────────────────────────────────────────────────────────────────
-
-exports.createStripeCheckoutSession = onCall(
-  { secrets: [STRIPE_SECRET_KEY, STRIPE_PRO_PRICE_ID, APP_URL] },
-  async (request) => {
-    const uid = request.auth?.uid;
-    if (!uid) {
-      throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
-    }
-
-    const Stripe = require('stripe');
-    const stripe = new Stripe(STRIPE_SECRET_KEY.value(), {
-      apiVersion: '2024-06-20',
-    });
-
-    // Look up or create the Stripe customer
-    const subSnap = await db.collection('subscriptions').doc(uid).get();
-    let customerId = subSnap.exists ? subSnap.data()?.stripeCustomerId : null;
-
-    if (!customerId) {
-      const userSnap = await db.collection('parents').doc(uid).get();
-      const email = userSnap.data()?.email ?? '';
-      const customer = await stripe.customers.create({
-        email,
-        metadata: { firebaseUid: uid },
-      });
-      customerId = customer.id;
-      await db.collection('subscriptions').doc(uid).set(
-        { stripeCustomerId: customerId },
-        { merge: true }
-      );
-    }
-
-    const appUrl = APP_URL.value() || 'https://localhost:3000';
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: STRIPE_PRO_PRICE_ID.value(),
-          quantity: 1,
-        },
-      ],
-      success_url: `${appUrl}/#/settings?upgrade=success`,
-      cancel_url: `${appUrl}/#/settings?upgrade=cancelled`,
-      metadata: { firebaseUid: uid },
-    });
-
-    return { sessionUrl: session.url };
-  }
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 2. stripeWebhook
-// ─────────────────────────────────────────────────────────────────────────────
-
-exports.stripeWebhook = onRequest(
-  { secrets: [STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET] },
-  async (req, res) => {
-    const Stripe = require('stripe');
-    const stripe = new Stripe(STRIPE_SECRET_KEY.value(), {
-      apiVersion: '2024-06-20',
-    });
-
-    const sig = req.headers['stripe-signature'];
-    let event;
-
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.rawBody,
-        sig,
-        STRIPE_WEBHOOK_SECRET.value()
-      );
-    } catch (err) {
-      console.error('Webhook signature verification failed:', err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object;
-      const uid = session.metadata?.firebaseUid;
-
-      if (uid) {
-        await db.collection('subscriptions').doc(uid).set(
-          {
-            tier: 'pro',
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
-            activatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-        console.log(`Upgraded user ${uid} to pro.`);
-      }
-    }
-
-    if (event.type === 'customer.subscription.deleted') {
-      const sub = event.data.object;
-      // Find user by customerId
-      const snap = await db
-        .collection('subscriptions')
-        .where('stripeCustomerId', '==', sub.customer)
-        .limit(1)
-        .get();
-
-      if (!snap.empty) {
-        const docRef = snap.docs[0].ref;
-        await docRef.set(
-          {
-            tier: 'free',
-            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
-          },
-          { merge: true }
-        );
-        console.log(`Downgraded user ${snap.docs[0].id} to free.`);
-      }
-    }
-
-    res.json({ received: true });
-  }
-);
-
-*/ // ── end Stripe (on hold) ─────────────────────────────────────────────────
 
 /* ── onSessionComplete (on hold) ─────────────────────────────────────────────
  * Not being turned on yet. Kept here, disabled, rather than deleted. To
  * re-enable: delete this opening "/*" and the matching closing "*\/" below.
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. onSessionComplete – email parent when child finishes a practice session
+// 1. onSessionComplete – email parent when child finishes a practice session
 // ─────────────────────────────────────────────────────────────────────────────
 
 exports.onSessionComplete = onDocumentUpdated(
@@ -330,7 +182,7 @@ exports.onSessionComplete = onDocumentUpdated(
 */ // ── end onSessionComplete (on hold) ─────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. onDeletionRequestCreated – email the guardian an approve/deny link
+// 2. onDeletionRequestCreated – email the guardian an approve/deny link
 // ─────────────────────────────────────────────────────────────────────────────
 
 exports.onDeletionRequestCreated = onDocumentCreated(
@@ -405,7 +257,7 @@ exports.onDeletionRequestCreated = onDocumentCreated(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. resolveDeletion – approve/deny link target; performs the actual deletion
+// 3. resolveDeletion – approve/deny link target; performs the actual deletion
 // ─────────────────────────────────────────────────────────────────────────────
 
 exports.resolveDeletion = onRequest(async (req, res) => {
@@ -495,7 +347,7 @@ exports.resolveDeletion = onRequest(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6-8. Recurrente payments (createRecurrenteCheckout,
+// 4-6. Recurrente payments (createRecurrenteCheckout,
 //      cancelRecurrenteSubscription, recurrenteWebhook)
 // ─────────────────────────────────────────────────────────────────────────────
 
