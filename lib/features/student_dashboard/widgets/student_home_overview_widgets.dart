@@ -24,8 +24,8 @@ class StudentMissionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = mission?['title'] as String? ??
-        '¡La Aventura de las Fracciones te espera!';
+    final title =
+        mission?['title'] as String? ?? '¡Tu próxima misión te espera!';
     final hasReal = mission != null;
 
     // Mobile: no mascot, slightly shorter
@@ -297,9 +297,9 @@ class StudentStatCardsRow extends StatelessWidget {
         icon: Icons.groups_rounded,
         iconColor: const Color(0xFF5C6BC0),
         bgColor: const Color(0xFFECEFF8),
-        title: 'Desafío Grupal',
+        title: 'Retos de Clase',
         value:
-            '$activeChallenges ${activeChallenges == 1 ? 'Amigo' : 'Amigos'} jugando',
+            '$activeChallenges ${activeChallenges == 1 ? 'reto activo' : 'retos activos'}',
         child: null,
       ),
     ];

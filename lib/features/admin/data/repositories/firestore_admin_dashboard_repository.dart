@@ -2,6 +2,7 @@
 import 'package:edu_play/features/admin/data/datasources/admin_dashboard_datasource.dart';
 import 'package:edu_play/features/admin/domain/entities/platform_stats.dart';
 import 'package:edu_play/features/admin/domain/repositories/admin_dashboard_repository.dart';
+import 'package:edu_play/features/teacher_dashboard/domain/entities/teacher_class.dart';
 
 class FirestoreAdminDashboardRepository implements AdminDashboardRepository {
   const FirestoreAdminDashboardRepository({required this.datasource});
@@ -12,10 +13,5 @@ class FirestoreAdminDashboardRepository implements AdminDashboardRepository {
   Future<PlatformStats?> loadStats() => datasource.loadStats();
 
   @override
-  Future<bool> setAdminRoleByEmail({
-    required String email,
-    required bool granting,
-  }) {
-    return datasource.setAdminRoleByEmail(email: email, granting: granting);
-  }
+  Future<List<TeacherClass>> listAllClasses() => datasource.listAllClasses();
 }

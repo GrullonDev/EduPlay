@@ -203,6 +203,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
             ? profile!['name']
             : member.displayName,
         'email': member.email,
+        'parentUid': member.parentUid,
         'age': (profile?['age'] as num?)?.toInt() ?? member.age,
         'focusSubject': member.focusSubject,
         'points': points,

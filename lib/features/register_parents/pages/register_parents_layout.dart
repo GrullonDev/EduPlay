@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -8,6 +9,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:edu_play/features/register_parents/bloc/register_parents_bloc.dart';
 import 'package:edu_play/l10n/app_localizations.dart';
+import 'package:edu_play/shared/services/newsletter_service.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
 
@@ -161,20 +163,24 @@ class _Navbar extends StatelessWidget {
               ),
               if (isDesktop) ...[
                 const SizedBox(width: 40),
-                ...[
-                  AppLocalizations.of(context)!.navCurriculum,
-                  AppLocalizations.of(context)!.navGames,
-                  AppLocalizations.of(context)!.navForTeachers,
-                  AppLocalizations.of(context)!.navPricing,
+                ...const [
+                  (label: 'Inicio', route: RouterPaths.landing),
+                  (
+                    label: 'Para Profesores',
+                    route: RouterPaths.registerTeacher
+                  ),
                 ].map(
-                  (label) => Padding(
+                  (item) => Padding(
                     padding: const EdgeInsets.only(right: 28),
-                    child: Text(
-                      label,
-                      style: GoogleFonts.nunito(
-                        color: Colors.grey[700],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    child: InkWell(
+                      onTap: () => Navigator.pushNamed(context, item.route),
+                      child: Text(
+                        item.label,
+                        style: GoogleFonts.nunito(
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -525,7 +531,11 @@ class _FormCard extends StatelessWidget {
                               fontSize: 13,
                               color: _kNavy,
                               fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => Navigator.pushNamed(
+                                  context, RouterPaths.termsOfService),
                           ),
                           const TextSpan(text: ' y la '),
                           TextSpan(
@@ -534,7 +544,11 @@ class _FormCard extends StatelessWidget {
                               fontSize: 13,
                               color: _kNavy,
                               fontWeight: FontWeight.w700,
+                              decoration: TextDecoration.underline,
                             ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => Navigator.pushNamed(
+                                  context, RouterPaths.privacyPolicy),
                           ),
                           const TextSpan(text: ' de EduPlay.'),
                         ],
@@ -740,9 +754,14 @@ class _Footer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(child: _FooterBrand()),
-                const Expanded(child: _FooterLinks('Producto', _productLinks)),
-                const Expanded(
-                    child: _FooterLinks('Recursos', _resourceLinks)),
+                Expanded(
+                  child: _FooterLinks('Producto', _productLinks,
+                      onTap: (i) => _onProductTap(context, i)),
+                ),
+                Expanded(
+                  child: _FooterLinks('Recursos', _resourceLinks,
+                      onTap: (i) => _onResourceTap(context, i)),
+                ),
                 Expanded(child: _FooterNewsletter()),
               ],
             )
@@ -751,9 +770,11 @@ class _Footer extends StatelessWidget {
               children: [
                 _FooterBrand(),
                 const SizedBox(height: 24),
-                const _FooterLinks('Producto', _productLinks),
+                _FooterLinks('Producto', _productLinks,
+                    onTap: (i) => _onProductTap(context, i)),
                 const SizedBox(height: 24),
-                const _FooterLinks('Recursos', _resourceLinks),
+                _FooterLinks('Recursos', _resourceLinks,
+                    onTap: (i) => _onResourceTap(context, i)),
                 const SizedBox(height: 24),
                 _FooterNewsletter(),
               ],
@@ -761,10 +782,31 @@ class _Footer extends StatelessWidget {
     );
   }
 
+  void _onProductTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, RouterPaths.registerTeacher);
+        break;
+      case 1:
+        Navigator.pushNamed(context, RouterPaths.parentGuide);
+        break;
+    }
+  }
+
+  void _onResourceTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushNamed(context, RouterPaths.privacyPolicy);
+        break;
+      case 1:
+        Navigator.pushNamed(context, RouterPaths.termsOfService);
+        break;
+    }
+  }
+
   static const _productLinks = [
     'Herramientas para Profesores',
     'Guía para Padres',
-    'Laboratorios de Investigación',
   ];
   static const _resourceLinks = [
     'Política de Privacidad',
@@ -801,10 +843,11 @@ class _FooterBrand extends StatelessWidget {
 }
 
 class _FooterLinks extends StatelessWidget {
-  const _FooterLinks(this.title, this.links);
+  const _FooterLinks(this.title, this.links, {this.onTap});
 
   final String title;
   final List<String> links;
+  final ValueChanged<int>? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -820,12 +863,15 @@ class _FooterLinks extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-        for (final link in links) ...[
-          Text(
-            link,
-            style: GoogleFonts.nunito(
-              fontSize: 13,
-              color: Colors.grey[600],
+        for (var i = 0; i < links.length; i++) ...[
+          InkWell(
+            onTap: onTap == null ? null : () => onTap!(i),
+            child: Text(
+              links[i],
+              style: GoogleFonts.nunito(
+                fontSize: 13,
+                color: Colors.grey[600],
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -835,7 +881,62 @@ class _FooterLinks extends StatelessWidget {
   }
 }
 
-class _FooterNewsletter extends StatelessWidget {
+class _FooterNewsletter extends StatefulWidget {
+  @override
+  State<_FooterNewsletter> createState() => _FooterNewsletterState();
+}
+
+class _FooterNewsletterState extends State<_FooterNewsletter> {
+  final _emailController = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _subscribe() async {
+    final email = _emailController.text.trim();
+    final emailRegex = RegExp(r'^[\w\.\+\-]+@[\w\-]+\.[a-z]{2,}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ingresa un correo válido.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _sending = true);
+    try {
+      await NewsletterService.subscribe(
+          email: email, source: 'register_parents_footer');
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _sending = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('No se pudo completar la suscripción. Intenta de nuevo.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    setState(() => _sending = false);
+    _emailController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('¡Gracias! Te avisaremos pronto.'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -854,7 +955,10 @@ class _FooterNewsletter extends StatelessWidget {
           children: [
             Expanded(
               child: TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 style: GoogleFonts.nunito(fontSize: 13),
+                onSubmitted: (_) => _sending ? null : _subscribe(),
                 decoration: InputDecoration(
                   hintText: 'Tu email',
                   hintStyle:
@@ -872,12 +976,7 @@ class _FooterNewsletter extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             ElevatedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('¡Gracias! Te avisaremos pronto.'),
-                  duration: Duration(seconds: 3),
-                ),
-              ),
+              onPressed: _sending ? null : _subscribe,
               style: ElevatedButton.styleFrom(
                 backgroundColor: _kNavy,
                 foregroundColor: Colors.white,
@@ -888,13 +987,20 @@ class _FooterNewsletter extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(
-                'Suscribirse',
-                style: GoogleFonts.nunito(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
+              child: _sending
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      'Suscribirse',
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
             ),
           ],
         ),
