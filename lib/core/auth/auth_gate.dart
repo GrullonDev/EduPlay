@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // Project imports:
 import 'package:edu_play/core/auth/independent_student_loader.dart';
+import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/features/auth/pages/email_verification_gate_page.dart';
 import 'package:edu_play/features/child_pin/pages/child_pin_page.dart';
 import 'package:edu_play/features/parents_dashboard/pages/parents_dashboard_page.dart';
@@ -14,6 +15,7 @@ import 'package:edu_play/features/student_dashboard/pages/student_dashboard_page
 import 'package:edu_play/features/student_dashboard/services/student_session_navigation_service.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/teacher_dashboard_page.dart';
 import 'package:edu_play/utils/child_portal_link.dart';
+import 'package:edu_play/utils/injection_container.dart';
 
 /// Listens to [FirebaseAuth.authStateChanges] and routes the user to the
 /// correct screen without going through the login page when they already
@@ -278,6 +280,27 @@ class _RoleResolutionErrorScreen extends StatelessWidget {
 class _NoSessionEntry extends StatelessWidget {
   const _NoSessionEntry();
 
+  /// Establishes anonymous auth *before* [ChildPinPage] is ever shown.
+  ///
+  /// [ChildPinPage._validate] also calls `ensureAnonymousAuth()` once the
+  /// child finishes entering their PIN — but if anonymous sign-in hadn't
+  /// happened yet at that point, its success fires a fresh
+  /// `authStateChanges()` event, which rebuilds [AuthGate] and mounts a
+  /// brand-new `ChildPinPage` in the middle of the in-flight PIN lookup. The
+  /// old page's `if (!mounted) return;` guard then silently drops the
+  /// result — even a *correct* PIN looks like nothing happened, and only a
+  /// second attempt (now with auth already established) succeeds.
+  ///
+  /// Doing the anonymous sign-in here, before `ChildPinPage` exists, means
+  /// that any such remount happens during this widget's own loading splash
+  /// — never while a child is mid-PIN-entry — and `ChildPinPage`'s own
+  /// `ensureAnonymousAuth()` call becomes a true no-op (already signed in),
+  /// so no further remount can happen once the numpad is on screen.
+  Future<bool> _prepare() async {
+    await sl<AuthRepository>().ensureAnonymousAuth();
+    return StudentSessionNavigationService.hasRememberedChildPin();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Synchronous check first: a parent-shared link embeds both the profile
@@ -287,7 +310,7 @@ class _NoSessionEntry extends StatelessWidget {
     }
 
     return FutureBuilder<bool>(
-      future: StudentSessionNavigationService.hasRememberedChildPin(),
+      future: _prepare(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const _SplashLoader();

@@ -21,6 +21,7 @@ import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_settings_page.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -402,7 +403,12 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 4),
           _TopIcon(
             Icons.settings_outlined,
-            onPressed: () => Navigator.pushNamed(context, RouterPaths.settings),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TeacherSettingsPage(teacherName: bloc.teacherName),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           // Avatar
