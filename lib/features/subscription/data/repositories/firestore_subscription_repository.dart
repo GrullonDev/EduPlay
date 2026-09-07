@@ -52,4 +52,9 @@ class FirestoreSubscriptionRepository implements SubscriptionRepository {
 
     return sub.sessionsThisMonth < Subscription.freeSessionLimit;
   }
+
+  @override
+  Future<void> cancelSubscription() {
+    return datasource.cancelSubscription();
+  }
 }

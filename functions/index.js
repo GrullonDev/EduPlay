@@ -32,6 +32,13 @@
  *     credits the purchase (subscription upgrade today; store items are a
  *     documented no-op pending a target write, see accreditOrder()).
  *
+ *  8. cancelRecurrenteSubscription – Callable; see payments/recurrente.js.
+ *     Downgrades the caller's own subscriptions/{uid} from 'pro' back to
+ *     'free'. Purely a local Firestore flip — Recurrente checkouts here are
+ *     one-off payments, not a Recurrente-managed recurring subscription, so
+ *     there is nothing to cancel on their side (see the function's own
+ *     docstring for the full reasoning).
+ *
  * Environment config (set via Firebase Secret Manager or .env):
  *   STRIPE_SECRET_KEY           – sk_live_… or sk_test_…
  *   STRIPE_WEBHOOK_SECRET       – whsec_… from Stripe dashboard
@@ -39,8 +46,10 @@
  *   SENDGRID_API_KEY            – SG.…
  *   SENDGRID_FROM_EMAIL         – noreply@yourdomain.com
  *   APP_URL                     – https://your-app.web.app
- *   RECURRENTE_SECRET_KEY_TEST  – sk_test_…
- *   RECURRENTE_SECRET_KEY       – sk_live_…
+ *   RECURRENTE_SECRET_KEY_TEST     – sk_test_…
+ *   RECURRENTE_SECRET_KEY          – sk_live_…
+ *   RECURRENTE_WEBHOOK_SECRET_TEST – webhook signing secret, test mode
+ *   RECURRENTE_WEBHOOK_SECRET      – webhook signing secret, live mode
  */
 
 'use strict';
@@ -53,7 +62,11 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
-const { createRecurrenteCheckout, recurrenteWebhook } = require('./payments/recurrente');
+const {
+  createRecurrenteCheckout,
+  cancelRecurrenteSubscription,
+  recurrenteWebhook,
+} = require('./payments/recurrente');
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Stripe is still on hold below. SendGrid is active but only for
@@ -482,8 +495,10 @@ exports.resolveDeletion = onRequest(async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6-7. Recurrente payments (createRecurrenteCheckout, recurrenteWebhook)
+// 6-8. Recurrente payments (createRecurrenteCheckout,
+//      cancelRecurrenteSubscription, recurrenteWebhook)
 // ─────────────────────────────────────────────────────────────────────────────
 
 exports.createRecurrenteCheckout = createRecurrenteCheckout;
+exports.cancelRecurrenteSubscription = cancelRecurrenteSubscription;
 exports.recurrenteWebhook = recurrenteWebhook;

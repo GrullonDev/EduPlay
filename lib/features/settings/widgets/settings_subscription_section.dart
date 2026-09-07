@@ -44,6 +44,78 @@ class SettingsSubscriptionSection extends StatefulWidget {
 class _SettingsSubscriptionSectionState
     extends State<SettingsSubscriptionSection> {
   bool _startingCheckout = false;
+  bool _cancelling = false;
+
+  Future<void> _confirmAndCancel(
+    BuildContext context,
+    SubscriptionRepository repository,
+  ) async {
+    if (_cancelling) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          '¿Cancelar tu Plan Pro?',
+          style: GoogleFonts.fredoka(fontWeight: FontWeight.w700),
+        ),
+        content: Text(
+          'Al cancelar perderás el acceso a las funciones Pro '
+          '(exploradores y sesiones ilimitadas, informes avanzados) '
+          'de inmediato — hoy no manejamos ciclos de facturación, así que '
+          'el cambio a Plan Gratuito ocurre al momento, no al final de un '
+          'periodo. Puedes volver a suscribirte cuando quieras.',
+          style: GoogleFonts.nunito(fontSize: 13, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('Volver', style: GoogleFonts.nunito()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              'Sí, cancelar',
+              style: GoogleFonts.nunito(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFFE74C3C),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _cancelling = true);
+    try {
+      await repository.cancelSubscription();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Tu suscripción Pro fue cancelada. Ahora estás en el Plan Gratuito.',
+              style: GoogleFonts.nunito(),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'No se pudo cancelar la suscripción. Inténtalo de nuevo.',
+              style: GoogleFonts.nunito(),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _cancelling = false);
+    }
+  }
 
   Future<void> _startCheckout(BuildContext context) async {
     if (_startingCheckout) return;
@@ -439,6 +511,39 @@ class _SettingsSubscriptionSectionState
                       'Tienes acceso ilimitado. Gracias por tu apoyo.',
                       style: GoogleFonts.nunito(
                           fontSize: 13, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: _cancelling
+                            ? null
+                            : () => _confirmAndCancel(context, repository),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(color: Color(0xFFE74C3C)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: _cancelling
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFFE74C3C)),
+                                ),
+                              )
+                            : Text(
+                                'Cancelar suscripción Pro',
+                                style: GoogleFonts.nunito(
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFE74C3C),
+                                ),
+                              ),
+                      ),
                     ),
                   ],
                 ],

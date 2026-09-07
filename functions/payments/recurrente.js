@@ -26,20 +26,80 @@
  * this API — only a secret key per mode.
  *
  * Environment config (Firebase Secret Manager or .env):
- *   RECURRENTE_SECRET_KEY_TEST  – sk_test_...
- *   RECURRENTE_SECRET_KEY       – sk_live_...
+ *   RECURRENTE_SECRET_KEY_TEST     – sk_test_...
+ *   RECURRENTE_SECRET_KEY          – sk_live_...
+ *   RECURRENTE_WEBHOOK_SECRET_TEST – signing secret for the test-mode webhook
+ *   RECURRENTE_WEBHOOK_SECRET      – signing secret for the live-mode webhook
+ *
+ * Webhook signature verification: Recurrente's event naming
+ * (`payment_intent.succeeded`, flat body) mirrors Stripe's API design, so
+ * `isValidSignature` below verifies against the same composite scheme Stripe
+ * uses: a `<signature-header>` value shaped as `t=<unix ts>,v1=<hmac>`, where
+ * the hmac is HMAC-SHA256(`${t}.${rawBody}`, webhookSecret) — this needs to
+ * be confirmed against the "Webhooks" section of the Recurrente dashboard
+ * (where the signing secret is issued) before relying on it in production.
+ * If the header name or scheme differs, SIGNATURE_HEADER and
+ * isValidSignature are the only things that need to change — the rest of
+ * the webhook (order lookup, mode selection, accreditation) doesn't.
  */
 
 'use strict';
 
+const crypto = require('crypto');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 
 const RECURRENTE_SECRET_KEY_TEST = defineSecret('RECURRENTE_SECRET_KEY_TEST');
 const RECURRENTE_SECRET_KEY = defineSecret('RECURRENTE_SECRET_KEY');
+const RECURRENTE_WEBHOOK_SECRET_TEST = defineSecret('RECURRENTE_WEBHOOK_SECRET_TEST');
+const RECURRENTE_WEBHOOK_SECRET = defineSecret('RECURRENTE_WEBHOOK_SECRET');
 
 const RECURRENTE_API_BASE = 'https://app.recurrente.com/api/v1';
+
+// Confirm this against the Recurrente dashboard's webhook config — see the
+// module docstring above. Lowercase because Node normalizes incoming header
+// names to lowercase on `req.headers`.
+const SIGNATURE_HEADER = 'recurrente-signature';
+
+// Reject events whose timestamp is further than this from "now", to stop a
+// captured request from being replayed later.
+const MAX_SIGNATURE_AGE_SECONDS = 5 * 60;
+
+/**
+ * Verifies a Stripe-style composite signature header (`t=<ts>,v1=<hmac>`)
+ * against the raw request body. Fails closed: any missing piece (header,
+ * secret, malformed value, stale timestamp, mismatch) returns false.
+ */
+function isValidSignature(rawBody, signatureHeader, secret) {
+  if (!rawBody || !signatureHeader || !secret) return false;
+
+  const parts = {};
+  for (const segment of String(signatureHeader).split(',')) {
+    const [key, value] = segment.trim().split('=');
+    if (key && value) parts[key] = value;
+  }
+
+  const timestamp = parts.t;
+  const signature = parts.v1;
+  if (!timestamp || !signature) return false;
+
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(timestamp));
+  if (!Number.isFinite(ageSeconds) || ageSeconds > MAX_SIGNATURE_AGE_SECONDS) {
+    return false;
+  }
+
+  const signedPayload = Buffer.concat([
+    Buffer.from(`${timestamp}.`, 'utf8'),
+    Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8'),
+  ]);
+  const expected = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
+
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const providedBuf = Buffer.from(signature, 'utf8');
+  if (expectedBuf.length !== providedBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, providedBuf);
+}
 
 /**
  * Credits the purchased product/subscription once an order is confirmed
@@ -185,20 +245,72 @@ const createRecurrenteCheckout = onCall(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// cancelRecurrenteSubscription
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Downgrades the caller's own subscription from 'pro' back to 'free'.
+ *
+ * Nothing to cancel on Recurrente's side: `createRecurrenteCheckout` creates
+ * a single `checkout_custom_links` payment (see the flow above — one
+ * `orders/{orderId}` doc, one payment_intent.succeeded webhook, no recurring
+ * billing object). `metadata.kind === 'subscription'` only tells
+ * `accreditOrder` which Firestore doc to flip to 'pro' — it is not a
+ * Recurrente-managed recurring subscription with its own lifecycle/ID that
+ * would need an API call to stop future charges. So "cancelling" today is
+ * purely local: flip `subscriptions/{uid}.tier` back to 'free'. If Recurrente
+ * recurring billing is adopted later, this is the function to extend with a
+ * call to their subscription-cancellation endpoint before the Firestore
+ * write.
+ *
+ * Firestore rules block the client from ever writing `tier` directly (see
+ * firestore.rules, `match /subscriptions/{uid}`), so this Admin-SDK callable
+ * is the only path — mirroring how `accreditOrder` is the only path to
+ * 'pro'.
+ */
+const cancelRecurrenteSubscription = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
+  }
+
+  const db = admin.firestore();
+  const subRef = db.collection('subscriptions').doc(uid);
+  const snap = await subRef.get();
+
+  if (!snap.exists || snap.data().tier !== 'pro') {
+    // Nothing to cancel — idempotent no-op rather than an error, so a
+    // retried client call (e.g. after a flaky connection) doesn't surface
+    // a scary failure once the first call already succeeded.
+    return { success: true, alreadyFree: true };
+  }
+
+  await subRef.set(
+    {
+      tier: 'free',
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  console.log(`[Recurrente] Cancelled pro subscription for ${uid}.`);
+  return { success: true, alreadyFree: false };
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // recurrenteWebhook
 // ─────────────────────────────────────────────────────────────────────────────
 
 const recurrenteWebhook = onRequest(
-  { secrets: [RECURRENTE_SECRET_KEY_TEST, RECURRENTE_SECRET_KEY] },
+  {
+    secrets: [
+      RECURRENTE_SECRET_KEY_TEST,
+      RECURRENTE_SECRET_KEY,
+      RECURRENTE_WEBHOOK_SECRET_TEST,
+      RECURRENTE_WEBHOOK_SECRET,
+    ],
+  },
   async (req, res) => {
-    // NOTE: no webhook signature verification yet — Recurrente's signing
-    // scheme for this endpoint hasn't been confirmed against live docs. Add
-    // it here before relying on this in production, the same way
-    // stripeWebhook verifies req.rawBody above. Once added, look up the
-    // order first (see below) and use its stored `mode` field to pick
-    // RECURRENTE_SECRET_KEY_TEST vs RECURRENTE_SECRET_KEY for verification
-    // — test-mode and live-mode checkouts are signed with different keys.
-    //
     // Event confirmed against Recurrente's own payment_intent.succeeded
     // example payload — flat top-level object, event name at `event_type`
     // (not `type`), checkout status/metadata nested under `checkout`:
@@ -231,6 +343,21 @@ const recurrenteWebhook = onRequest(
     }
 
     const order = snap.data();
+
+    const webhookSecret =
+      order.mode === 'test'
+        ? RECURRENTE_WEBHOOK_SECRET_TEST.value()
+        : RECURRENTE_WEBHOOK_SECRET.value();
+    const signatureHeader = req.headers[SIGNATURE_HEADER];
+
+    if (!isValidSignature(req.rawBody, signatureHeader, webhookSecret)) {
+      console.error(
+        `Recurrente webhook: invalid or missing signature for order ${orderId} ` +
+        `(mode=${order.mode ?? 'unknown'}).`
+      );
+      return res.status(401).json({ received: false, error: 'invalid signature' });
+    }
+
     if (order.status === 'PAID') {
       // Already processed (webhook retry) — acknowledge without re-crediting.
       return res.status(200).json({ received: true, alreadyPaid: true });
@@ -253,4 +380,8 @@ const recurrenteWebhook = onRequest(
   }
 );
 
-module.exports = { createRecurrenteCheckout, recurrenteWebhook };
+module.exports = {
+  createRecurrenteCheckout,
+  cancelRecurrenteSubscription,
+  recurrenteWebhook,
+};
