@@ -188,8 +188,9 @@ service cloud.firestore {
     // ── Subscriptions ─────────────────────────────────────────────────────────
     // Top-level collection: subscriptions/{uid}
     // Parents read their own subscription. App client writes usage counters
-    // (sessionsThisMonth). Tier upgrades come via Cloud Functions / Stripe
-    // webhooks, so only Cloud Functions can set tier:'pro'.
+    // (sessionsThisMonth). Tier upgrades come via Cloud Functions (the
+    // Recurrente webhook / cancel callable), so only Cloud Functions can
+    // set tier:'pro'.
     // For now, allow the client to write usage counters but not the tier field.
     match /subscriptions/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;

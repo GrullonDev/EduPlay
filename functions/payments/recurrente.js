@@ -26,20 +26,96 @@
  * this API — only a secret key per mode.
  *
  * Environment config (Firebase Secret Manager or .env):
- *   RECURRENTE_SECRET_KEY_TEST  – sk_test_...
- *   RECURRENTE_SECRET_KEY       – sk_live_...
+ *   RECURRENTE_SECRET_KEY_TEST     – sk_test_...
+ *   RECURRENTE_SECRET_KEY          – sk_live_...
+ *   RECURRENTE_WEBHOOK_SECRET_TEST – Svix signing secret for the test-mode
+ *                                    endpoint (whsec_..., from the "GrullonDev
+ *                                    (Test)" environment in Recurrente's Svix
+ *                                    webhook dashboard)
+ *   RECURRENTE_WEBHOOK_SECRET      – Svix signing secret for the live-mode
+ *                                    endpoint (whsec_..., from the
+ *                                    "GrullonDev" production environment,
+ *                                    once that endpoint is created there)
+ *
+ * Webhook signature verification: confirmed (via the Recurrente/Svix
+ * dashboard) that Recurrente delivers webhooks through Svix, not a
+ * Stripe-style scheme — so `isValidSignature` below implements Svix's own
+ * verification algorithm: https://docs.svix.com/receiving/verifying-payloads/how-manual
+ *   1. Headers `svix-id`, `svix-timestamp`, `svix-signature` arrive on every
+ *      delivery (`svix-signature` is a space-delimited list of
+ *      "<version>,<base64-hmac>" pairs; only "v1" is checked here).
+ *   2. signedContent = `${svix-id}.${svix-timestamp}.${rawBody}`.
+ *   3. The whsec_... secret's base64 portion (after the prefix) is the raw
+ *      HMAC-SHA256 key; the digest is base64-encoded and compared
+ *      (timing-safe) against each v1 value in svix-signature.
+ *   4. svix-timestamp outside MAX_SIGNATURE_AGE_SECONDS of "now" is rejected
+ *      (replay protection) — same tolerance Svix's own libraries use.
  */
 
 'use strict';
 
+const crypto = require('crypto');
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 
 const RECURRENTE_SECRET_KEY_TEST = defineSecret('RECURRENTE_SECRET_KEY_TEST');
 const RECURRENTE_SECRET_KEY = defineSecret('RECURRENTE_SECRET_KEY');
+const RECURRENTE_WEBHOOK_SECRET_TEST = defineSecret('RECURRENTE_WEBHOOK_SECRET_TEST');
+const RECURRENTE_WEBHOOK_SECRET = defineSecret('RECURRENTE_WEBHOOK_SECRET');
 
 const RECURRENTE_API_BASE = 'https://app.recurrente.com/api/v1';
+
+const SVIX_ID_HEADER = 'svix-id';
+const SVIX_TIMESTAMP_HEADER = 'svix-timestamp';
+const SVIX_SIGNATURE_HEADER = 'svix-signature';
+
+// Reject events whose svix-timestamp is further than this from "now", to
+// stop a captured request from being replayed later.
+const MAX_SIGNATURE_AGE_SECONDS = 5 * 60;
+
+/**
+ * Verifies a Svix webhook delivery against the raw request body. Fails
+ * closed: any missing piece (headers, secret, malformed value, stale
+ * timestamp, no matching v1 signature) returns false.
+ */
+function isValidSignature(rawBody, headers, secret) {
+  if (!rawBody || !secret) return false;
+
+  const svixId = headers?.[SVIX_ID_HEADER];
+  const svixTimestamp = headers?.[SVIX_TIMESTAMP_HEADER];
+  const svixSignature = headers?.[SVIX_SIGNATURE_HEADER];
+  if (!svixId || !svixTimestamp || !svixSignature) return false;
+
+  const ageSeconds = Math.abs(Date.now() / 1000 - Number(svixTimestamp));
+  if (!Number.isFinite(ageSeconds) || ageSeconds > MAX_SIGNATURE_AGE_SECONDS) {
+    return false;
+  }
+
+  const bodyBuf = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(String(rawBody), 'utf8');
+  const signedContent = Buffer.concat([
+    Buffer.from(`${svixId}.${svixTimestamp}.`, 'utf8'),
+    bodyBuf,
+  ]);
+
+  // whsec_... secrets are base64-encoded after the prefix; that decoded
+  // value is the actual HMAC key (per Svix's verification spec).
+  const secretKey = secret.startsWith('whsec_')
+    ? Buffer.from(secret.slice('whsec_'.length), 'base64')
+    : Buffer.from(secret, 'base64');
+
+  const expectedBuf = crypto.createHmac('sha256', secretKey).update(signedContent).digest();
+
+  for (const part of String(svixSignature).split(' ')) {
+    const [version, sig] = part.trim().split(',');
+    if (version !== 'v1' || !sig) continue;
+
+    const providedBuf = Buffer.from(sig, 'base64');
+    if (providedBuf.length !== expectedBuf.length) continue;
+    if (crypto.timingSafeEqual(expectedBuf, providedBuf)) return true;
+  }
+  return false;
+}
 
 /**
  * Credits the purchased product/subscription once an order is confirmed
@@ -185,20 +261,72 @@ const createRecurrenteCheckout = onCall(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// cancelRecurrenteSubscription
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Downgrades the caller's own subscription from 'pro' back to 'free'.
+ *
+ * Nothing to cancel on Recurrente's side: `createRecurrenteCheckout` creates
+ * a single `checkout_custom_links` payment (see the flow above — one
+ * `orders/{orderId}` doc, one payment_intent.succeeded webhook, no recurring
+ * billing object). `metadata.kind === 'subscription'` only tells
+ * `accreditOrder` which Firestore doc to flip to 'pro' — it is not a
+ * Recurrente-managed recurring subscription with its own lifecycle/ID that
+ * would need an API call to stop future charges. So "cancelling" today is
+ * purely local: flip `subscriptions/{uid}.tier` back to 'free'. If Recurrente
+ * recurring billing is adopted later, this is the function to extend with a
+ * call to their subscription-cancellation endpoint before the Firestore
+ * write.
+ *
+ * Firestore rules block the client from ever writing `tier` directly (see
+ * firestore.rules, `match /subscriptions/{uid}`), so this Admin-SDK callable
+ * is the only path — mirroring how `accreditOrder` is the only path to
+ * 'pro'.
+ */
+const cancelRecurrenteSubscription = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) {
+    throw new HttpsError('unauthenticated', 'Debes iniciar sesión.');
+  }
+
+  const db = admin.firestore();
+  const subRef = db.collection('subscriptions').doc(uid);
+  const snap = await subRef.get();
+
+  if (!snap.exists || snap.data().tier !== 'pro') {
+    // Nothing to cancel — idempotent no-op rather than an error, so a
+    // retried client call (e.g. after a flaky connection) doesn't surface
+    // a scary failure once the first call already succeeded.
+    return { success: true, alreadyFree: true };
+  }
+
+  await subRef.set(
+    {
+      tier: 'free',
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  console.log(`[Recurrente] Cancelled pro subscription for ${uid}.`);
+  return { success: true, alreadyFree: false };
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // recurrenteWebhook
 // ─────────────────────────────────────────────────────────────────────────────
 
 const recurrenteWebhook = onRequest(
-  { secrets: [RECURRENTE_SECRET_KEY_TEST, RECURRENTE_SECRET_KEY] },
+  {
+    secrets: [
+      RECURRENTE_SECRET_KEY_TEST,
+      RECURRENTE_SECRET_KEY,
+      RECURRENTE_WEBHOOK_SECRET_TEST,
+      RECURRENTE_WEBHOOK_SECRET,
+    ],
+  },
   async (req, res) => {
-    // NOTE: no webhook signature verification yet — Recurrente's signing
-    // scheme for this endpoint hasn't been confirmed against live docs. Add
-    // it here before relying on this in production, the same way
-    // stripeWebhook verifies req.rawBody above. Once added, look up the
-    // order first (see below) and use its stored `mode` field to pick
-    // RECURRENTE_SECRET_KEY_TEST vs RECURRENTE_SECRET_KEY for verification
-    // — test-mode and live-mode checkouts are signed with different keys.
-    //
     // Event confirmed against Recurrente's own payment_intent.succeeded
     // example payload — flat top-level object, event name at `event_type`
     // (not `type`), checkout status/metadata nested under `checkout`:
@@ -231,6 +359,19 @@ const recurrenteWebhook = onRequest(
     }
 
     const order = snap.data();
+
+    const webhookSecret =
+      order.mode === 'test'
+        ? RECURRENTE_WEBHOOK_SECRET_TEST.value()
+        : RECURRENTE_WEBHOOK_SECRET.value();
+    if (!isValidSignature(req.rawBody, req.headers, webhookSecret)) {
+      console.error(
+        `Recurrente webhook: invalid or missing signature for order ${orderId} ` +
+        `(mode=${order.mode ?? 'unknown'}).`
+      );
+      return res.status(401).json({ received: false, error: 'invalid signature' });
+    }
+
     if (order.status === 'PAID') {
       // Already processed (webhook retry) — acknowledge without re-crediting.
       return res.status(200).json({ received: true, alreadyPaid: true });
@@ -253,4 +394,8 @@ const recurrenteWebhook = onRequest(
   }
 );
 
-module.exports = { createRecurrenteCheckout, recurrenteWebhook };
+module.exports = {
+  createRecurrenteCheckout,
+  cancelRecurrenteSubscription,
+  recurrenteWebhook,
+};

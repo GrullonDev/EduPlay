@@ -62,12 +62,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyD3iyJW0cffV7lIe2bR88KqxrMaBUuJZxk',
-    appId: '1:729553550400:web:dfff11b6e7dc86f301f3a5',
+    appId: '1:729553550400:web:e5a66561d6c5a17201f3a5',
     messagingSenderId: '729553550400',
     projectId: 'eduplay-8792f',
     authDomain: 'eduplay-8792f.firebaseapp.com',
     storageBucket: 'eduplay-8792f.firebasestorage.app',
-    measurementId: 'G-0GQCJB4X0X',
+    measurementId: 'G-DKQPVG46XM',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
