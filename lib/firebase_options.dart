@@ -60,14 +60,21 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.eduPlay',
   );
 
+  // NOTE: web deliberately points at a DIFFERENT project than every other
+  // platform here — "eduplay-prod" ("EduPlay-Prod"), the dedicated
+  // production project configured on the `main` branch, not
+  // "eduplay-8792f" (the dev project `develop` uses for everything else,
+  // including the other platform blocks below). Do not "fix" this to
+  // match android/ios/macos/windows — see the release branch history for
+  // why this diverges intentionally on `main`.
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD3iyJW0cffV7lIe2bR88KqxrMaBUuJZxk',
-    appId: '1:729553550400:web:e5a66561d6c5a17201f3a5',
-    messagingSenderId: '729553550400',
-    projectId: 'eduplay-8792f',
-    authDomain: 'eduplay-8792f.firebaseapp.com',
-    storageBucket: 'eduplay-8792f.firebasestorage.app',
-    measurementId: 'G-DKQPVG46XM',
+    apiKey: 'AIzaSyDdE2Cd0j4OROsJeo3H7q7DHkolcplx-t8',
+    appId: '1:319528834915:web:f6dc2fd50059c3c5586556',
+    messagingSenderId: '319528834915',
+    projectId: 'eduplay-prod',
+    authDomain: 'eduplay-prod.firebaseapp.com',
+    storageBucket: 'eduplay-prod.firebasestorage.app',
+    measurementId: 'G-B36H7EP40K',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(

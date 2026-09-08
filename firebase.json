@@ -57,12 +57,12 @@
       },
       "dart": {
         "lib/firebase_options.dart": {
-          "projectId": "eduplay-8792f",
+          "projectId": "eduplay-prod",
           "configurations": {
             "android": "1:729553550400:android:9cf0c6db595ad89901f3a5",
             "ios": "1:729553550400:ios:4480b23f2ab981e101f3a5",
             "macos": "1:729553550400:ios:4480b23f2ab981e101f3a5",
-            "web": "1:729553550400:web:e5a66561d6c5a17201f3a5",
+            "web": "1:319528834915:web:f6dc2fd50059c3c5586556",
             "windows": "1:729553550400:web:e5a66561d6c5a17201f3a5"
           }
         }
