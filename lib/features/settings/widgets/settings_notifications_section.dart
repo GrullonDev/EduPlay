@@ -14,10 +14,16 @@ const _kNavy = Color(0xFF1E1B6A);
 
 class SettingsNotificationsSection extends StatefulWidget {
   const SettingsNotificationsSection(
-      {super.key, SettingsRepository? repository})
+      {super.key, SettingsRepository? repository, this.forTeacher = false})
       : _repository = repository;
 
   final SettingsRepository? _repository;
+
+  /// Swaps the "sesión completada"/"resumen semanal" copy from parent-of-a-
+  /// child phrasing ("tu hijo/a", "tus hijos") to teacher-of-a-class
+  /// phrasing — the toggles and the Firestore fields they control are the
+  /// same either way, only the label text differs by audience.
+  final bool forTeacher;
 
   @override
   State<SettingsNotificationsSection> createState() =>
@@ -116,8 +122,9 @@ class SettingsNotificationsSectionState
                     icon: Icons.check_circle_outline_rounded,
                     iconColor: const Color(0xFF27AE60),
                     title: 'Sesión completada',
-                    subtitle:
-                        'Recibe un email cuando tu hijo/a termine una sesión de práctica.',
+                    subtitle: widget.forTeacher
+                        ? 'Recibe un email cuando un alumno de tu clase termine una sesión de práctica.'
+                        : 'Recibe un email cuando tu hijo/a termine una sesión de práctica.',
                     value: _emailSessionComplete,
                     onChanged: (v) => _toggle('emailSessionComplete', v),
                   ),
@@ -125,8 +132,9 @@ class SettingsNotificationsSectionState
                     icon: Icons.calendar_today_rounded,
                     iconColor: const Color(0xFF3498DB),
                     title: 'Resumen semanal',
-                    subtitle:
-                        'Un resumen del progreso de tus hijos cada lunes.',
+                    subtitle: widget.forTeacher
+                        ? 'Un resumen del progreso de tus alumnos cada lunes.'
+                        : 'Un resumen del progreso de tus hijos cada lunes.',
                     value: _emailWeeklyDigest,
                     onChanged: (v) => _toggle('emailWeeklyDigest', v),
                   ),
