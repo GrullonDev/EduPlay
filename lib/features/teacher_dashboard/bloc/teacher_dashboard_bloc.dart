@@ -24,6 +24,23 @@ class TeacherDashboardBloc extends ChangeNotifier {
   final ClassroomChallengesRepository _classroomChallengesRepository =
       sl<ClassroomChallengesRepository>();
 
+  // _load()/refresh() are async and touch Firestore across several awaits —
+  // if the provider that owns this bloc gets disposed (navigating away,
+  // logout, an AuthGate rebuild) before one of those in-flight calls
+  // resolves, the pending notifyListeners() would otherwise throw "A
+  // TeacherDashboardBloc was used after being disposed."
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void _notify() {
+    if (!_disposed) notifyListeners();
+  }
+
   bool isLoading = true;
   String teacherName = 'Profe';
   List<TeacherClass> classes = [];
@@ -93,7 +110,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
 
   Future<void> _load() async {
     isLoading = true;
-    notifyListeners();
+    _notify();
 
     try {
       teacherName = await _loadTeacherName();
@@ -141,7 +158,7 @@ class TeacherDashboardBloc extends ChangeNotifier {
     }
 
     isLoading = false;
-    notifyListeners();
+    _notify();
   }
 
   Future<void> refresh() => _load();

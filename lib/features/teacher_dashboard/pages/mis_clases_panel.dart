@@ -389,7 +389,19 @@ class _ClassCardState extends State<_ClassCard> {
                         ),
                       );
                       if (confirmed == true) {
-                        await sl<TeacherClassesRepository>().deleteClass(tc.id);
+                        try {
+                          await sl<TeacherClassesRepository>()
+                              .deleteClass(tc.id);
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'No se pudo eliminar la clase. Intenta de nuevo.'),
+                              ),
+                            );
+                          }
+                        }
                       }
                     }
                   },

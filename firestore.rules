@@ -121,7 +121,18 @@ service cloud.firestore {
         && resource.data.teacherUid == request.auth.uid;
 
       match /members/{memberId} {
-        allow read: if request.auth != null;
+        // Was `allow read: if request.auth != null` — any authenticated
+        // user (any teacher, any parent, any collectionGroup('members')
+        // query) could read every class's full roster: student names,
+        // emails, ages, parentUid. Narrowed to the same three parties who
+        // are already allowed to write this doc (the owning teacher, the
+        // linked parent, or the member themself), matching create/update/
+        // delete below rather than inventing a new access model.
+        allow read: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
 
         allow create, update: if request.auth != null && (
           get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid

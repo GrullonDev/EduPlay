@@ -74,7 +74,7 @@ class TeacherSettingsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const SettingsNotificationsSection(),
+              const SettingsNotificationsSection(forTeacher: true),
               const SizedBox(height: 20),
               const SettingsSecuritySection(),
               const SizedBox(height: 20),

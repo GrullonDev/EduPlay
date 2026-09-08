@@ -150,8 +150,15 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
     if (confirmed != true) return;
 
     final repo = sl<TeacherClassesRepository>();
+    var removedCount = 0;
     for (final m in selected) {
-      await repo.removeMember(classId: m.classId, memberId: m.id);
+      try {
+        await repo.removeMember(classId: m.classId, memberId: m.id);
+        removedCount++;
+      } catch (_) {
+        // Keep going so one failure doesn't strand the rest of the batch;
+        // the summary snackbar below reports how many actually succeeded.
+      }
     }
     if (!mounted) return;
     setState(() {
@@ -160,8 +167,12 @@ class _AlumnosPanelState extends State<AlumnosPanel> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(
-              '${selected.length} alumnos fueron quitados de sus clases.')),
+        content: Text(
+          removedCount == selected.length
+              ? '$removedCount alumnos fueron quitados de sus clases.'
+              : '$removedCount de ${selected.length} alumnos fueron quitados. Intenta de nuevo con el resto.',
+        ),
+      ),
     );
   }
 
