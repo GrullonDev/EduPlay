@@ -19,9 +19,13 @@ const _kCoral = Color(0xFFFF6E6C);
 const _kLavender = Color(0xFFEEEDF8);
 
 class MisClasesPanel extends StatelessWidget {
-  const MisClasesPanel({super.key, this.onViewRoster});
+  const MisClasesPanel({super.key, this.onViewRoster, this.searchQuery = ''});
 
   final VoidCallback? onViewRoster;
+
+  /// Lower-cased filter text coming from the dashboard's top-bar search
+  /// field. Matches against the class name.
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -86,17 +90,32 @@ class MisClasesPanel extends StatelessWidget {
                     onTap: () => _showCreateDialog(context),
                   );
                 }
+                final filtered = searchQuery.isEmpty
+                    ? classes
+                    : classes
+                        .where((c) =>
+                            c.name.toLowerCase().contains(searchQuery))
+                        .toList();
+                if (filtered.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'Sin clases que coincidan con "$searchQuery".',
+                      style: GoogleFonts.nunito(
+                          fontSize: 14, color: Colors.grey[500]),
+                    ),
+                  );
+                }
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ClassStatsRow(classes: classes, wide: wide),
+                    _ClassStatsRow(classes: filtered, wide: wide),
                     const SizedBox(height: 20),
                     Expanded(
                       child: wide
                           ? _ClassGrid(
-                              classes: classes, onViewRoster: onViewRoster)
+                              classes: filtered, onViewRoster: onViewRoster)
                           : _ClassList(
-                              classes: classes, onViewRoster: onViewRoster),
+                              classes: filtered, onViewRoster: onViewRoster),
                     ),
                   ],
                 );

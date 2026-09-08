@@ -101,21 +101,31 @@ service cloud.firestore {
 
     // ── Teacher classes (top-level collection used by the dashboard) ─────────
     match /classes/{classId} {
-      allow read: if request.auth != null;
+      // Was `allow read: if request.auth != null` — any authenticated user
+      // could read (or unfiltered-list) every class, public or not,
+      // harvesting every joinCode/teacherUid. `isPublic` classes are meant
+      // to be discoverable (see getPublicClassesForAge), so that half stays
+      // open; a private class is now readable only by its own teacher.
+      // Join-by-code no longer needs client read access at all — it's
+      // mediated by lookupClassByJoinCode/joinClassByCode/
+      // generateUniqueJoinCode (functions/classes.js), which use the Admin
+      // SDK and bypass this rule entirely.
+      allow read: if request.auth != null && (
+        resource.data.isPublic == true
+        || resource.data.teacherUid == request.auth.uid
+      );
 
       allow create: if request.auth != null
         && request.resource.data.teacherUid == request.auth.uid;
 
-      allow update: if request.auth != null && (
-        resource.data.teacherUid == request.auth.uid
-        ||
-        (
-          request.resource.data.diff(resource.data)
-            .affectedKeys()
-            .hasOnly(['studentCount'])
-          && request.resource.data.studentCount == resource.data.studentCount + 1
-        )
-      );
+      // The old `|| affectedKeys().hasOnly(['studentCount']) && ...+1` branch
+      // here was the client-side join transaction's escape hatch to bump
+      // studentCount without owning the class — removed now that
+      // joinClassByCode does that increment server-side (Admin SDK). Removing
+      // a decrement (see removeMember()) was always covered by the owner
+      // clause below regardless, since only the owning teacher calls it.
+      allow update: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
 
       allow delete: if request.auth != null
         && resource.data.teacherUid == request.auth.uid;
@@ -128,6 +138,17 @@ service cloud.firestore {
         // are already allowed to write this doc (the owning teacher, the
         // linked parent, or the member themself), matching create/update/
         // delete below rather than inventing a new access model.
+        //
+        // Reading a member doc that doesn't exist (e.g. isEnrolled()
+        // checking "has this child joined this class" while browsing)
+        // correctly comes back permission-denied for a parent/child who
+        // isn't already one of these three parties — verified against the
+        // emulator. That's the intended outcome, not a bug: nothing about
+        // "am I enrolled here" should be readable before you have a real
+        // relationship to the class. isEnrolled() treats that denial as
+        // "not enrolled" client-side (see
+        // FirestoreTeacherClassesDatasource.isEnrolled) rather than this
+        // rule being loosened to answer the question for free.
         allow read: if request.auth != null && (
           get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
           || resource.data.parentUid == request.auth.uid

@@ -33,6 +33,19 @@
  *     there is nothing to cancel on their side (see the function's own
  *     docstring for the full reasoning).
  *
+ *  7. lookupClassByJoinCode        – Callable; see classes.js. Looks up a
+ *     teacher class by its join code via the Admin SDK, so the client no
+ *     longer needs broad read access to classes/{classId} to do this.
+ *
+ *  8. joinClassByCode              – Callable; see classes.js. Re-validates
+ *     the code server-side and performs the same join transaction the
+ *     client used to run directly (member doc + studentCount increment).
+ *
+ *  9. generateUniqueJoinCode       – Callable; see classes.js. Scans across
+ *     all classes (not just the caller's own) for a join-code collision —
+ *     needed once classes/{classId} read is tightened, since the client can
+ *     otherwise only see its own classes.
+ *
  * Environment config (set via Firebase Secret Manager or .env):
  *   SENDGRID_API_KEY            – SG.…
  *   SENDGRID_FROM_EMAIL         – noreply@yourdomain.com
@@ -58,6 +71,12 @@ const {
   cancelRecurrenteSubscription,
   recurrenteWebhook,
 } = require('./payments/recurrente');
+
+const {
+  lookupClassByJoinCode,
+  joinClassByCode,
+  generateUniqueJoinCode,
+} = require('./classes');
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // SendGrid is active but only for onDeletionRequestCreated (guardian-consent
@@ -354,3 +373,12 @@ exports.resolveDeletion = onRequest(async (req, res) => {
 exports.createRecurrenteCheckout = createRecurrenteCheckout;
 exports.cancelRecurrenteSubscription = cancelRecurrenteSubscription;
 exports.recurrenteWebhook = recurrenteWebhook;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7-9. Teacher-class join-by-code (lookupClassByJoinCode, joinClassByCode,
+//      generateUniqueJoinCode)
+// ─────────────────────────────────────────────────────────────────────────────
+
+exports.lookupClassByJoinCode = lookupClassByJoinCode;
+exports.joinClassByCode = joinClassByCode;
+exports.generateUniqueJoinCode = generateUniqueJoinCode;
