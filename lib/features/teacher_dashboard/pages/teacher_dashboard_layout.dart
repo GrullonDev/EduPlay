@@ -47,6 +47,14 @@ class TeacherDashboardLayout extends StatefulWidget {
 
 class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   int _selectedIndex = 0;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
@@ -109,6 +117,18 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
                     'Buscar informes...',
                     'Buscar amigos...',
                   ][_selectedIndex.clamp(0, 6)],
+                  // The Alumnos tab (index 2) has its own internal search
+                  // field (see AlumnosPanel) that already filters its table
+                  // and drives bulk-selection state. Wiring this shared
+                  // top-bar field into that same tab would mean keeping two
+                  // independent TextEditingControllers in sync, which risks
+                  // regressing a search that already works. So the top-bar
+                  // field is disabled (read-only) there instead, while it
+                  // stays fully functional for every other filterable tab.
+                  enabled: _selectedIndex != 2,
+                  controller: _searchCtrl,
+                  onChanged: (v) =>
+                      setState(() => _searchQuery = v.trim().toLowerCase()),
                 ),
                 Expanded(
                   child: bloc.isLoading
@@ -123,18 +143,27 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
     );
   }
 
-  void _goToTab(int index) => setState(() => _selectedIndex = index);
+  void _goToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+      // Clear any filter left over from the previous tab so it doesn't
+      // silently apply to a list it was never meant for.
+      _searchQuery = '';
+      _searchCtrl.clear();
+    });
+  }
 
   Widget _buildBody(TeacherDashboardBloc bloc) {
     switch (_selectedIndex) {
       case 0:
         return _OverviewPanel(bloc: bloc, onNavigateTab: _goToTab);
       case 1:
-        return MisClasesPanel(onViewRoster: () => _goToTab(2));
+        return MisClasesPanel(
+            onViewRoster: () => _goToTab(2), searchQuery: _searchQuery);
       case 2:
         return AlumnosPanel(onNavigateTab: _goToTab);
       case 3:
-        return RetosPanel(bloc: bloc);
+        return RetosPanel(bloc: bloc, searchQuery: _searchQuery);
       case 4:
         return RendimientoPanel(bloc: bloc);
       case 5:
@@ -330,10 +359,16 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     this.onMenuTap,
     this.searchHint = 'Buscar alumnos, retos...',
+    this.controller,
+    this.onChanged,
+    this.enabled = true,
   });
 
   final VoidCallback? onMenuTap;
   final String searchHint;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -378,6 +413,9 @@ class _TopBar extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
+                      controller: controller,
+                      onChanged: onChanged,
+                      enabled: enabled,
                       decoration: InputDecoration(
                         hintText: searchHint,
                         hintStyle: GoogleFonts.nunito(

@@ -9,7 +9,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "firebase emulators:exec --project eduplay-rules-test --only firestore \"node --test\""
+    "test": "firebase emulators:exec --project eduplay-rules-test --only firestore \"node --test test/*.test.js\""
   },
   "engines": {
     "node": "20"
