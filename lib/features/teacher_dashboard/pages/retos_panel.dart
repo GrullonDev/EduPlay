@@ -31,17 +31,28 @@ const List<({String route, String label})> _kTargetableGames = [
 ];
 
 class RetosPanel extends StatelessWidget {
-  const RetosPanel({super.key, required this.bloc});
+  const RetosPanel({super.key, required this.bloc, this.searchQuery = ''});
 
   final TeacherDashboardBloc bloc;
+
+  /// Lower-cased filter text coming from the dashboard's top-bar search
+  /// field. Matches against the challenge title.
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context) {
     final wide = ScreenSize.of(context).isDesktop;
+    final visibleChallenges = searchQuery.isEmpty
+        ? bloc.challenges
+        : bloc.challenges
+            .where((c) => ((c['title'] as String?) ?? '')
+                .toLowerCase()
+                .contains(searchQuery))
+            .toList();
     final active =
-        bloc.challenges.where((c) => c['status'] == 'active').toList();
+        visibleChallenges.where((c) => c['status'] == 'active').toList();
     final completed =
-        bloc.challenges.where((c) => c['status'] == 'completed').toList();
+        visibleChallenges.where((c) => c['status'] == 'completed').toList();
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: wide ? 32 : 16, vertical: 24),
@@ -74,6 +85,11 @@ class RetosPanel extends StatelessWidget {
                   'Todavía no has asignado retos. El siguiente reto que crees aparecerá también en el panel del alumno.',
               onCreate: () => _showCreateDialog(context),
             )
+          else if (visibleChallenges.isEmpty)
+            _EmptyRetos(
+              message: 'Sin retos que coincidan con "$searchQuery".',
+              onCreate: null,
+            )
           else
             GridView.builder(
               shrinkWrap: true,
@@ -84,12 +100,12 @@ class RetosPanel extends StatelessWidget {
                 mainAxisSpacing: 16,
                 childAspectRatio: wide ? 0.95 : 1.4,
               ),
-              itemCount: bloc.challenges.length + 1,
+              itemCount: visibleChallenges.length + 1,
               itemBuilder: (context, index) {
-                if (index == bloc.challenges.length) {
+                if (index == visibleChallenges.length) {
                   return _CreateCard(onTap: () => _showCreateDialog(context));
                 }
-                return _ChallengeCard(data: bloc.challenges[index]);
+                return _ChallengeCard(data: visibleChallenges[index]);
               },
             ),
         ],

@@ -1,8 +1,6 @@
-// Dart imports:
-import 'dart:math';
-
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Project imports:
@@ -62,11 +60,22 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
   FirestoreTeacherClassesDatasource({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
+    FirebaseFunctions? functions,
   })  : _db = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+        _auth = auth ?? FirebaseAuth.instance,
+        _providedFunctions = functions;
 
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
+  final FirebaseFunctions? _providedFunctions;
+
+  // Resolved lazily rather than in the initializer list: constructing this
+  // datasource in a test that never calls findByCode/joinClass/createClass
+  // (e.g. one exercising only deleteClass against fake_cloud_firestore,
+  // with no FirebaseApp initialized) shouldn't fail just because
+  // FirebaseFunctions.instance requires Firebase.initializeApp().
+  FirebaseFunctions get _functions =>
+      _providedFunctions ?? FirebaseFunctions.instance;
 
   String? get _uid => _auth.currentUser?.uid;
 
@@ -90,12 +99,38 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
 
   @override
   Future<TeacherClass?> findByCode(String code) async {
-    final snap = await _classes
-        .where('joinCode', isEqualTo: code.trim().toUpperCase())
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    return TeacherClass.fromMap(snap.docs.first.data(), snap.docs.first.id);
+    // Looking up a class by code is a cross-tenant read (the caller
+    // doesn't own the class they're searching for), so it's mediated by a
+    // Cloud Function rather than a direct query — classes/{classId} read
+    // is restricted to `isPublic == true || teacherUid == uid` precisely
+    // so a client can't enumerate every class's joinCode itself.
+    final callable = _functions.httpsCallable('lookupClassByJoinCode');
+    final result = await callable.call<Map<String, dynamic>>({'code': code});
+    final data = result.data;
+    if (data['found'] != true) return null;
+    return _classFromCallableMap(
+      Map<String, dynamic>.from(data['teacherClass'] as Map),
+    );
+  }
+
+  TeacherClass _classFromCallableMap(Map<String, dynamic> map) {
+    final millis = map['createdAtMillis'] as int?;
+    return TeacherClass(
+      id: map['id'] as String? ?? '',
+      teacherUid: map['teacherUid'] as String? ?? '',
+      teacherName: map['teacherName'] as String? ?? '',
+      name: map['name'] as String? ?? '',
+      subject: map['subject'] as String? ?? '',
+      gradeLevel: map['gradeLevel'] as String? ?? '',
+      joinCode: map['joinCode'] as String? ?? '',
+      studentCount: (map['studentCount'] as num?)?.toInt() ?? 0,
+      minAge: (map['minAge'] as num?)?.toInt() ?? 3,
+      maxAge: (map['maxAge'] as num?)?.toInt() ?? 12,
+      isPublic: map['isPublic'] as bool? ?? false,
+      createdAt: millis != null
+          ? DateTime.fromMillisecondsSinceEpoch(millis)
+          : DateTime.now(),
+    );
   }
 
   @override
@@ -224,18 +259,59 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
     required String classId,
     required String childProfileId,
   }) async {
-    final doc = await _db
-        .collection('classes')
-        .doc(classId)
-        .collection('members')
-        .doc(childProfileId)
-        .get();
-    return doc.exists;
+    // A member doc that doesn't exist yet is only readable by
+    // firestore.rules once the caller already has a relationship to it
+    // (owning teacher, linked parent, or the member themself) — checking
+    // enrollment in a class you're not part of correctly comes back
+    // permission-denied rather than a clean `exists: false`. That's the
+    // intended behavior of the rule, not a bug to route around there; "not
+    // enrolled" is the right answer for this check either way.
+    try {
+      final doc = await _db
+          .collection('classes')
+          .doc(classId)
+          .collection('members')
+          .doc(childProfileId)
+          .get();
+      return doc.exists;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') return false;
+      rethrow;
+    }
   }
 
   @override
-  Future<void> deleteClass(String classId) {
-    return _classes.doc(classId).delete();
+  Future<void> deleteClass(String classId) async {
+    final classRef = _classes.doc(classId);
+
+    // Deleting only the class doc would leave its `members` and
+    // `challenges` subcollections behind — orphaned docs a student/parent
+    // could still read (e.g. a "phantom enrollment"). Firestore has no
+    // recursive delete for client SDKs, so gather every subdocument first
+    // and remove it before the class itself.
+    final memberDocs = await classRef.collection('members').get();
+    final challengeDocs = await classRef.collection('challenges').get();
+
+    final refsToDelete = [
+      ...memberDocs.docs.map((d) => d.reference),
+      ...challengeDocs.docs.map((d) => d.reference),
+    ];
+
+    // A WriteBatch caps out at 500 operations. Reserve one for the final
+    // class-doc delete and chunk the rest well under that ceiling — in
+    // practice a classroom never gets close to this, but a paged delete
+    // costs nothing and avoids a silent failure if it ever does.
+    const chunkSize = 400;
+    for (var i = 0; i < refsToDelete.length; i += chunkSize) {
+      final chunk = refsToDelete.skip(i).take(chunkSize);
+      final batch = _db.batch();
+      for (final ref in chunk) {
+        batch.delete(ref);
+      }
+      await batch.commit();
+    }
+
+    await classRef.delete();
   }
 
   @override
@@ -267,53 +343,26 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
     int? age,
     String? focusSubject,
   }) async {
-    final uid = _uid;
-    if (uid == null) throw StateError('Not authenticated');
+    if (_uid == null) throw StateError('Not authenticated');
 
-    final classDoc = await _classes.doc(classId).get();
-    if (!classDoc.exists) throw StateError('Class not found');
-
-    final classData = classDoc.data() ?? <String, dynamic>{};
-    final memberKey = (studentId?.isNotEmpty ?? false) ? studentId! : uid;
-    final memberRef = _db
-        .collection('classes')
-        .doc(classId)
-        .collection('members')
-        .doc(memberKey);
-
-    await _db.runTransaction((tx) async {
-      final existing = await tx.get(memberRef);
-
-      tx.set(
-        memberRef,
-        {
-          'classId': classId,
-          'teacherUid': (classData['teacherUid'] as String?) ?? '',
-          'className': (classData['name'] as String?) ?? '',
-          'classSubject': (classData['subject'] as String?) ?? '',
-          'classGradeLevel': (classData['gradeLevel'] as String?) ?? '',
-          'displayName': displayName,
-          'email': email,
-          'role': role,
-          'studentId': studentId ?? memberKey,
-          'childProfileId': childProfileId ?? '',
-          'parentUid': parentUid ?? uid,
-          'age': age,
-          'focusSubject': focusSubject ?? '',
-          'completedChallengeIds':
-              existing.data()?['completedChallengeIds'] ?? const [],
-          'joinedAt': existing.exists
-              ? (existing.data()?['joinedAt'] ?? FieldValue.serverTimestamp())
-              : FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-
-      if (!existing.exists) {
-        tx.update(_classes.doc(classId), {
-          'studentCount': FieldValue.increment(1),
-        });
-      }
+    // Same reasoning as findByCode: the caller doesn't own `classId` (it's
+    // someone else's class), and the member-doc write also needs to read
+    // that class's name/subject/teacherUid to denormalize onto the new
+    // member — none of which the client can do anymore once
+    // classes/{classId} read is restricted to the owning teacher (or
+    // public classes). The Cloud Function runs the identical transaction
+    // via the Admin SDK.
+    final callable = _functions.httpsCallable('joinClassByCode');
+    await callable.call<Map<String, dynamic>>({
+      'classId': classId,
+      'displayName': displayName,
+      'email': email,
+      'role': role,
+      'studentId': studentId,
+      'childProfileId': childProfileId,
+      'parentUid': parentUid,
+      'age': age,
+      'focusSubject': focusSubject,
     });
   }
 
@@ -330,15 +379,14 @@ class FirestoreTeacherClassesDatasource implements TeacherClassesDatasource {
   }
 
   Future<String> _uniqueJoinCode() async {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final rng = Random();
-    while (true) {
-      final code =
-          List.generate(6, (_) => chars[rng.nextInt(chars.length)]).join();
-      final existing =
-          await _classes.where('joinCode', isEqualTo: code).limit(1).get();
-      if (existing.docs.isEmpty) return code;
-    }
+    // Uniqueness has to be checked across *every* class, not just the
+    // caller's own — something the client can no longer read once
+    // classes/{classId} read is restricted to `isPublic == true ||
+    // teacherUid == uid`. The Cloud Function runs the same scan via the
+    // Admin SDK.
+    final callable = _functions.httpsCallable('generateUniqueJoinCode');
+    final result = await callable.call<Map<String, dynamic>>();
+    return result.data['code'] as String;
   }
 
   Future<String> _loadTeacherName(String uid) async {

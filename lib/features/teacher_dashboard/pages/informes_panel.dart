@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
 // Package imports:
 import 'package:google_fonts/google_fonts.dart';
@@ -28,7 +29,8 @@ class InformesPanel extends StatelessWidget {
         children: [
           _HeaderRow(
               totalStudents: bloc.totalStudents,
-              totalClasses: bloc.classes.length),
+              totalClasses: bloc.classes.length,
+              bloc: bloc),
           const SizedBox(height: 24),
           wide
               ? IntrinsicHeight(
@@ -78,10 +80,12 @@ class _HeaderRow extends StatelessWidget {
   const _HeaderRow({
     required this.totalStudents,
     required this.totalClasses,
+    required this.bloc,
   });
 
   final int totalStudents;
   final int totalClasses;
+  final TeacherDashboardBloc bloc;
 
   @override
   Widget build(BuildContext context) {
@@ -109,12 +113,7 @@ class _HeaderRow extends StatelessWidget {
         ),
         const Spacer(),
         OutlinedButton.icon(
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Exportación disponible próximamente.'),
-              duration: Duration(seconds: 2),
-            ),
-          ),
+          onPressed: () => _exportAllData(context, bloc),
           icon: const Icon(Icons.upload_rounded, size: 14, color: _kNavy),
           label: Text(
             'Exportar Todo',
@@ -275,13 +274,7 @@ class _BuilderCard extends StatelessWidget {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content:
-                    Text('Informes personalizados disponibles próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
+            onPressed: () => _showReportBuilder(context, bloc),
             style: ElevatedButton.styleFrom(
               backgroundColor: _kCoral,
               foregroundColor: Colors.white,
@@ -681,3 +674,193 @@ BoxDecoration _cardDecoration() => BoxDecoration(
         ),
       ],
     );
+
+// ── Exportar Todo ─────────────────────────────────────────────────────────────
+
+Future<void> _exportAllData(
+    BuildContext context, TeacherDashboardBloc bloc) async {
+  if (bloc.classes.isEmpty &&
+      bloc.students.isEmpty &&
+      bloc.challenges.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Aún no hay datos para exportar.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+    return;
+  }
+
+  final buffer = StringBuffer();
+
+  buffer.writeln('CLASES');
+  buffer.writeln('Nombre,Materia,Grado,Alumnos');
+  for (final c in bloc.classes) {
+    buffer.writeln('${c.name},${c.subject},${c.gradeLevel},${c.studentCount}');
+  }
+
+  buffer.writeln();
+  buffer.writeln('ALUMNOS');
+  buffer.writeln('Nombre,Edad,Clase,Retos completados,Ingresó');
+  for (final s in bloc.students) {
+    final name = (s['name'] as String? ?? '').replaceAll(',', ' ');
+    final age = s['age']?.toString() ?? '';
+    final className = (s['className'] as String? ?? '').replaceAll(',', ' ');
+    final completed =
+        (s['completedChallengeIds'] as List?)?.length.toString() ?? '0';
+    final joinedAt = s['joinedAt'];
+    final joinedLabel = joinedAt is DateTime
+        ? '${joinedAt.day.toString().padLeft(2, '0')}/${joinedAt.month.toString().padLeft(2, '0')}/${joinedAt.year}'
+        : '';
+    buffer.writeln('$name,$age,$className,$completed,$joinedLabel');
+  }
+
+  buffer.writeln();
+  buffer.writeln('RETOS');
+  buffer.writeln('Título,Clase,Estado');
+  for (final c in bloc.challenges) {
+    final title = (c['title'] as String? ?? '').replaceAll(',', ' ');
+    final className = (c['class_name'] as String? ?? '').replaceAll(',', ' ');
+    final status = c['status'] as String? ?? '';
+    buffer.writeln('$title,$className,$status');
+  }
+
+  await Clipboard.setData(ClipboardData(text: buffer.toString()));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+          'Clases, alumnos y retos copiados. Pégalos en Excel o Google Sheets.'),
+      duration: Duration(seconds: 3),
+    ),
+  );
+}
+
+// ── Diseñar Informe Personalizado ─────────────────────────────────────────────
+
+void _showReportBuilder(BuildContext context, TeacherDashboardBloc bloc) {
+  showDialog<void>(
+    context: context,
+    builder: (_) => _ReportBuilderDialog(bloc: bloc),
+  );
+}
+
+class _ReportBuilderDialog extends StatefulWidget {
+  const _ReportBuilderDialog({required this.bloc});
+  final TeacherDashboardBloc bloc;
+
+  @override
+  State<_ReportBuilderDialog> createState() => _ReportBuilderDialogState();
+}
+
+class _ReportBuilderDialogState extends State<_ReportBuilderDialog> {
+  final Map<String, bool> _sections = {
+    'Clases': true,
+    'Retos': true,
+    'Progreso': true,
+    'Top alumnos': true,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Diseñar Informe Personalizado',
+        style: GoogleFonts.fredoka(
+            fontSize: 18, color: _kNavy, fontWeight: FontWeight.w700),
+      ),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Elige qué secciones incluir en tu informe.',
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 8),
+            ..._sections.keys.map((label) => CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  value: _sections[label],
+                  onChanged: (v) =>
+                      setState(() => _sections[label] = v ?? false),
+                  title: Text(label, style: GoogleFonts.nunito(fontSize: 14)),
+                )),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _sections.values.any((v) => v)
+              ? () => _generateReport(context, widget.bloc, _sections)
+              : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _kCoral,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Generar'),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _generateReport(
+  BuildContext context,
+  TeacherDashboardBloc bloc,
+  Map<String, bool> sections,
+) async {
+  final buffer = StringBuffer('INFORME PERSONALIZADO\n\n');
+
+  if (sections['Clases'] == true) {
+    buffer.writeln('CLASES (${bloc.classes.length})');
+    for (final c in bloc.classes) {
+      buffer.writeln('- ${c.name} · ${c.subject} · ${c.studentCount} alumnos');
+    }
+    buffer.writeln();
+  }
+
+  if (sections['Retos'] == true) {
+    buffer.writeln('RETOS (${bloc.challenges.length})');
+    for (final c in bloc.challenges) {
+      buffer.writeln(
+          '- ${c['title'] ?? 'Reto'} · ${c['status'] ?? 'desconocido'}');
+    }
+    buffer.writeln();
+  }
+
+  if (sections['Progreso'] == true) {
+    buffer.writeln('PROGRESO GENERAL');
+    buffer.writeln('- Tasa de completado: ${bloc.completionRate}%');
+    buffer.writeln('- Tiempo promedio: ${bloc.averageMinutes} min');
+    buffer.writeln(
+        '- Progreso promedio: ${(bloc.averageProgress * 100).round()}%');
+    buffer.writeln();
+  }
+
+  if (sections['Top alumnos'] == true) {
+    buffer.writeln('TOP ALUMNOS');
+    for (final s in bloc.topStudents) {
+      final trend = ((s['trend'] as num?) ?? 0).round();
+      buffer.writeln('- ${s['name'] ?? 'Estudiante'} (+$trend pts)');
+    }
+    buffer.writeln();
+  }
+
+  await Clipboard.setData(ClipboardData(text: buffer.toString()));
+  if (!context.mounted) return;
+  Navigator.of(context).pop();
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('Informe generado y copiado. Pégalo donde lo necesites.'),
+      duration: Duration(seconds: 3),
+    ),
+  );
+}

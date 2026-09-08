@@ -335,42 +335,24 @@ class _SecondaryGameCard extends StatelessWidget {
                     ),
                     child: Icon(game.icon, color: game.color, size: 20),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 8,
-                              backgroundColor: Color(0xFF4CAF50),
-                              child: Text('A',
-                                  style: TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(width: 2),
-                            const CircleAvatar(
-                              radius: 8,
-                              backgroundColor: Color(0xFF2196F3),
-                              child: Text('B',
-                                  style: TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold)),
-                            ),
-                            const SizedBox(width: 4),
-                            Text('+4',
-                                style: GoogleFonts.nunito(
-                                    fontSize: 10, color: Colors.grey[500])),
-                          ],
-                        ),
-                        Text('Amigos jugando',
-                            style: GoogleFonts.nunito(
-                                fontSize: 10, color: Colors.grey[400])),
-                      ],
+                  const Spacer(),
+                  ElevatedButton(
+                    onPressed: game.onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: game.color,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 7),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      '¡Jugar!',
+                      style: GoogleFonts.fredoka(fontSize: 13),
                     ),
                   ),
                 ],

@@ -182,6 +182,11 @@ class FakeSubscriptionRepository implements SubscriptionRepository {
 
   @override
   Future<bool> canCreateSession() async => true;
+
+  @override
+  Future<void> cancelSubscription() async {
+    isPro = false;
+  }
 }
 
 class FakeParentDashboardRepository implements ParentDashboardRepository {

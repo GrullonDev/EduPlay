@@ -1,5 +1,6 @@
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // Project imports:
@@ -15,17 +16,22 @@ abstract class SubscriptionDatasource {
   Future<void> initSubscription(String uid);
 
   Future<void> incrementSessionCount();
+
+  Future<void> cancelSubscription();
 }
 
 class FirestoreSubscriptionDatasource implements SubscriptionDatasource {
   FirestoreSubscriptionDatasource({
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
+    FirebaseFunctions? functions,
   })  : _db = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+        _auth = auth ?? FirebaseAuth.instance,
+        _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _db;
   final FirebaseAuth _auth;
+  final FirebaseFunctions _functions;
 
   String? get _uid => _auth.currentUser?.uid;
 
@@ -95,5 +101,14 @@ class FirestoreSubscriptionDatasource implements SubscriptionDatasource {
         'sessionsThisMonth': FieldValue.increment(1),
       });
     }
+  }
+
+  @override
+  Future<void> cancelSubscription() async {
+    // Server writes tier — the client is blocked from it by firestore.rules
+    // (see match /subscriptions/{uid}), so this always goes through the
+    // Cloud Function even though it only ever touches the caller's own doc.
+    final callable = _functions.httpsCallable('cancelRecurrenteSubscription');
+    await callable.call<Map<String, dynamic>>();
   }
 }

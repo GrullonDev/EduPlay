@@ -101,27 +101,59 @@ service cloud.firestore {
 
     // ── Teacher classes (top-level collection used by the dashboard) ─────────
     match /classes/{classId} {
-      allow read: if request.auth != null;
+      // Was `allow read: if request.auth != null` — any authenticated user
+      // could read (or unfiltered-list) every class, public or not,
+      // harvesting every joinCode/teacherUid. `isPublic` classes are meant
+      // to be discoverable (see getPublicClassesForAge), so that half stays
+      // open; a private class is now readable only by its own teacher.
+      // Join-by-code no longer needs client read access at all — it's
+      // mediated by lookupClassByJoinCode/joinClassByCode/
+      // generateUniqueJoinCode (functions/classes.js), which use the Admin
+      // SDK and bypass this rule entirely.
+      allow read: if request.auth != null && (
+        resource.data.isPublic == true
+        || resource.data.teacherUid == request.auth.uid
+      );
 
       allow create: if request.auth != null
         && request.resource.data.teacherUid == request.auth.uid;
 
-      allow update: if request.auth != null && (
-        resource.data.teacherUid == request.auth.uid
-        ||
-        (
-          request.resource.data.diff(resource.data)
-            .affectedKeys()
-            .hasOnly(['studentCount'])
-          && request.resource.data.studentCount == resource.data.studentCount + 1
-        )
-      );
+      // The old `|| affectedKeys().hasOnly(['studentCount']) && ...+1` branch
+      // here was the client-side join transaction's escape hatch to bump
+      // studentCount without owning the class — removed now that
+      // joinClassByCode does that increment server-side (Admin SDK). Removing
+      // a decrement (see removeMember()) was always covered by the owner
+      // clause below regardless, since only the owning teacher calls it.
+      allow update: if request.auth != null
+        && resource.data.teacherUid == request.auth.uid;
 
       allow delete: if request.auth != null
         && resource.data.teacherUid == request.auth.uid;
 
       match /members/{memberId} {
-        allow read: if request.auth != null;
+        // Was `allow read: if request.auth != null` — any authenticated
+        // user (any teacher, any parent, any collectionGroup('members')
+        // query) could read every class's full roster: student names,
+        // emails, ages, parentUid. Narrowed to the same three parties who
+        // are already allowed to write this doc (the owning teacher, the
+        // linked parent, or the member themself), matching create/update/
+        // delete below rather than inventing a new access model.
+        //
+        // Reading a member doc that doesn't exist (e.g. isEnrolled()
+        // checking "has this child joined this class" while browsing)
+        // correctly comes back permission-denied for a parent/child who
+        // isn't already one of these three parties — verified against the
+        // emulator. That's the intended outcome, not a bug: nothing about
+        // "am I enrolled here" should be readable before you have a real
+        // relationship to the class. isEnrolled() treats that denial as
+        // "not enrolled" client-side (see
+        // FirestoreTeacherClassesDatasource.isEnrolled) rather than this
+        // rule being loosened to answer the question for free.
+        allow read: if request.auth != null && (
+          get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
+          || resource.data.parentUid == request.auth.uid
+          || request.auth.uid == memberId
+        );
 
         allow create, update: if request.auth != null && (
           get(/databases/$(database)/documents/classes/$(classId)).data.teacherUid == request.auth.uid
@@ -188,8 +220,9 @@ service cloud.firestore {
     // ── Subscriptions ─────────────────────────────────────────────────────────
     // Top-level collection: subscriptions/{uid}
     // Parents read their own subscription. App client writes usage counters
-    // (sessionsThisMonth). Tier upgrades come via Cloud Functions / Stripe
-    // webhooks, so only Cloud Functions can set tier:'pro'.
+    // (sessionsThisMonth). Tier upgrades come via Cloud Functions (the
+    // Recurrente webhook / cancel callable), so only Cloud Functions can
+    // set tier:'pro'.
     // For now, allow the client to write usage counters but not the tier field.
     match /subscriptions/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
@@ -337,7 +370,11 @@ service cloud.firestore {
     // Notifications
     // Users can read their own notification inbox. Friend-request notifications
     // are created by the sender when the friend request is created, and only
-    // the recipient may mark them as read.
+    // the recipient may mark them as read. Teacher-message notifications are
+    // created by a teacher addressing a specific class member's parent — the
+    // classId/memberId on the doc are cross-checked against the roster so a
+    // teacher can only message parents of students actually in one of their
+    // own classes, not an arbitrary uid.
     match /notifications/{notificationId} {
       allow read: if request.auth != null
         && request.auth.uid == resource.data.recipientUid;
@@ -345,8 +382,19 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.auth.uid == request.resource.data.senderUid
         && request.resource.data.recipientUid is string
-        && request.resource.data.type == 'friend_request'
-        && request.resource.data.read == false;
+        && request.resource.data.read == false
+        && (
+          request.resource.data.type == 'friend_request'
+          ||
+          (
+            request.resource.data.type == 'teacher_message'
+            && request.resource.data.senderRole == 'teacher'
+            && request.resource.data.classId is string
+            && request.resource.data.memberId is string
+            && get(/databases/$(database)/documents/classes/$(request.resource.data.classId)).data.teacherUid == request.auth.uid
+            && get(/databases/$(database)/documents/classes/$(request.resource.data.classId)/members/$(request.resource.data.memberId)).data.parentUid == request.resource.data.recipientUid
+          )
+        );
 
       allow update: if request.auth != null
         && request.auth.uid == resource.data.recipientUid
@@ -532,6 +580,23 @@ service cloud.firestore {
           && request.resource.data.cost is int;
         allow update, delete: if false;
       }
+    }
+
+    // ── Newsletter sign-ups ───────────────────────────────────────────────────
+    // Public marketing pages (parent guide, registration landing) capture an
+    // email address into this write-only collection — no Firebase Auth
+    // session exists yet on those pages, so creation must be allowed for
+    // anyone. Nothing in the app ever reads this back; it's reviewed from
+    // the Firebase console. Size-capped to keep it from being abused as a
+    // free-form data dump.
+    match /newsletter_subscribers/{subscriberId} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.email.size() < 200
+        && request.resource.data.source is string
+        && request.resource.data.source.size() < 50
+        && request.resource.data.keys().hasOnly(['email', 'source', 'createdAt']);
     }
 
     // ── Default: deny everything not matched above ────────────────────────────

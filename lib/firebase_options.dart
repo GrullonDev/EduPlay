@@ -60,6 +60,13 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.eduPlay',
   );
 
+  // NOTE: web deliberately points at a DIFFERENT project than every other
+  // platform here — "eduplay-prod" ("EduPlay-Prod"), the dedicated
+  // production project configured on the `main` branch, not
+  // "eduplay-8792f" (the dev project `develop` uses for everything else,
+  // including the other platform blocks below). Do not "fix" this to
+  // match android/ios/macos/windows — see the release branch history for
+  // why this diverges intentionally on `main`.
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyDdE2Cd0j4OROsJeo3H7q7DHkolcplx-t8',
     appId: '1:319528834915:web:f6dc2fd50059c3c5586556',

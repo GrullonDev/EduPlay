@@ -135,27 +135,33 @@ class CatalogFilterPanel extends StatelessWidget {
                   checked: selectedDifficulties.contains(d),
                   onChanged: (_) => onDifficultyToggled(d),
                 ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: onDismiss ?? () {},
-                  icon: const Icon(Icons.rocket_launch_rounded, size: 16),
-                  label: Text(
-                    '¡Explorar!',
-                    style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _kRed,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+              // Only shown in the modal-sheet (mobile/tablet) presentation —
+              // the persistent desktop sidebar applies filters live as the
+              // child taps them, so there's nothing for this button to do
+              // there and it's omitted instead of being a dead tap target.
+              if (onDismiss != null) ...[
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: onDismiss,
+                    icon: const Icon(Icons.rocket_launch_rounded, size: 16),
+                    label: Text(
+                      '¡Explorar!',
+                      style: GoogleFonts.nunito(fontWeight: FontWeight.w700),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _kRed,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

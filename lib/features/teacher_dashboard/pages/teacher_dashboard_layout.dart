@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:edu_play/core/config/release_flags.dart';
 import 'package:edu_play/data/repositories/auth_repository.dart';
 import 'package:edu_play/data/repositories/student_repository.dart';
+import 'package:edu_play/features/notifications/services/notifications_service.dart';
 import 'package:edu_play/features/notifications/widgets/notifications_button.dart';
 import 'package:edu_play/features/teacher_dashboard/bloc/teacher_dashboard_bloc.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/alumnos_panel.dart';
@@ -21,6 +22,8 @@ import 'package:edu_play/features/teacher_dashboard/pages/informes_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/mis_clases_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/rendimiento_panel.dart';
 import 'package:edu_play/features/teacher_dashboard/pages/retos_panel.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_help_sheet.dart';
+import 'package:edu_play/features/teacher_dashboard/pages/teacher_settings_page.dart';
 import 'package:edu_play/utils/injection_container.dart';
 import 'package:edu_play/utils/responsive.dart';
 import 'package:edu_play/utils/routes/router_paths.dart';
@@ -44,6 +47,14 @@ class TeacherDashboardLayout extends StatefulWidget {
 
 class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
   int _selectedIndex = 0;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
 
   static const _navItems = [
     _NavItem(icon: Icons.dashboard_rounded, label: 'Panel Principal'),
@@ -106,6 +117,18 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
                     'Buscar informes...',
                     'Buscar amigos...',
                   ][_selectedIndex.clamp(0, 6)],
+                  // The Alumnos tab (index 2) has its own internal search
+                  // field (see AlumnosPanel) that already filters its table
+                  // and drives bulk-selection state. Wiring this shared
+                  // top-bar field into that same tab would mean keeping two
+                  // independent TextEditingControllers in sync, which risks
+                  // regressing a search that already works. So the top-bar
+                  // field is disabled (read-only) there instead, while it
+                  // stays fully functional for every other filterable tab.
+                  enabled: _selectedIndex != 2,
+                  controller: _searchCtrl,
+                  onChanged: (v) =>
+                      setState(() => _searchQuery = v.trim().toLowerCase()),
                 ),
                 Expanded(
                   child: bloc.isLoading
@@ -120,18 +143,27 @@ class _TeacherDashboardLayoutState extends State<TeacherDashboardLayout> {
     );
   }
 
-  void _goToTab(int index) => setState(() => _selectedIndex = index);
+  void _goToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+      // Clear any filter left over from the previous tab so it doesn't
+      // silently apply to a list it was never meant for.
+      _searchQuery = '';
+      _searchCtrl.clear();
+    });
+  }
 
   Widget _buildBody(TeacherDashboardBloc bloc) {
     switch (_selectedIndex) {
       case 0:
         return _OverviewPanel(bloc: bloc, onNavigateTab: _goToTab);
       case 1:
-        return MisClasesPanel(onViewRoster: () => _goToTab(2));
+        return MisClasesPanel(
+            onViewRoster: () => _goToTab(2), searchQuery: _searchQuery);
       case 2:
         return AlumnosPanel(onNavigateTab: _goToTab);
       case 3:
-        return RetosPanel(bloc: bloc);
+        return RetosPanel(bloc: bloc, searchQuery: _searchQuery);
       case 4:
         return RendimientoPanel(bloc: bloc);
       case 5:
@@ -268,12 +300,7 @@ class _Sidebar extends StatelessWidget {
                 _SidebarTextBtn(
                   icon: Icons.help_outline_rounded,
                   label: 'Ayuda',
-                  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Centro de ayuda próximamente.'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  ),
+                  onTap: () => showTeacherHelpSheet(context),
                 ),
                 _SidebarTextBtn(
                   icon: Icons.logout_rounded,
@@ -332,10 +359,16 @@ class _TopBar extends StatelessWidget {
   const _TopBar({
     this.onMenuTap,
     this.searchHint = 'Buscar alumnos, retos...',
+    this.controller,
+    this.onChanged,
+    this.enabled = true,
   });
 
   final VoidCallback? onMenuTap;
   final String searchHint;
+  final TextEditingController? controller;
+  final ValueChanged<String>? onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -380,6 +413,9 @@ class _TopBar extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
+                      controller: controller,
+                      onChanged: onChanged,
+                      enabled: enabled,
                       decoration: InputDecoration(
                         hintText: searchHint,
                         hintStyle: GoogleFonts.nunito(
@@ -402,7 +438,12 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 4),
           _TopIcon(
             Icons.settings_outlined,
-            onPressed: () => Navigator.pushNamed(context, RouterPaths.settings),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TeacherSettingsPage(teacherName: bloc.teacherName),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           // Avatar
@@ -457,12 +498,7 @@ class _OverviewPanel extends StatelessWidget {
           // Quick actions
           _QuickActionsRow(
             onAssignChallenge: () => onNavigateTab(3),
-            onGroupMessage: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Mensajería grupal próximamente.'),
-                duration: Duration(seconds: 2),
-              ),
-            ),
+            onGroupMessage: () => _showGroupMessageDialog(context, bloc),
             onExportData: () => _exportRosterCsv(context, bloc),
           ),
           const SizedBox(height: 20),
@@ -777,18 +813,12 @@ class _WeeklyProgressCard extends StatelessWidget {
   final List<double> weeklyTotals;
 
   static const _labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Actual'];
-  // Mock retos data (ratio to media)
-  static const _retosRatios = [0.6, 0.75, 0.55, 0.85];
 
   @override
   Widget build(BuildContext context) {
     final media = weeklyTotals.isEmpty
         ? [0.0, 0.0, 0.0, 0.0]
         : weeklyTotals.take(4).toList();
-    final retos = List.generate(
-      media.length,
-      (i) => media[i] * _retosRatios[i % _retosRatios.length],
-    );
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -805,9 +835,7 @@ class _WeeklyProgressCard extends StatelessWidget {
               ),
             ),
             // Legend
-            const _LegendDot(color: Color(0xFF3B82F6), label: 'Media'),
-            const SizedBox(width: 14),
-            const _LegendDot(color: Color(0xFFEF4444), label: 'Retos'),
+            const _LegendDot(color: Color(0xFF3B82F6), label: 'Actividad'),
           ]),
           const SizedBox(height: 20),
           SizedBox(
@@ -815,7 +843,6 @@ class _WeeklyProgressCard extends StatelessWidget {
             child: _BarChart(
               labels: _labels,
               mediaValues: media,
-              retosValues: retos,
             ),
           ),
         ],
@@ -850,23 +877,19 @@ class _BarChart extends StatelessWidget {
   const _BarChart({
     required this.labels,
     required this.mediaValues,
-    required this.retosValues,
   });
 
   final List<String> labels;
   final List<double> mediaValues;
-  final List<double> retosValues;
 
   @override
   Widget build(BuildContext context) {
-    final maxVal =
-        [...mediaValues, ...retosValues].fold<double>(0, (m, v) => max(m, v));
+    final maxVal = mediaValues.fold<double>(0, (m, v) => max(m, v));
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(labels.length, (i) {
         final mFrac = maxVal == 0 ? 0.0 : mediaValues[i] / maxVal;
-        final rFrac = maxVal == 0 ? 0.0 : retosValues[i] / maxVal;
         final isLast = labels[i] == 'Actual';
         return Expanded(
           child: Column(
@@ -882,26 +905,10 @@ class _BarChart extends StatelessWidget {
                         alignment: Alignment.bottomCenter,
                         heightFactor: mFrac.clamp(0.05, 1.0),
                         child: Container(
-                          width: 16,
+                          width: 24,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           decoration: const BoxDecoration(
                             color: Color(0xFF3B82F6),
-                            borderRadius:
-                                BorderRadius.vertical(top: Radius.circular(4)),
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Retos bar
-                    Flexible(
-                      child: FractionallySizedBox(
-                        alignment: Alignment.bottomCenter,
-                        heightFactor: rFrac.clamp(0.05, 1.0),
-                        child: Container(
-                          width: 16,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFEF4444),
                             borderRadius:
                                 BorderRadius.vertical(top: Radius.circular(4)),
                           ),
@@ -1348,6 +1355,122 @@ class _QuickActionsRow extends StatelessWidget {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+void _showGroupMessageDialog(BuildContext context, TeacherDashboardBloc bloc) {
+  showDialog<void>(
+    context: context,
+    builder: (_) => _GroupMessageDialog(bloc: bloc),
+  );
+}
+
+class _GroupMessageDialog extends StatefulWidget {
+  const _GroupMessageDialog({required this.bloc});
+  final TeacherDashboardBloc bloc;
+
+  @override
+  State<_GroupMessageDialog> createState() => _GroupMessageDialogState();
+}
+
+class _GroupMessageDialogState extends State<_GroupMessageDialog> {
+  final _titleController = TextEditingController();
+  final _bodyController = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _bodyController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final title = _titleController.text.trim();
+    final body = _bodyController.text.trim();
+    if (title.isEmpty || body.isEmpty) return;
+
+    setState(() => _sending = true);
+    final sent = await NotificationsService.sendTeacherMessageToClass(
+      students: widget.bloc.students,
+      senderName: widget.bloc.teacherName,
+      title: title,
+      body: body,
+    );
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(sent > 0
+            ? 'Mensaje enviado a $sent ${sent == 1 ? 'familia' : 'familias'}.'
+            : 'No hay alumnos con un padre vinculado para enviarles el mensaje.'),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Mensaje Grupal',
+        style: GoogleFonts.fredoka(
+            fontSize: 18, color: _kNavy, fontWeight: FontWeight.w700),
+      ),
+      content: SizedBox(
+        width: 340,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Se enviará como notificación a los padres de tus ${widget.bloc.totalStudents} alumnos.',
+              style:
+                  GoogleFonts.nunito(fontSize: 13, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Asunto',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _bodyController,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Mensaje',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _sending ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _sending ? null : _send,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _kCoral,
+            foregroundColor: Colors.white,
+          ),
+          child: _sending
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Enviar'),
         ),
       ],
     );

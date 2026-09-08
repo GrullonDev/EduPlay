@@ -38,11 +38,8 @@ import 'package:edu_play/features/store/data/datasources/store_catalog_datasourc
 import 'package:edu_play/features/store/data/repositories/firestore_store_catalog_repository.dart';
 import 'package:edu_play/features/store/domain/repositories/store_catalog_repository.dart';
 import 'package:edu_play/features/store/services/store_catalog_cache.dart';
-import 'package:edu_play/features/subscription/data/datasources/checkout_datasource.dart';
 import 'package:edu_play/features/subscription/data/datasources/subscription_datasource.dart';
-import 'package:edu_play/features/subscription/data/repositories/firebase_checkout_repository.dart';
 import 'package:edu_play/features/subscription/data/repositories/firestore_subscription_repository.dart';
-import 'package:edu_play/features/subscription/domain/repositories/checkout_repository.dart';
 import 'package:edu_play/features/subscription/domain/repositories/subscription_repository.dart';
 import 'package:edu_play/features/teacher_dashboard/data/datasources/classroom_challenges_datasource.dart';
 import 'package:edu_play/features/teacher_dashboard/data/datasources/teacher_classes_datasource.dart';
@@ -104,11 +101,6 @@ void init() {
   if (!sl.isRegistered<OnboardingDatasource>()) {
     sl.registerLazySingleton<OnboardingDatasource>(
       () => FirestoreOnboardingDatasource(),
-    );
-  }
-  if (!sl.isRegistered<CheckoutDatasource>()) {
-    sl.registerLazySingleton<CheckoutDatasource>(
-      () => FirebaseCheckoutDatasource(),
     );
   }
   if (!sl.isRegistered<TeacherRegistrationDatasource>()) {
@@ -198,11 +190,6 @@ void init() {
   if (!sl.isRegistered<OnboardingRepository>()) {
     sl.registerLazySingleton<OnboardingRepository>(
       () => FirestoreOnboardingRepository(datasource: sl()),
-    );
-  }
-  if (!sl.isRegistered<CheckoutRepository>()) {
-    sl.registerLazySingleton<CheckoutRepository>(
-      () => FirebaseCheckoutRepository(datasource: sl()),
     );
   }
   if (!sl.isRegistered<TeacherRegistrationRepository>()) {

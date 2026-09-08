@@ -306,8 +306,9 @@ class _OverviewBodyState extends State<_OverviewBody> {
           ),
         ),
 
-        // Child profiles section
-        const _SectionLabel(title: 'Perfiles de Niños', action: 'Ver todos'),
+        // Child profiles section — all profiles are already shown below,
+        // so there's nothing further for a "Ver todos" action to reveal.
+        const _SectionLabel(title: 'Perfiles de Niños'),
         const SizedBox(height: 14),
         widget.profiles.isEmpty
             ? ParentEmptyProfiles(onAdd: widget.onAddProfile)

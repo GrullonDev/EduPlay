@@ -148,6 +148,24 @@ class AuthGate extends StatelessWidget {
         // (saved PIN or a parent-shared link), who should skip straight in.
         if (user == null) return const _NoSessionEntry();
 
+        // Anonymous users (the child portal) can never have a
+        // parents/teachers/independent_students doc, so resolving a role
+        // for one is pointless — and doing it anyway wraps this build in a
+        // FutureBuilder, which is a *different widget* at this position
+        // than the plain `_NoSessionEntry()` returned just above. Any
+        // credentialed login elsewhere in the app calls
+        // `FirebaseAuth.signOut()` right before signing in (see
+        // AuthDatasource.loginParent), which briefly flips `user` to null
+        // and back — and if an anonymous session also happens to be
+        // involved (e.g. this device previously used the child portal, or
+        // the login flow briefly re-establishes one), that null→anonymous
+        // hop would tear down and rebuild this entire subtree via the
+        // FutureBuilder wrapper, mid-login, for no reason. Short-circuiting
+        // straight to `_buildForRole` keeps the widget at this position
+        // identical (`_NoSessionEntry()`) across that hop, so nothing gets
+        // rebuilt.
+        if (user.isAnonymous) return _buildForRole(user, null);
+
         // Logged in → resolve role from Firestore
         return FutureBuilder<String?>(
           future: _resolveRole(user.uid),
@@ -278,6 +296,24 @@ class _RoleResolutionErrorScreen extends StatelessWidget {
 class _NoSessionEntry extends StatelessWidget {
   const _NoSessionEntry();
 
+  /// NOTE: this used to also call `ensureAnonymousAuth()` here, to
+  /// establish anonymous auth before [ChildPinPage] is shown (working
+  /// around AuthGate rebuilding and remounting ChildPinPage mid-PIN-entry
+  /// when anonymous sign-in completed later, inside `_validate()`). That
+  /// masked the real bug rather than fixing it, and introduced a worse one:
+  /// signing in anonymously the instant this widget saw an unauthenticated
+  /// frame fired during *every* credentialed login too (`loginParent()`
+  /// signs out before signing in), racing an anonymous sign-in against the
+  /// real one and breaking parent/teacher login outright. The actual fix
+  /// is in `AuthGate.build()` (see the `user.isAnonymous` short-circuit
+  /// above it), which stops the anonymous auth transition from tearing
+  /// down this widget's subtree in the first place — so `ChildPinPage`'s
+  /// own `ensureAnonymousAuth()` call (in `_validate()`) is safe again
+  /// without needing to pre-empt it here.
+  Future<bool> _prepare() {
+    return StudentSessionNavigationService.hasRememberedChildPin();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Synchronous check first: a parent-shared link embeds both the profile
@@ -287,7 +323,7 @@ class _NoSessionEntry extends StatelessWidget {
     }
 
     return FutureBuilder<bool>(
-      future: StudentSessionNavigationService.hasRememberedChildPin(),
+      future: _prepare(),
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const _SplashLoader();
